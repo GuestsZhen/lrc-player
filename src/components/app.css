@@ -34,24 +34,10 @@
         "Apple Color Emoji", "Segoe UI Emoji";
 }
 
-[lang]:lang(zh-HK) {
-    font-family:
-        -apple-system, BlinkMacSystemFont, system-ui, "Akari Fallback UI", "PingFang HK", "Microsoft JhengHei UI",
-        "Microsoft JhengHei", "Source Han Sans HK", "Noto Sans CJK TC", sans-serif, "Apple Color Emoji",
-        "Segoe UI Emoji";
-}
-
 [lang]:lang(zh-TW) {
     font-family:
         -apple-system, BlinkMacSystemFont, system-ui, "Akari Fallback UI", "PingFang TC", "Microsoft JhengHei UI",
         "Microsoft JhengHei", "Source Han Sans TW", "Noto Sans CJK TC", sans-serif, "Apple Color Emoji",
-        "Segoe UI Emoji";
-}
-
-[lang]:lang(ja) {
-    font-family:
-        -apple-system, BlinkMacSystemFont, system-ui, "Akari Fallback UI", "Hiragino Kaku Gothic Pro", "Yu Gothic UI",
-        "Yu Gothic", "Meiryo UI", Meiryo, "Source Han Sans JP", "Noto Sans CJK JP", sans-serif, "Apple Color Emoji",
         "Segoe UI Emoji";
 }
 
@@ -190,24 +176,26 @@ a > * {
 
 .akari-odango-loading {
     position: fixed;
-    inset: 0;
-    width: 50vmin;
-    height: 50vmin;
-    margin: auto;
-    text-align: center;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px;
+    height: 200px;
+    z-index: 9999;
 }
 
-.start-loading {
-    animation: akari-loading 2s linear infinite;
+.start-loading .akari-odango-loading {
+    animation: loading-fade-in 0.5s ease-out;
 }
 
-@keyframes akari-loading {
+@keyframes loading-fade-in {
     from {
-        transform: rotate(0deg) translateX(-2vmin) rotate(0deg);
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.8);
     }
-
     to {
-        transform: rotate(360deg) translateX(-2vmin) rotate(-360deg);
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
     }
 }
 

@@ -23,11 +23,11 @@ const initState = {
     lang: "en-US",
     spaceStart: 1,
     spaceEnd: 0,
-    fixed: 3 as Fixed,
+    fixed: 2 as Fixed,
     builtInAudio: false,
     showWaveform: true,
     screenButton: false,
-    themeColor: themeColor.pink,
+    themeColor: themeColor.grey,
     themeMode: ThemeMode.auto,
 };
 

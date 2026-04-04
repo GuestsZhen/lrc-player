@@ -12,7 +12,7 @@ import { AkariNotFound, AkariOdangoLoading } from "./svg.img.js";
 import { EditorSVG, GithubSVG, SynchronizerSVG } from "./svg.js";
 import { toastPubSub } from "./toast.js";
 
-const newTokenUrl = "https://github.com/settings/tokens/new?scopes=gist&description=https://lrc-maker.github.io";
+const newTokenUrl = "https://github.com/settings/tokens/new?scopes=gist&description=https://lrc-player.github.io";
 
 const disableCheck = {
     autoCapitalize: "none",

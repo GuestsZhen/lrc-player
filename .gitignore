@@ -65,4 +65,7 @@ metadata.d.ts
 build/
 build.es6/
 
+# Local subproject
+lrc-utils2/
+
 .DS_Store

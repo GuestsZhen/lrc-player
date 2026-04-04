@@ -34,18 +34,18 @@
 @media (prefers-color-scheme: dark) {
     :root {
         --font-color: var(--white);
-        --background-color: var(--black);
+        --background-color: #2e2e2e;
     }
 }
 
 [data-theme="light"] {
-    --font-color: var(--black);
-    --background-color: #f1f3f4;
+    --font-color: #1c1c1c;
+    --background-color: #ededed;
 }
 
 [data-theme="dark"] {
     --font-color: var(--white);
-    --background-color: var(--black);
+    --background-color: #2e2e2e;
 }
 
 @media (prefers-reduced-motion: reduce) {

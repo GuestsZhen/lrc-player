@@ -2,10 +2,10 @@ import { presets, tagBuilder } from "gen_dep_tag";
 import { execSync } from "node:child_process";
 import { readdirSync } from "node:fs";
 import { readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { externals } from "rollup-plugin-externals";
 import { swc } from "rollup-plugin-swc3";
-import { defineConfig, type HtmlTagDescriptor } from "vite";
+import { defineConfig, type HtmlTagDescriptor, type Plugin } from "vite";
 import pkg from "./package.json" with { type: "json" };
 import sw_plugin from "./plugins/sw-plugin";
 
@@ -38,12 +38,74 @@ const langMap = await Promise.all(
 
 const tag = tagBuilder({ sri: true });
 
+const lrcUtilsPlugin = (): Plugin => {
+    return {
+        name: 'lrc-utils-plugin',
+        configureServer(server) {
+            // Serve normalize.css for lrc-utils
+            server.middlewares.use('/normalize.css', async (req, res) => {
+                const fs = await import('node:fs');
+                const path = await import('node:path');
+                const filePath = path.join(resolve(__dirname, './src/normalize.css'));
+                res.setHeader('Content-Type', 'text/css; charset=utf-8');
+                fs.createReadStream(filePath).pipe(res);
+            });
+            
+            // Serve lrc-utils app from build directory
+            server.middlewares.use('/lrc-utils', async (req, res, next) => {
+                const fs = await import('node:fs');
+                const path = await import('node:path');
+                
+                let urlPath = req.url?.split('?')[0] || '';
+                if (urlPath === '/' || urlPath === '') {
+                    urlPath = '/index.html';
+                }
+                
+                // Point to build directory instead of src
+                const filePath = path.join(resolve(__dirname, './lrc-utils/build'), urlPath);
+                
+                if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+                    const ext = path.extname(filePath);
+                    const contentTypeMap: Record<string, string> = {
+                        '.html': 'text/html; charset=utf-8',
+                        '.css': 'text/css; charset=utf-8',
+                        '.js': 'application/javascript; charset=utf-8',
+                        '.ts': 'application/typescript; charset=utf-8',
+                    };
+                    
+                    res.setHeader('Content-Type', contentTypeMap[ext] || 'text/plain; charset=utf-8');
+                    
+                    if (ext === '.html') {
+                        let content = fs.readFileSync(filePath, 'utf-8');
+                        // Replace CDN links with local paths
+                        content = content.replace(
+                            'href="https://cdn.jsdelivr.net/npm/lrc-player/src/normalize.css"',
+                            'href="/normalize.css"'
+                        );
+                        content = content.replace(
+                            /<script[^>]*src="https:\/\/cdn\.jsdelivr\.net\/npm\/lrc-player@5\/build\/polyfill\/[^"]*"[^>]*><\/script>/g,
+                            ''
+                        );
+                        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+                        res.end(content);
+                    } else {
+                        fs.createReadStream(filePath).pipe(res);
+                    }
+                } else {
+                    next();
+                }
+            });
+        },
+    };
+};
+
 export default defineConfig({
     clearScreen: false,
     json: {
         namedExports: false,
     },
     plugins: [
+        lrcUtilsPlugin(),
         swc(),
         externals({
             react: "React",

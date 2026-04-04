@@ -1,15 +1,40 @@
 {
     "languageName": "繁體中文",
     "app": {
-        "name": "歌詞滾動姬",
-        "fullname": "小明的歌詞滾動姬"
+        "name": "简谱 lrc 播放器",
+        "fullname": "简谱 lrc 播放器"
     },
     "header": {
         "home": "主頁",
         "editor": "編輯",
         "synchronizer": "同步",
+        "player": "播放",
+        "tune": "轉調",
         "gist": "Github Gist",
-        "preferences": "設定"
+        "preferences": "設定",
+        "lrcutils": "歌詞工具",
+        "fullscreen": "全螢幕",
+        "exitFullscreen": "退出全螢幕",
+        "fontSettings": "字體設定",
+        "fontSize": "字體大小",
+        "increaseFont": "增大字體",
+        "decreaseFont": "減小字體",
+        "currentFontSize": "目前字體大小",
+        "textAlign": "對齊方式",
+        "alignLeft": "靠左對齊",
+        "alignCenter": "置中",
+        "alignRight": "靠右對齊",
+        "left": "左",
+        "center": "中",
+        "right": "右",
+        "bgColor": "背景顏色",
+        "selectBgColor": "選擇背景顏色",
+        "lyricColor": "歌詞顏色",
+        "selectLyricColor": "選擇歌詞顏色",
+        "subOpacity": "副行透明度",
+        "increaseOpacity": "增大透明度",
+        "decreaseOpacity": "減小透明度",
+        "currentOpacity": "目前透明度"
     },
     "audio": {
         "loadAudio": "匯入音訊",
@@ -62,6 +87,7 @@
         "updateTime": "更新時間",
         "repo": "專案地址",
         "help": "關於 & 幫助",
+        "about": "本程序是基於Akari的lrc-maker製作的，增加了首調唱名法轉調、獨立播放介面、播放列表等功能。感謝Akari、專案原地址為：https://github.com/magic-akari/lrc-maker",
         "language": "語言(language)",
         "builtInAudio": "使用瀏覽器內建音訊播放器",
         "spaceButton": "啓用螢幕 Space 鍵",
@@ -80,6 +106,47 @@
         }
     },
     "notify": {
-        "audioLoaded": "音訊已匯入"
+        "audioLoaded": "音訊已匯入",
+        "playlistCleared": "播放清單已清除",
+        "copySuccess": "複製成功",
+        "downloadSuccess": "下載成功"
+    },
+    "playlist": {
+        "title": "播放清單",
+        "tracks": "首",
+        "clearPlaylist": "清除播放清單",
+        "close": "關閉",
+        "noTracks": "暫無歌曲",
+        "openFile": "開啟檔案",
+        "searchPlaceholder": "搜尋歌曲...",
+        "clearSearch": "清除搜尋"
+    },
+    "tune": {
+        "title": "首調唱名法轉調",
+        "originalKey": "原調",
+        "targetKey": "目標調性",
+        "transpose": "轉調",
+        "reset": "重設",
+        "copyOriginal": "複製原文本",
+        "copyTransposed": "複製轉調後",
+        "downloadOriginal": "下載原文本",
+        "downloadTransposed": "下載轉調後"
+    },
+    "lrcUtils": {
+        "title": "歌詞工具",
+        "originalText": "原文本",
+        "processedText": "處理後",
+        "copyOriginal": "複製原文本",
+        "downloadOriginal": "下載原文本",
+        "clearOriginal": "清除原文本",
+        "copyProcessed": "複製處理後",
+        "downloadProcessed": "下載處理後",
+        "clearProcessed": "清除處理後",
+        "compressTags": "壓縮標籤",
+        "removeTags": "標籤移除",
+        "removeEmpty": "空行移除",
+        "changeOffset": "時間偏移",
+        "splitTranslation": "翻譯拆分",
+        "lrcOverwrite": "歌詞覆寫"
     }
 }

@@ -1,7 +1,10 @@
 {
-    "home": "/",
+    "home": "/player/",
     "editor": "/editor/",
     "synchronizer": "/synchronizer/",
+    "player": "/player/",
+    "tune": "/tune/",
     "gist": "/gist/",
-    "preferences": "/preferences/"
+    "preferences": "/preferences/",
+    "lrcutils": "/lrc-utils/"
 }

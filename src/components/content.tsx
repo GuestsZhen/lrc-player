@@ -8,7 +8,6 @@ import { ActionType as LrcActionType, useLrc } from "../hooks/useLrc.js";
 import { ThemeMode } from "../hooks/usePref.js";
 import { AudioActionType, audioStatePubSub } from "../utils/audiomodule.js";
 import { appContext, ChangBits } from "./app.context.js";
-import { Home } from "./home.js";
 import { AkariNotFound, AkariOdangoLoading } from "./svg.img.js";
 
 const LazyEditor = lazy(async () =>
@@ -20,6 +19,24 @@ const LazyEditor = lazy(async () =>
 const LazySynchronizer = lazy(async () =>
     import("./synchronizer.js").then(({ Synchronizer }) => {
         return { default: Synchronizer };
+    })
+);
+
+const LazyPlayer = lazy(async () =>
+    import("./player.js").then(({ Player }) => {
+        return { default: Player };
+    })
+);
+
+const LazyTune = lazy(async () =>
+    import("./tune.js").then(({ Tune }) => {
+        return { default: Tune };
+    })
+);
+
+const LazyLrcUtils = lazy(async () =>
+    import("./lrc-utils.js").then(({ LrcUtils }) => {
+        return { default: LrcUtils };
     })
 );
 
@@ -41,15 +58,31 @@ export const Content: React.FC = () => {
     const { prefState, trimOptions } = useContext(appContext, ChangBits.prefState);
 
     const [path, setPath] = useState(location.hash);
+    const [previousPath, setPreviousPath] = useState(location.hash);
+    const [isTransitioning, setIsTransitioning] = useState(false);
+    
     useEffect(() => {
         function onHashchange() {
-            setPath(location.hash);
+            // 如果有前一个页面，开始过渡动画
+            if (previousPath !== location.hash) {
+                setIsTransitioning(true);
+                setPreviousPath(location.hash);
+                
+                // 等待淡出动画完成后更新路径
+                setTimeout(() => {
+                    setPath(location.hash);
+                    // 等待新内容渲染后开始淡入
+                    requestAnimationFrame(() => {
+                        setIsTransitioning(false);
+                    });
+                }, 250); // 与 CSS 动画时间一致
+            }
         }
 
         window.addEventListener("hashchange", onHashchange);
 
         return () => window.removeEventListener("hashchange", onHashchange);
-    }, []);
+    }, [previousPath]);
 
     const [lrcState, lrcDispatch] = useLrc(() => {
         return {
@@ -58,6 +91,20 @@ export const Content: React.FC = () => {
             select: Number.parseInt(sessionStorage.getItem(SSK.selectIndex)!, 10) || 0,
         };
     });
+    
+    // 监听自动加载歌词事件
+    useEffect(() => {
+        const onLoadLrc = (event: CustomEvent<{ text: string }>) => {
+            lrcDispatch({
+                type: LrcActionType.parse,
+                payload: { text: event.detail.text, options: trimOptions },
+            });
+        };
+        
+        window.addEventListener('load-lrc', onLoadLrc as EventListener);
+        
+        return () => window.removeEventListener('load-lrc', onLoadLrc as EventListener);
+    }, [lrcDispatch, trimOptions]);
 
     useEffect(() => {
         return audioStatePubSub.sub(self.current, (data) => {
@@ -118,7 +165,8 @@ export const Content: React.FC = () => {
                     once: true,
                 });
 
-                location.hash = ROUTER.editor;
+                // 不自动跳转页面，保持在当前页面
+                // location.hash = ROUTER.editor;
 
                 fileReader.readAsText(file, "utf-8");
             }
@@ -162,6 +210,15 @@ export const Content: React.FC = () => {
 
     const content = ((): JSX.Element => {
         switch (path.slice(1)) {
+            case ROUTER.home:
+            case ROUTER.player: {
+                if (lrcState.lyric.length === 0) {
+                    // 没有歌词时显示帮助界面，但路由仍然在 player
+                    return <AkariNotFound />;
+                }
+                return <LazyPlayer state={lrcState} dispatch={lrcDispatch} />;
+            }
+
             case ROUTER.editor: {
                 return <LazyEditor lrcState={lrcState} lrcDispatch={lrcDispatch} />;
             }
@@ -173,6 +230,14 @@ export const Content: React.FC = () => {
                 return <LazySynchronizer state={lrcState} dispatch={lrcDispatch} />;
             }
 
+            case ROUTER.tune: {
+                return <LazyTune lrcState={lrcState} lrcDispatch={lrcDispatch} />;
+            }
+
+            case ROUTER.lrcutils: {
+                return <LazyLrcUtils lrcState={lrcState} lrcDispatch={lrcDispatch} />;
+            }
+
             case ROUTER.gist: {
                 return <LazyGist lrcDispatch={lrcDispatch} langName={prefState.lang} />;
             }
@@ -180,13 +245,17 @@ export const Content: React.FC = () => {
             case ROUTER.preferences: {
                 return <LazyPreferences />;
             }
+            
+            default: {
+                // 默认重定向到 player 页面
+                location.hash = ROUTER.player;
+                return <AkariOdangoLoading />;
+            }
         }
-
-        return <Home />;
     })();
 
     return (
-        <main className="app-main">
+        <main className={`app-main${isTransitioning ? ' page-transition-out' : ' page-transition-in'}`}>
             <Suspense fallback={<AkariOdangoLoading />}>{content}</Suspense>
         </main>
     );

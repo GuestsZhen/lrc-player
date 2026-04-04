@@ -1,5 +1,5 @@
 <p align="center">
-    <a href="https://lrc-maker.github.io">
+    <a href="https://lrc-player.github.io">
         <img src="./public/favicons/apple-touch-icon.png" alt="logo" />
     </a>
 </p>
@@ -10,24 +10,24 @@
 
 </div>
 
-# [LRC Maker][lrc maker] &middot; [![Build](https://github.com/magic-akari/lrc-maker/actions/workflows/build.yml/badge.svg)](https://github.com/magic-akari/lrc-maker/actions/workflows/build.yml)
+# [LRC Player][lrc player] &middot; [![Build](https://github.com/magic-akari/lrc-player/actions/workflows/build.yml/badge.svg)](https://github.com/magic-akari/lrc-player/actions/workflows/build.yml)
 
 ## What is this
 
 This is a tool for creating scrolling lrc files, which refers to text with time tags.
 
-## Why lrc-maker
+## Why lrc-player
 
 I'm not satisfied with the existing tools, they can't be used across platforms. So I have created one by myself.
 
 ## How to use
 
-Click [lrc-maker][lrc maker] to start. You can add the link to browser bookmark. Drag and drop the file in the page to load it and use the arrow key and space key to insert the timestamp.
+Click [lrc-player][lrc player] to start. You can add the link to browser bookmark. Drag and drop the file in the page to load it and use the arrow key and space key to insert the timestamp.
 
 Development branch links:
 
-- https://magic-akari.github.io/lrc-maker/
-- https://lrc-maker.vercel.app/
+- https://magic-akari.github.io/lrc-player/
+- https://lrc-player.vercel.app/
 
 ## Hotkeys
 
@@ -73,9 +73,9 @@ If you want to run this project on your computer locally, follow the tips.
 
 ```bash
 # clone this repo
-git clone https://github.com/magic-akari/lrc-maker.git
+git clone https://github.com/magic-akari/lrc-player.git
 
-cd lrc-maker
+cd lrc-player
 
 # install dependencies
 npm i
@@ -97,9 +97,9 @@ It runs the build and give you a minimal nginx image.
 
 ```bash
 # build image
-docker build -t lrc-maker .
+docker build -t lrc-player .
 # create a container and serve at port 8080
-docker run -d -p 8080:80 lrc-maker
+docker run -d -p 8080:80 lrc-player
 ```
 
 ## Star this project :star:
@@ -108,5 +108,5 @@ If you like give us a star :star: Also share this project to help more people.
 
 ---
 
-[lrc maker]: https://lrc-maker.github.io
-[version 3.x]: https://lrc-maker.github.io/3.x
+[lrc player]: https://lrc-player.github.io
+[version 3.x]: https://lrc-player.github.io/3.x

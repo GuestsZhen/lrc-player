@@ -8,8 +8,33 @@
         "home": "home",
         "editor": "editor",
         "synchronizer": "synchronizer",
+        "player": "player",
+        "tune": "tune",
         "gist": "Github Gist",
-        "preferences": "preferences"
+        "preferences": "preferences",
+        "lrcutils": "LRC Utils",
+        "fullscreen": "Fullscreen",
+        "exitFullscreen": "Exit Fullscreen",
+        "fontSettings": "Font Settings",
+        "fontSize": "Font Size",
+        "increaseFont": "Increase Font Size",
+        "decreaseFont": "Decrease Font Size",
+        "currentFontSize": "Current Font Size",
+        "textAlign": "Text Alignment",
+        "alignLeft": "Left Align",
+        "alignCenter": "Center Align",
+        "alignRight": "Right Align",
+        "left": "Left",
+        "center": "Center",
+        "right": "Right",
+        "bgColor": "Background Color",
+        "selectBgColor": "Select Background Color",
+        "lyricColor": "Lyric Color",
+        "selectLyricColor": "Select Lyric Color",
+        "subOpacity": "Sub-line Opacity",
+        "increaseOpacity": "Increase Opacity",
+        "decreaseOpacity": "Decrease Opacity",
+        "currentOpacity": "Current Opacity"
     },
     "audio": {
         "loadAudio": "load audio",
@@ -68,6 +93,7 @@
         "updateTime": "Update time",
         "repo": "Repository",
         "help": "Help & tips",
+        "about": "This program is based on Akari's lrc-maker, with added features including movable-do solfège transposition, independent playback interface, and playlist functionality. Thanks to Akari. Original project: https://github.com/magic-akari/lrc-maker",
         "language": "Language",
         "builtInAudio": "Use browser built-in audio player",
         "spaceButton": "On-screen space key",
@@ -86,6 +112,47 @@
         }
     },
     "notify": {
-        "audioLoaded": "Audio loaded."
+        "audioLoaded": "Audio loaded.",
+        "playlistCleared": "Playlist cleared",
+        "copySuccess": "Copied successfully",
+        "downloadSuccess": "Downloaded successfully"
+    },
+    "playlist": {
+        "title": "Playlist",
+        "tracks": "tracks",
+        "clearPlaylist": "Clear Playlist",
+        "close": "Close",
+        "noTracks": "No tracks yet",
+        "openFile": "Open File",
+        "searchPlaceholder": "Search songs...",
+        "clearSearch": "Clear Search"
+    },
+    "tune": {
+        "title": "Movable-Do Transposition",
+        "originalKey": "Original Key",
+        "targetKey": "Target Key",
+        "transpose": "Transpose",
+        "reset": "Reset",
+        "copyOriginal": "Copy Original",
+        "copyTransposed": "Copy Transposed",
+        "downloadOriginal": "Download Original",
+        "downloadTransposed": "Download Transposed"
+    },
+    "lrcUtils": {
+        "title": "LRC Utils",
+        "originalText": "Original Text",
+        "processedText": "Processed Text",
+        "copyOriginal": "Copy Original",
+        "downloadOriginal": "Download Original",
+        "clearOriginal": "Clear Original",
+        "copyProcessed": "Copy Processed",
+        "downloadProcessed": "Download Processed",
+        "clearProcessed": "Clear Processed",
+        "compressTags": "Compress Tags",
+        "removeTags": "Remove Tags",
+        "removeEmpty": "Remove Empty Lines",
+        "changeOffset": "Time Offset",
+        "splitTranslation": "Split Translation",
+        "lrcOverwrite": "Lyric Overwrite"
     }
 }

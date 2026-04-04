@@ -5,7 +5,9 @@ import { useCallback, useContext, useEffect, useMemo, useRef } from "react";
 import { themeColor, ThemeMode } from "../hooks/usePref.js";
 import { unregister } from "../utils/sw.unregister.js";
 import { appContext, ChangBits } from "./app.context.js";
-import { AkariHideWall } from "./svg.img.js";
+import enUS from "../languages/en-US.json" assert { type: "json" };
+import zhCN from "../languages/zh-CN.json" assert { type: "json" };
+import zhTW from "../languages/zh-TW.json" assert { type: "json" };
 
 const numberInputProps = { type: "number", step: 1 } as const;
 
@@ -46,7 +48,11 @@ const useNumberInput: IUseNumberInput = (defaultValue: number, onChange) => {
     return { ...numberInputProps, ref, onChange: $onChange, defaultValue };
 };
 
-const langMap = i18n.langMap;
+const langMap: Array<[string, { languageName: string }]> = [
+    ['en-US', enUS],
+    ['zh-CN', zhCN],
+    ['zh-TW', zhTW],
+];
 
 export const Preferences: React.FC = () => {
     const { prefState, prefDispatch, lang } = useContext(appContext, ChangBits.lang || ChangBits.prefState);
@@ -197,10 +203,10 @@ export const Preferences: React.FC = () => {
     );
 
     const LangOptionList = useMemo(() => {
-        return langMap.map(([code, display]) => {
+        return langMap.map(([code, langData]) => {
             return (
                 <option key={code} value={code}>
-                    {display}
+                    {langData.languageName}
                 </option>
             );
         });
@@ -282,6 +288,11 @@ export const Preferences: React.FC = () => {
                         <a className="link" href={LINK.wiki} target="_blank" rel="noopener noreferrer">
                             Github Wiki
                         </a>
+                    </section>
+                </li>
+                <li>
+                    <section className="list-item about-section">
+                        <span>{lang.preferences.about}</span>
                     </section>
                 </li>
                 <li>
@@ -459,7 +470,6 @@ export const Preferences: React.FC = () => {
                     <section className="list-item">{lang.preferences.clearCache}</section>
                 </li>
             </ul>
-            <AkariHideWall />
         </div>
     );
 };

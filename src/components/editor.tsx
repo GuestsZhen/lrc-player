@@ -138,9 +138,18 @@ export const Eidtor: React.FC<{
         }, 500);
     }, [downloadName, lang]);
 
+    const onUtilsClick = useCallback(() => {
+        // Save current lyric to localStorage before opening lrc-utils
+        // Use textarea value directly to ensure we get the latest content
+        const currentText = textarea.current?.value || '';
+        localStorage.setItem(LSK.lyric, currentText);
+        console.log('[Editor] Saved lyric to localStorage:', currentText ? `${currentText.length} chars` : 'empty');
+    }, []);
+
     return (
-        <div className="app-editor">
-            <details ref={details} open={detailsOpened} onToggle={onDetailsToggle}>
+        <>
+            <div className="app-editor">
+                <details ref={details} open={detailsOpened} onToggle={onDetailsToggle}>
                 <summary>{lang.editor.metaInfo}</summary>
                 <section className="app-editor-infobox" onBlur={setInfo}>
                     <label htmlFor="info-ti">[ti:</label>
@@ -200,7 +209,7 @@ export const Eidtor: React.FC<{
                     <CloudUploadSVG />
                 </a>
 
-                <a title={lang.editor.utils} href="/lrc-utils/" className="editor-tools-item ripple">
+                <a title={lang.editor.utils} href={prependHash(ROUTER.lrcutils)} className="editor-tools-item ripple" onClick={onUtilsClick}>
                     <UtilitySVG />
                 </a>
             </section>
@@ -213,5 +222,6 @@ export const Eidtor: React.FC<{
                 {...useDefaultValue(text, textarea)}
             />
         </div>
+            </>
     );
 };

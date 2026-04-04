@@ -35,8 +35,19 @@ body, .app-container {
 .app-main {
     width: 80%;
     margin: auto;
-    padding-top: 60px;
+    padding-top: 10px;
     padding-bottom: 32px;
+    transition: opacity var(--transition-duration) ease-in-out;
+}
+
+/* 页面过渡动画 - 淡出 */
+.app-main.page-transition-out {
+    opacity: 0;
+}
+
+/* 页面过渡动画 - 淡入 */
+.app-main.page-transition-in {
+    opacity: 1;
 }
 
 @media (width <= 1280px) {

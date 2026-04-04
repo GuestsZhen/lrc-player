@@ -1,18 +1,18 @@
 {
-    "name": "lrc-maker",
+    "name": "lrc-player",
     "version": "6.0.0",
-    "description": "歌词滚动姬｜可能是你所能见到的最好用的歌词制作工具",
-    "repository": "https://github.com/magic-akari/lrc-maker.git",
+    "description": "简谱 lrc 播放器｜可能是你所能见到的最好用的歌词制作工具",
+    "repository": "https://github.com/magic-akari/lrc-player.git",
     "author": "magic-akari <akari.ccino@gmail.com>",
     "license": "MIT",
     "keywords": [
         "lrc",
-        "lrc maker",
+        "lrc player",
         "lyric",
-        "lyric maker"
+        "lyric player"
     ],
-    "bugs": "https://github.com/magic-akari/lrc-maker/issues",
-    "homepage": "https://github.com/magic-akari/lrc-maker#readme",
+    "bugs": "https://github.com/magic-akari/lrc-player/issues",
+    "homepage": "https://github.com/magic-akari/lrc-player#readme",
     "files": [
         "src",
         "build"

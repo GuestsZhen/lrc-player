@@ -289,3 +289,18 @@ input[type="number"] {
     position: absolute;
     visibility: hidden;
 }
+
+.about-section {
+    display: block;
+    padding: 16px;
+    line-height: 1.8;
+    text-align: left;
+}
+
+.about-section > span {
+    display: block;
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--font-color);
+    opacity: 0.85;
+}
