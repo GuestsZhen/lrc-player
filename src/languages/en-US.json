@@ -55,7 +55,7 @@
         "file": "File",
         "url": "URL",
         "loadFile": "Click here or drop audio file in this page",
-        "iosTip": "iOS Tip: Please save audio files to iCloud Drive or Downloads folder, then browse in the file picker. Safari browser is recommended for better compatibility."
+        "iosTip": "iOS Tip: Due to system restrictions, Chrome may not access certain files. Recommendations:\n1. Use Safari browser to open this page\n2. Or upload audio to cloud storage and use the URL tab\n3. Ensure file is downloaded locally (cloud icon means not downloaded)"
     },
     "home": {
         "tips": "Tips",

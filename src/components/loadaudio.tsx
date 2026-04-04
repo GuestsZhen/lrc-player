@@ -103,13 +103,14 @@ export const LoadAudio: React.FC<ILoadAudioOptions> = ({ setAudioSrc, lang }) =>
                         {/iPad|iPhone|iPod/.test(navigator.userAgent) && !('MSStream' in window) && (
                             <div className="ios-hint" style={{
                                 marginTop: '12px',
-                                padding: '10px',
+                                padding: '12px',
                                 backgroundColor: '#fff3cd',
                                 border: '1px solid #ffc107',
-                                borderRadius: '4px',
+                                borderRadius: '6px',
                                 fontSize: '13px',
-                                lineHeight: '1.5',
-                                color: '#856404'
+                                lineHeight: '1.6',
+                                color: '#856404',
+                                whiteSpace: 'pre-line'
                             }}>
                                 <strong>📱 iOS 提示：</strong>
                                 <br />
