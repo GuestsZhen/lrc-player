@@ -20,19 +20,15 @@ export interface ITrackInfo {
     lrcFile?: File;       // 同名 LRC 文件引用（可选）
 }
 
-// Android 和 iOS 兼容的文件类型定义
-// iOS 对混合 MIME 类型敏感，需要仔细排序
+// 跨平台兼容的文件类型定义
+// 仅使用扩展名，避免 iOS/Android 对 MIME 类型的不同处理
 const accept = [
-    // 文本文件（LRC）- 放在前面让 iOS 优先识别
+    // 歌词文件
     ".lrc", ".txt",
-    "text/plain", "text/*",
-    // 音频文件扩展名（Android 友好）
+    // 音频文件
     ".mp3", ".wav", ".aac", ".m4a", ".flac", ".ogg", ".wma", ".ape", ".aiff", ".alac",
     // 加密格式
-    ".ncm", ".qmcflac", ".qmc0", ".qmc1", ".qmc2", ".qmc3", ".qmcogg",
-    // 音频 MIME 类型（iOS 需要）
-    "audio/mpeg", "audio/wav", "audio/aac", "audio/mp4", "audio/flac", "audio/ogg",
-    "audio/x-wav", "audio/x-m4a", "audio/x-flac"
+    ".ncm", ".qmcflac", ".qmc0", ".qmc1", ".qmc2", ".qmc3", ".qmcogg"
 ].join(", ");
 
 // 从文件名获取基础名称（不含扩展名）
