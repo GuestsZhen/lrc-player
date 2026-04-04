@@ -20,7 +20,19 @@ export interface ITrackInfo {
     lrcFile?: File;       // 同名 LRC 文件引用（可选）
 }
 
-const accept = ["audio/*", ".ncm", ".qmcflac", ".qmc0", ".qmc1", ".qmc2", ".qmc3", "qmcogg", ".lrc"].join(", ");
+// Android 和 iOS 兼容的文件类型定义
+// Android 优先使用扩展名，iOS 需要 MIME 类型
+const accept = [
+    // 优先使用扩展名（Android 友好）
+    ".mp3", ".wav", ".aac", ".m4a", ".flac", ".ogg", ".wma", ".ape", ".aiff", ".alac",
+    // 加密格式
+    ".ncm", ".qmcflac", ".qmc0", ".qmc1", ".qmc2", ".qmc3", ".qmcogg",
+    // 歌词文件
+    ".lrc", ".txt",
+    // MIME 类型（iOS 需要）
+    "audio/mpeg", "audio/wav", "audio/aac", "audio/mp4", "audio/flac", "audio/ogg",
+    "audio/x-wav", "audio/x-m4a", "audio/x-flac"
+].join(", ");
 
 // 从文件名获取基础名称（不含扩展名）
 const getBaseName = (fileName: string): string => {
