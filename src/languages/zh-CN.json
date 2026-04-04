@@ -48,7 +48,8 @@
     "loadAudio": {
         "file": "文件",
         "url": "外链",
-        "loadFile": "点击这里或直接拖放音频到这个页面"
+        "loadFile": "点击这里或直接拖放音频到这个页面",
+        "iosTip": "iOS 用户提示：请将音频文件保存到 iCloud Drive 或“下载”文件夹，然后在文件选择器中浏览。建议使用 Safari 浏览器以获得更好的兼容性。"
     },
     "home": {
         "tips": "提示",

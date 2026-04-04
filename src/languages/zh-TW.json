@@ -48,7 +48,8 @@
     "loadAudio": {
         "file": "檔案",
         "url": "URL",
-        "loadFile": "點選這裡或直接拖放音訊檔案到這個頁面"
+        "loadFile": "點選這裡或直接拖放音訊檔案到這個頁面",
+        "iosTip": "iOS 用戶提示：請將音訊檔案儲存到 iCloud Drive 或「下載」資料夾，然後在檔案選擇器中瀏覽。建議使用 Safari 瀏覽器以獲得更好的相容性。"
     },
     "home": {
         "tips": "提示",

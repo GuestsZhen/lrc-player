@@ -54,7 +54,8 @@
     "loadAudio": {
         "file": "File",
         "url": "URL",
-        "loadFile": "Click here or drop audio file in this page"
+        "loadFile": "Click here or drop audio file in this page",
+        "iosTip": "iOS Tip: Please save audio files to iCloud Drive or Downloads folder, then browse in the file picker. Safari browser is recommended for better compatibility."
     },
     "home": {
         "tips": "Tips",

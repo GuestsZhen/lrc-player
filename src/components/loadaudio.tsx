@@ -99,6 +99,23 @@ export const LoadAudio: React.FC<ILoadAudioOptions> = ({ setAudioSrc, lang }) =>
                         <label className="audio-input-tip" htmlFor="audio-input">
                             {lang.loadAudio.loadFile}
                         </label>
+                        {/* iOS 使用提示 */}
+                        {/iPad|iPhone|iPod/.test(navigator.userAgent) && !('MSStream' in window) && (
+                            <div className="ios-hint" style={{
+                                marginTop: '12px',
+                                padding: '10px',
+                                backgroundColor: '#fff3cd',
+                                border: '1px solid #ffc107',
+                                borderRadius: '4px',
+                                fontSize: '13px',
+                                lineHeight: '1.5',
+                                color: '#856404'
+                            }}>
+                                <strong>📱 iOS 提示：</strong>
+                                <br />
+                                {lang.loadAudio.iosTip}
+                            </div>
+                        )}
                     </div>
                 </div>
 
