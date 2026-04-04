@@ -33,6 +33,11 @@ swWorker.addEventListener("fetch", (event) => {
 
     const url = new URL(event.request.url);
 
+    // 跳过非 http/https 协议的请求（如 chrome-extension）
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+        return;
+    }
+
     if (!/(?:\.css|\.js|\.svg)$/i.test(url.pathname) && url.origin !== swWorker.location.origin) {
         return;
     }
