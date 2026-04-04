@@ -283,14 +283,6 @@ export const Preferences: React.FC = () => {
                     </section>
                 </li>
                 <li>
-                    <section className="list-item">
-                        <span>{lang.preferences.help}</span>
-                        <a className="link" href={LINK.wiki} target="_blank" rel="noopener noreferrer">
-                            Github Wiki
-                        </a>
-                    </section>
-                </li>
-                <li>
                     <section className="list-item about-section">
                         <span>{lang.preferences.about}</span>
                     </section>
