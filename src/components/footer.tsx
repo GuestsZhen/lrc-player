@@ -31,7 +31,8 @@ const accept = [
     ".lrc", ".txt",
     // MIME 类型（iOS 需要）
     "audio/mpeg", "audio/wav", "audio/aac", "audio/mp4", "audio/flac", "audio/ogg",
-    "audio/x-wav", "audio/x-m4a", "audio/x-flac"
+    "audio/x-wav", "audio/x-m4a", "audio/x-flac",
+    "text/plain"  // LRC 文件需要
 ].join(", ");
 
 // 从文件名获取基础名称（不含扩展名）
