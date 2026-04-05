@@ -421,11 +421,10 @@ export const Content: React.FC = () => {
                                         >
                                             <div className="file-name-wrapper">
                                                 <span 
-                                                    className="file-name file-name-scroll" 
+                                                    className="file-name" 
                                                     title={displayName}
-                                                    data-text={displayName}
                                                 >
-                                                    {displayName + '\u00A0\u00A0\u00A0' + displayName}
+                                                    {displayName}
                                                 </span>
                                             </div>
                                         </li>
