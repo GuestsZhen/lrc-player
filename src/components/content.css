@@ -282,6 +282,7 @@ body, .app-container {
 /* 正在播放的文件名颜色 */
 .selected-file-item.playing .file-name {
     color: #ffffff;
+    font-size: 1.5rem; /* 正在播放的歌名比普通大 2 号 */
 }
 
 [data-theme="light"] .file-name {
@@ -290,6 +291,7 @@ body, .app-container {
 
 [data-theme="light"] .selected-file-item.playing .file-name {
     color: #1c1c1c;
+    font-size: 1.5rem;
 }
 
 /* 亮色模式下文件名颜色 */
