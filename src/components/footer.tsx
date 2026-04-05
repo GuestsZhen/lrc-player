@@ -280,12 +280,11 @@ export const Footer: React.FC = () => {
         };
 
         const handlePreviousTrack = () => {
-            onPreviousTrack();
+            // 不执行任何操作，事件已经由 audio.tsx 发送，content.tsx 会处理
         };
 
         const handleNextTrack = (event: Event) => {
-            const customEvent = event as CustomEvent<{ playMode?: number }>;
-            onNextTrack(customEvent.detail?.playMode);
+            // 不执行任何操作，事件已经由 audio.tsx 发送，content.tsx 会处理
         };
         
         // 监听来自 Header 的打开文件事件
