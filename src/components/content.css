@@ -229,14 +229,14 @@ body, .app-container {
     background-color: transparent;
     color: #ffffff;
     font-weight: bold;
-    font-size: 1.15rem; /* 比普通歌名大 2 号（原 0.9rem * 1.28 ≈ 1.15rem） */
+    font-size: 1.5rem; /* 比普通歌名大 2 号（1.2rem + 0.3rem = 1.5rem） */
 }
 
 /* 亮色模式下播放时样式 */
 [data-theme="light"] .selected-file-item.playing {
     color: #1c1c1c;
     font-weight: bold;
-    font-size: 1.15rem;
+    font-size: 1.5rem;
 }
 
 .file-name {
