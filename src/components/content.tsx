@@ -301,7 +301,6 @@ export const Content: React.FC = () => {
 
     useEffect(() => {
         const values = {
-            [ThemeMode.auto]: "auto",
             [ThemeMode.light]: "light",
             [ThemeMode.dark]: "dark",
         } as const;

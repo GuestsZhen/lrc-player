@@ -14,7 +14,6 @@ export const themeColor = {
 };
 
 export const enum ThemeMode {
-    auto,
     light,
     dark,
 }
@@ -28,7 +27,7 @@ const initState = {
     showWaveform: true,
     screenButton: false,
     themeColor: themeColor.grey,
-    themeMode: ThemeMode.auto,
+    themeMode: ThemeMode.dark, // 默认暗色模式
 };
 
 export type State = Readonly<typeof initState>;

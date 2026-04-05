@@ -353,7 +353,6 @@ export const Preferences: React.FC = () => {
                                 onChange={onThemeModeChange}
                                 aria-label={lang.preferences.themeMode.label}
                             >
-                                <option value={ThemeMode.auto}>{lang.preferences.themeMode.auto}</option>
                                 <option value={ThemeMode.light}>{lang.preferences.themeMode.light}</option>
                                 <option value={ThemeMode.dark}>{lang.preferences.themeMode.dark}</option>
                             </select>
