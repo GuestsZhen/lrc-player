@@ -248,6 +248,36 @@ body, .app-container {
     color: #eeeeee;
     display: block;
     min-width: 0;
+    transition: all 0.3s ease;
+}
+
+/* 文件名列滚动动画容器 */
+.file-name-wrapper {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+}
+
+/* 滚动动画 */
+@keyframes marquee {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-100%);
+    }
+}
+
+.file-name-marquee {
+    display: inline-block;
+    white-space: nowrap;
+    padding-right: 2em;
+}
+
+/* 悬停时启动滚动 */
+.selected-file-item:hover .file-name-marquee {
+    animation: marquee 8s linear infinite;
 }
 
 /* 正在播放的文件名颜色 */

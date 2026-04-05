@@ -421,7 +421,7 @@ export const Content: React.FC = () => {
                                         >
                                             <div className="file-name-wrapper">
                                                 <span 
-                                                    className="file-name" 
+                                                    className="file-name file-name-marquee" 
                                                     title={displayName}
                                                 >
                                                     {displayName}
