@@ -306,47 +306,15 @@ export const Content: React.FC = () => {
         };
     }, []);
 
-    // 上一首歌
+    // 上一首歌 - 暂时禁用
     const onPreviousTrack = useCallback(() => {
-        if (selectedFiles.length === 0) return;
-        
-        const newIndex = currentTrackIndex <= 0 ? selectedFiles.length - 1 : currentTrackIndex - 1;
-        const fileName = selectedFiles[newIndex];
-        handlePlayFile(fileName);
-        setCurrentTrackIndex(newIndex);
-    }, [selectedFiles, currentTrackIndex, handlePlayFile]);
+        console.log('上一曲功能已禁用');
+    }, []);
 
-    // 下一首歌（暂时只保留顺序播放）
+    // 下一首歌 - 暂时禁用
     const onNextTrack = useCallback((_mode?: number) => {
-        if (selectedFiles.length === 0) return;
-        
-        // 暂时只实现顺序播放
-        const newIndex = currentTrackIndex >= selectedFiles.length - 1 ? 0 : currentTrackIndex + 1;
-        
-        const fileName = selectedFiles[newIndex];
-        handlePlayFile(fileName);
-        setCurrentTrackIndex(newIndex);
-    }, [selectedFiles, currentTrackIndex, handlePlayFile]);
-
-    // 监听来自 footer 的上一曲/下一曲事件
-    useEffect(() => {
-        const handlePreviousTrackEvent = () => {
-            onPreviousTrack();
-        };
-
-        const handleNextTrackEvent = (event: Event) => {
-            const customEvent = event as CustomEvent<{ playMode?: number }>;
-            onNextTrack(customEvent.detail?.playMode);
-        };
-
-        window.addEventListener('previous-track', handlePreviousTrackEvent);
-        window.addEventListener('next-track', handleNextTrackEvent);
-
-        return () => {
-            window.removeEventListener('previous-track', handlePreviousTrackEvent);
-            window.removeEventListener('next-track', handleNextTrackEvent);
-        };
-    }, [onPreviousTrack, onNextTrack]);
+        console.log('下一曲功能已禁用');
+    }, []);
 
     const [lrcState, lrcDispatch] = useLrc(() => {
         return {
