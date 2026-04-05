@@ -67,20 +67,7 @@ export const Footer: React.FC = () => {
     const [db, setDb] = useState<IDBDatabase | null>(null);
     const [searchQuery, setSearchQuery] = useState<string>('');
     
-    // 播放模式：0=顺序播放，1=随机播放，2=单曲循环
-    const [playMode, setPlayMode] = useState(0);
     
-    // 监听播放模式变化事件（从 audio 组件）
-    useEffect(() => {
-        const handlePlayModeChange = (event: Event) => {
-            const customEvent = event as CustomEvent<{ playMode: number }>;
-            setPlayMode(customEvent.detail.playMode);
-        };
-        
-        window.addEventListener('play-mode-change' as any, handlePlayModeChange as any);
-        return () => window.removeEventListener('play-mode-change' as any, handlePlayModeChange as any);
-    }, []);
-
     // 初始化 IndexedDB
     useEffect(() => {
         const request = indexedDB.open('MusicPlayerDB', 1);
@@ -207,26 +194,12 @@ export const Footer: React.FC = () => {
         }
     }, [playlist, currentTrackIndex]);
 
-    // 下一首歌（支持随机播放和单曲循环）
-    const onNextTrack = useCallback((mode?: number) => {
+    // 下一首歌（暂时只保留顺序播放）
+    const onNextTrack = useCallback((_mode?: number) => {
         if (playlist.length === 0) return;
         
-        let newIndex: number;
-        
-        // 播放模式：0=顺序播放，1=随机播放，2=单曲循环
-        if (mode === 1) {
-            // 随机播放：从播放列表中随机选择一首（排除当前正在播放的）
-            const availableIndexes = Array.from({ length: playlist.length }, (_, i) => i)
-                .filter(i => i !== currentTrackIndex);
-            const randomIndex = Math.floor(Math.random() * availableIndexes.length);
-            newIndex = availableIndexes[randomIndex];
-        } else if (mode === 2) {
-            // 单曲循环：重新播放当前歌曲
-            newIndex = currentTrackIndex;
-        } else {
-            // 顺序播放：按顺序播放下一首
-            newIndex = currentTrackIndex >= playlist.length - 1 ? 0 : currentTrackIndex + 1;
-        }
+        // 暂时只实现顺序播放
+        const newIndex = currentTrackIndex >= playlist.length - 1 ? 0 : currentTrackIndex + 1;
         
         setCurrentTrackIndex(newIndex);
         
@@ -604,8 +577,8 @@ export const Footer: React.FC = () => {
         });
         
         // 播放结束时自动播放下一首
-        onNextTrack(playMode);
-    }, [onNextTrack, playMode]);
+        onNextTrack();
+    }, [onNextTrack]);
 
     const onAudioTimeUpdate = useCallback(() => {
         if (audioRef.paused) {

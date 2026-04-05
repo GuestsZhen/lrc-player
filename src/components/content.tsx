@@ -316,29 +316,12 @@ export const Content: React.FC = () => {
         setCurrentTrackIndex(newIndex);
     }, [selectedFiles, currentTrackIndex, handlePlayFile]);
 
-    // 下一首歌
-    const onNextTrack = useCallback((mode?: number) => {
+    // 下一首歌（暂时只保留顺序播放）
+    const onNextTrack = useCallback((_mode?: number) => {
         if (selectedFiles.length === 0) return;
         
-        let newIndex: number;
-        
-        // 播放模式：0=顺序播放，1=随机播放，2=单曲循环
-        if (mode === 1) {
-            // 随机播放
-            const availableIndexes = Array.from({ length: selectedFiles.length }, (_, i) => i)
-                .filter(i => i !== currentTrackIndex);
-            const randomIndex = Math.floor(Math.random() * availableIndexes.length);
-            newIndex = availableIndexes[randomIndex];
-        } else if (mode === 2) {
-            // 单曲循环
-            newIndex = currentTrackIndex;
-            const fileName = selectedFiles[newIndex];
-            handlePlayFile(fileName);
-            return;
-        } else {
-            // 顺序播放
-            newIndex = currentTrackIndex >= selectedFiles.length - 1 ? 0 : currentTrackIndex + 1;
-        }
+        // 暂时只实现顺序播放
+        const newIndex = currentTrackIndex >= selectedFiles.length - 1 ? 0 : currentTrackIndex + 1;
         
         const fileName = selectedFiles[newIndex];
         handlePlayFile(fileName);
