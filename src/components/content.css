@@ -246,8 +246,7 @@ body, .app-container {
     white-space: nowrap;
     font-size: 1.2rem; /* 歌名文字再大 3 号（原 0.9rem + 0.3rem = 1.2rem） */
     color: #eeeeee;
-    /* 滚动动画支持 */
-    display: inline-block;
+    display: block;
     min-width: 0;
 }
 
@@ -256,6 +255,7 @@ body, .app-container {
     flex: 1;
     overflow: hidden;
     position: relative;
+    width: 100%;
 }
 
 /* 滚动动画 */
@@ -271,12 +271,24 @@ body, .app-container {
 .file-name-scroll {
     display: inline-block;
     white-space: nowrap;
-    animation: scroll-text 8s linear infinite;
+    animation: scroll-text 10s linear infinite;
     animation-play-state: paused;
+    padding-right: 3em;
 }
 
+/* 默认不显示滚动，只有悬停且文本溢出时才滚动 */
+.file-name-scroll {
+    animation: none; /* 默认无动画 */
+}
+
+/* 鼠标悬停在列表项上时启动滚动 */
 .selected-file-item:hover .file-name-scroll {
-    animation-play-state: running;
+    animation: scroll-text 10s linear infinite;
+}
+
+/* 确保正在播放的项也能正常滚动 */
+.selected-file-item.playing:hover .file-name-scroll {
+    animation: scroll-text 10s linear infinite;
 }
 
 /* 正在播放的文件名颜色 */

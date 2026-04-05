@@ -412,8 +412,6 @@ export const Content: React.FC = () => {
                                 {filteredAudioFiles.map((fileName, index) => {
                                     const displayName = removeExtension(fileName);
                                     const isPlaying = fileName === currentPlayingFile;
-                                    // 检查文本是否溢出，决定是否需要滚动
-                                    const needsScroll = displayName.length > 20; // 简单判断：超过20个字符可能需要滚动
                                     
                                     return (
                                         <li 
@@ -422,13 +420,13 @@ export const Content: React.FC = () => {
                                             onClick={() => handlePlayFile(fileName)}
                                         >
                                             <div className="file-name-wrapper">
-                                                {needsScroll ? (
-                                                    <span className="file-name file-name-scroll" title={displayName}>
-                                                        {displayName + '\u00A0\u00A0\u00A0' + displayName} {/* 重复文本以实现无缝滚动 */}
-                                                    </span>
-                                                ) : (
-                                                    <span className="file-name" title={displayName}>{displayName}</span>
-                                                )}
+                                                <span 
+                                                    className="file-name file-name-scroll" 
+                                                    title={displayName}
+                                                    data-text={displayName}
+                                                >
+                                                    {displayName + '\u00A0\u00A0\u00A0' + displayName}
+                                                </span>
                                             </div>
                                         </li>
                                     );
