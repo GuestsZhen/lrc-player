@@ -69,7 +69,7 @@ const removeExtension = (fileName: string): string => {
 export const Content: React.FC = () => {
     const self = useRef(Symbol(Content.name));
 
-    const { prefState, trimOptions } = useContext(appContext, ChangBits.prefState);
+    const { prefState, trimOptions, lang } = useContext(appContext, ChangBits.prefState);
 
     const [path, setPath] = useState(location.hash);
     const [previousPath, setPreviousPath] = useState(location.hash);
@@ -384,13 +384,13 @@ export const Content: React.FC = () => {
             {showFileListPanel && (
                 <div className="selected-files-panel">
                     <div className="selected-files-header">
-                        <span>文件列表</span>
+                        <span>{lang.playlist?.title || '文件列表'}</span>
                         <div className="header-actions">
                             {selectedFiles.length > 0 && (
                                 <button 
                                     className="clear-files-action-btn"
                                     onClick={handleClearFiles}
-                                    title="清除文件列表"
+                                    title={lang.playlist?.clearPlaylist || '清除文件列表'}
                                 >
                                     <DeleteSVG />
                                 </button>
@@ -398,7 +398,7 @@ export const Content: React.FC = () => {
                             <button 
                                 className="close-files-btn"
                                 onClick={() => setShowFileListPanel(false)}
-                                title="关闭"
+                                title={lang.playlist?.close || '关闭'}
                             >
                                 ✕
                             </button>
@@ -409,15 +409,30 @@ export const Content: React.FC = () => {
                     {audioFiles.length > 0 ? (
                         <>
                             <ul className="selected-files-list">
-                                {filteredAudioFiles.map((fileName, index) => (
-                                    <li 
-                                        key={index} 
-                                        className={`selected-file-item ${fileName === currentPlayingFile ? 'playing' : ''}`}
-                                        onClick={() => handlePlayFile(fileName)}
-                                    >
-                                        <span className="file-name" title={fileName}>{removeExtension(fileName)}</span>
-                                    </li>
-                                ))}
+                                {filteredAudioFiles.map((fileName, index) => {
+                                    const displayName = removeExtension(fileName);
+                                    const isPlaying = fileName === currentPlayingFile;
+                                    // 检查文本是否溢出，决定是否需要滚动
+                                    const needsScroll = displayName.length > 20; // 简单判断：超过20个字符可能需要滚动
+                                    
+                                    return (
+                                        <li 
+                                            key={index} 
+                                            className={`selected-file-item ${isPlaying ? 'playing' : ''}`}
+                                            onClick={() => handlePlayFile(fileName)}
+                                        >
+                                            <div className="file-name-wrapper">
+                                                {needsScroll ? (
+                                                    <span className="file-name file-name-scroll" title={displayName}>
+                                                        {displayName + '\u00A0\u00A0\u00A0' + displayName} {/* 重复文本以实现无缝滚动 */}
+                                                    </span>
+                                                ) : (
+                                                    <span className="file-name" title={displayName}>{displayName}</span>
+                                                )}
+                                            </div>
+                                        </li>
+                                    );
+                                })}
                             </ul>
                             
                             {/* 底部搜索框 */}
@@ -432,7 +447,7 @@ export const Content: React.FC = () => {
                                 <input
                                     type="text"
                                     className="file-search-input"
-                                    placeholder="搜索歌曲..."
+                                    placeholder={lang.playlist?.searchPlaceholder || '搜索歌曲...'}
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                 />
@@ -440,7 +455,7 @@ export const Content: React.FC = () => {
                                     <button
                                         className="file-search-clear"
                                         onClick={() => setSearchQuery('')}
-                                        title="清除搜索"
+                                        title={lang.playlist?.clearSearch || '清除搜索'}
                                     >
                                         ✕
                                     </button>
@@ -449,12 +464,12 @@ export const Content: React.FC = () => {
                         </>
                     ) : (
                         <div className="no-audio-files">
-                            <p>暂无音频文件</p>
+                            <p>{lang.playlist?.noTracks || '暂无音频文件'}</p>
                             <button 
                                 className="open-file-from-panel-btn"
                                 onClick={handleOpenFileFromPanel}
                             >
-                                打开文件
+                                {lang.playlist?.openFile || '打开文件'}
                             </button>
                         </div>
                     )}

@@ -72,9 +72,9 @@ body, .app-container {
     bottom: 60px; /* 对接 Footer 顶部，避免遮挡 Footer */
     left: 10px;
     right: 10px;
-    max-width: 400px;
+    max-width: 300px; /* 减少 25%：从 400px 改为 300px */
     background-color: rgba(30, 30, 30, 0.95);
-    border-radius: 0 0 0 0; /* 无圆角 */
+    border-radius: 8px; /* 添加圆角，参考字体设置菜单 */
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
     z-index: 10001; /* 高于 Header 按钮 (10000)，确保关闭按钮可点击 */
     display: flex;
@@ -113,7 +113,7 @@ body, .app-container {
     justify-content: space-between;
     align-items: center;
     padding: 12px 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    /* border-bottom: 1px solid rgba(255, 255, 255, 0.1); */ /* 隐藏分隔线 */
     font-weight: 600;
     font-size: 0.9rem;
 }
@@ -229,14 +229,14 @@ body, .app-container {
     background-color: transparent;
     color: #ffffff;
     font-weight: bold;
-    font-size: 1.2rem; /* 比普通歌名大 20% */
+    font-size: 1.15rem; /* 比普通歌名大 2 号（原 0.9rem * 1.28 ≈ 1.15rem） */
 }
 
 /* 亮色模式下播放时样式 */
 [data-theme="light"] .selected-file-item.playing {
     color: #1c1c1c;
     font-weight: bold;
-    font-size: 1.2rem;
+    font-size: 1.15rem;
 }
 
 .file-name {
@@ -244,8 +244,39 @@ body, .app-container {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 0.9rem;
+    font-size: 1.2rem; /* 歌名文字再大 3 号（原 0.9rem + 0.3rem = 1.2rem） */
     color: #eeeeee;
+    /* 滚动动画支持 */
+    display: inline-block;
+    min-width: 0;
+}
+
+/* 文件名列滚动动画容器 */
+.file-name-wrapper {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+}
+
+/* 滚动动画 */
+@keyframes scroll-text {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+.file-name-scroll {
+    display: inline-block;
+    white-space: nowrap;
+    animation: scroll-text 8s linear infinite;
+    animation-play-state: paused;
+}
+
+.selected-file-item:hover .file-name-scroll {
+    animation-play-state: running;
 }
 
 /* 正在播放的文件名颜色 */
@@ -270,7 +301,7 @@ body, .app-container {
 .file-search-box {
     position: relative;
     padding: 12px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    /* border-top: 1px solid rgba(255, 255, 255, 0.1); */ /* 隐藏分隔线 */
     flex-shrink: 0;
     display: flex;
     gap: 8px;
