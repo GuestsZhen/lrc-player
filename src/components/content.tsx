@@ -142,6 +142,16 @@ export const Content: React.FC = () => {
     const handleClearFiles = () => {
         setSelectedFiles([]);
         setSearchQuery('');
+        setCurrentTrackIndex(-1);
+        setCurrentPlayingFile('');
+        setFileObjects(new Map());
+        
+        // 清理 IndexedDB 中的所有 tracks
+        if (db) {
+            const transaction = db.transaction(['tracks'], 'readwrite');
+            const store = transaction.objectStore('tracks');
+            store.clear();
+        }
     };
 
     // 处理打开文件

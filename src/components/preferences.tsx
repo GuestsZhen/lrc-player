@@ -128,6 +128,26 @@ export const Preferences: React.FC = () => {
 
     const onCacheClear = useCallback(() => {
         void unregister();
+        
+        // 清理 IndexedDB 中的 MusicPlayerDB
+        if ('indexedDB' in window) {
+            const deleteRequest = indexedDB.deleteDatabase('MusicPlayerDB');
+            deleteRequest.onsuccess = () => {
+                console.log('IndexedDB MusicPlayerDB 已清除');
+            };
+            deleteRequest.onerror = () => {
+                console.error('清除 IndexedDB 失败');
+            };
+        }
+        
+        // 清理 localStorage 和 sessionStorage
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        // 刷新页面以应用更改
+        setTimeout(() => {
+            window.location.reload();
+        }, 500);
     }, []);
 
     const updateTime = useMemo(() => {
