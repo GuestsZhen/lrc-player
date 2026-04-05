@@ -195,6 +195,7 @@ audio::-webkit-media-controls-enclosure {
         color: #eeeeee;
         cursor: pointer;
         transition: all 0.2s ease;
+        z-index: 10; /* 确保按钮在最上层 */
     }
     
     .play-mode-button-left svg {
