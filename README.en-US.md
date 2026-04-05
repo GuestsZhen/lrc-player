@@ -1,5 +1,5 @@
 <p align="center">
-    <a href="https://lrc-player.github.io">
+    <a href="https://guestszhen.github.io/lrc-player">
         <img src="./public/favicons/lrc-icon.svg" alt="logo" width="96" />
     </a>
 </p>
@@ -156,23 +156,6 @@ npm run build
 npm start
 ```
 
-### Notes for Windows Users
-
-If you encounter PowerShell execution policy restrictions, you can use the following methods to start:
-
-**Method 1: Double-click to run (Recommended)**
-```bash
-# Directly double-click the start.bat file
-```
-
-**Method 2: Run in PowerShell**
-```powershell
-.\start.ps1
-```
-
-**Method 3: Modify execution policy**
-```powershell
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
 
 ## Production Deployment

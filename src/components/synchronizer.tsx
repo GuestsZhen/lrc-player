@@ -37,7 +37,7 @@ export const Synchronizer: React.FC<ISynchronizerProps> = ({ state, dispatch }) 
             type: ActionType.info,
             payload: {
                 name: "tool",
-                value: `${lang.app.name} https://lrc-player.github.io`,
+                value: `${lang.app.name} https://guestszhen.github.io/lrc-player`,
             },
         });
     }, [dispatch, lang]);

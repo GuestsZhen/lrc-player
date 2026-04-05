@@ -1,5 +1,5 @@
 <p align="center">
-    <a href="https://lrc-player.github.io">
+    <a href="https://guestszhen.github.io/lrc-player">
         <img src="./public/favicons/lrc-icon.svg" alt="logo" width="96" />
     </a>
 </p>
@@ -156,24 +156,7 @@ npm run build
 npm start
 ```
 
-### Windows 用户注意事项
 
-如果遇到 PowerShell 执行策略限制，可以使用以下方式启动：
-
-**方式1：双击运行（推荐）**
-```bash
-# 直接双击 start.bat 文件
-```
-
-**方式2：在 PowerShell 中运行**
-```powershell
-.\start.ps1
-```
-
-**方式3：修改执行策略**
-```powershell
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-```
 
 ## 生产部署
 
