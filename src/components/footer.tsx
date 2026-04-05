@@ -339,49 +339,51 @@ export const Footer: React.FC = () => {
                 const file = customEvent.detail.file;
                 const lrcFile = customEvent.detail.lrcFile;
                 
-                // 检查文件是否已在播放列表中
-                const trackIndex = playlist.findIndex(track => track.fileName === file.name);
-                
-                if (trackIndex !== -1) {
-                    // 文件已存在，直接切换到该歌曲
-                    receiveFile(playlist[trackIndex].file!, setAudioSrc);
-                    setCurrentTrackIndex(trackIndex);
+                setPlaylist(prevPlaylist => {
+                    // 检查文件是否已在播放列表中
+                    const trackIndex = prevPlaylist.findIndex(track => track.fileName === file.name);
                     
-                    // 自动播放
-                    setTimeout(() => {
-                        audioRef.current?.play();
-                    }, 200);
-                    
-                    // 优先使用传入的 LRC 文件，其次使用播放列表中已有的 LRC 文件
-                    const lrcToLoad = lrcFile || playlist[trackIndex].lrcFile;
-                    if (lrcToLoad) {
-                        loadLrcFile(lrcToLoad);
-                    }
-                } else {
-                    // 文件不存在，添加到播放列表并播放
-                    const id = `${file.name}-${file.size}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-                    const name = getBaseName(file.name);
-                    const track: ITrackInfo = { id, name, fileName: file.name, file, lrcFile };
-                    const newIndex = playlist.length;
-                    
-                    setPlaylist(prev => {
-                        const updated = [...prev, track];
+                    if (trackIndex !== -1) {
+                        // 文件已存在，直接切换到该歌曲
+                        setCurrentTrackIndex(trackIndex);
+                        receiveFile(prevPlaylist[trackIndex].file!, setAudioSrc);
+                        
+                        // 自动播放
+                        setTimeout(() => {
+                            audioRef.current?.play();
+                        }, 200);
+                        
+                        // 优先使用传入的 LRC 文件，其次使用播放列表中已有的 LRC 文件
+                        const lrcToLoad = lrcFile || prevPlaylist[trackIndex].lrcFile;
+                        if (lrcToLoad) {
+                            loadLrcFile(lrcToLoad);
+                        }
+                    } else {
+                        // 文件不存在，添加到播放列表并播放
+                        const id = `${file.name}-${file.size}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+                        const name = getBaseName(file.name);
+                        const track: ITrackInfo = { id, name, fileName: file.name, file, lrcFile };
+                        const newIndex = prevPlaylist.length;
+                        
                         saveTrackToDB(track);
-                        return updated;
-                    });
-                    setCurrentTrackIndex(newIndex);
-                    
-                    // 加载音频并播放
-                    receiveFile(file, setAudioSrc);
-                    setTimeout(() => {
-                        audioRef.current?.play();
-                    }, 200);
-                    
-                    // 如果有 LRC 文件，加载歌词
-                    if (lrcFile) {
-                        loadLrcFile(lrcFile);
+                        setCurrentTrackIndex(newIndex);
+                        
+                        // 加载音频并播放
+                        receiveFile(file, setAudioSrc);
+                        setTimeout(() => {
+                            audioRef.current?.play();
+                        }, 200);
+                        
+                        // 如果有 LRC 文件，加载歌词
+                        if (lrcFile) {
+                            loadLrcFile(lrcFile);
+                        }
+                        
+                        return [...prevPlaylist, track];
                     }
-                }
+                    
+                    return prevPlaylist;
+                });
             }
         };
 
