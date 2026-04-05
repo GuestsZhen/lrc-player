@@ -478,14 +478,15 @@
 
 @media (width <= 768px) {
     .tune-header {
-        align-items: flex-start;
-        justify-content: flex-start;
+        align-items: center;
+        justify-content: center;
         flex-direction: column;
         gap: 12px;
     }
     
     .tune-header .editor-title {
-        text-align: left;
+        text-align: center;
+        width: 100%;
     }
 
     .tune-controls {

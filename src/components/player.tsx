@@ -209,6 +209,20 @@ export const Player: React.FC<IPlayerProps> = ({ state, dispatch }) => {
     // 自动滚动到当前行（歌词中心点在屏幕 70% 高度处，从下往上计算）
     const ul = useRef<HTMLUListElement>(null);
     
+    // 修复 iOS Safari/Chrome 歌词不显示的渲染 Bug
+    // 当歌词数据更新后，强制触发重新渲染
+    useEffect(() => {
+        if (lyric.length > 0 && ul.current) {
+            // 通过微小的 transform 变化触发 iOS 重绘
+            const el = ul.current;
+            el.style.transform = 'translateZ(0)';
+            // 在下一帧恢复
+            requestAnimationFrame(() => {
+                el.style.transform = 'translateZ(0.1px)';
+            });
+        }
+    }, [lyric.length]);
+    
     useEffect(() => {
         const line = ul.current?.children[currentIndex];
         if (line) {
