@@ -135,8 +135,8 @@ body, .app-container {
 
 /* 清除文件按钮（带 SVG 图标） */
 .clear-files-action-btn {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
     border: none;
     background-color: transparent; /* 删除背景 */
     color: #eeeeee;
@@ -157,6 +157,7 @@ body, .app-container {
     width: 28px !important; /* 修改为 28px，强制覆盖 SVG 内联属性 */
     height: 28px !important; /* 修改为 28px，强制覆盖 SVG 内联属性 */
     fill: currentColor;
+    transform: scale(2.0); /* 放大图标，让实际的垃圾桶图案填充整个按钮 */
 }
 
 [data-theme="light"] .clear-files-action-btn {
@@ -351,6 +352,7 @@ body, .app-container {
     width: 24px;
     height: 24px;
     fill: currentColor;
+    transform: scale(1.5); /* 放大图标 1.5 倍 */
 }
 
 .file-search-input {

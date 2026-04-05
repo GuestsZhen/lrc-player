@@ -310,6 +310,11 @@ audio::-webkit-media-controls-enclosure {
         flex: 1;
         min-width: 200px;
     }
+    
+    /* 放大横屏模式按钮中的图标 1.5 倍 */
+    .lrc-audio .landscape-layout > button svg {
+        transform: scale(1.5);
+    }
 }
 
 .lrc-audio > button {
@@ -536,6 +541,7 @@ progress::-webkit-progress-value {
     width: 30px;
     height: 30px;
     fill: currentColor;
+    transform: scale(1.5); /* 放大图标 1.5 倍 */
 }
 
 .settings-btn:hover {

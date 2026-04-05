@@ -416,16 +416,16 @@ export const LrcAudio: React.FC<ILrcAudioProps> = ({ lang, currentTrackName }) =
         loadAudioDialogRef.open();
     }, []);
 
-    // 上一首歌 - 暂时禁用
+    // 上一首歌
     const onPreviousTrack = useCallback(() => {
-        // 功能已禁用，保留按钮UI
-        console.log('上一曲功能已禁用');
+        // 发送上一首事件，由 footer.tsx 处理
+        window.dispatchEvent(new CustomEvent('previous-track'));
     }, []);
 
-    // 下一首歌 - 暂时禁用
+    // 下一首歌
     const onNextTrack = useCallback(() => {
-        // 功能已禁用，保留按钮UI
-        console.log('下一曲功能已禁用');
+        // 发送下一首事件，由 footer.tsx 处理
+        window.dispatchEvent(new CustomEvent('next-track'));
     }, []);
 
     return (

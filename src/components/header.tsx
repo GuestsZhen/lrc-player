@@ -301,7 +301,7 @@ export const Header: React.FC = () => {
             {/* 左上角打开文件按钮 */}
             <div className="header-left-controls">
                 <button 
-                    className="header-control-button"
+                    className="header-control-button file-list-btn"
                     onClick={toggleFileListPanel}
                     title="文件列表"
                 >
@@ -373,7 +373,7 @@ export const Header: React.FC = () => {
                 <div className="header-player-group">
                     {/* Player 按钮 */}
                     <a 
-                        className="header-control-button"
+                        className="header-control-button player-btn"
                         href={prependHash(ROUTER.player)}
                         title={lang.header.player}
                     >

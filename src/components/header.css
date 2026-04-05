@@ -149,6 +149,12 @@
     fill: currentColor;
 }
 
+/* 放大文件列表和播放按钮的图标 1.5 倍 */
+.header-control-button.file-list-btn svg,
+.header-control-button.player-btn svg {
+    transform: scale(1.5);
+}
+
 .header-control-button:hover {
     opacity: 1;
     background-color: rgba(255, 255, 255, 0.1);

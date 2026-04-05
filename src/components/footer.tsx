@@ -10,15 +10,10 @@ import { LrcAudio } from "./audio.js";
 import { LoadAudio, nec } from "./loadaudio.js";
 import { CloseSVG, FolderSVG, SearchSVG, DeleteSVG } from "./svg.js";
 import { toastPubSub } from "./toast.js";
+import { playlistManager, type ITrackInfo } from "../utils/playlist-manager.js";
 
 // 播放列表曲目信息
-export interface ITrackInfo {
-    id: string;           // 唯一标识
-    name: string;         // 歌名（去扩展名）
-    fileName: string;     // 原始文件名
-    file?: File;          // 音频文件引用（可选）
-    lrcFile?: File;       // 同名 LRC 文件引用（可选）
-}
+// 已从 ../utils/playlist-manager.js 导入
 
 // 跨平台兼容的文件类型定义
 // 仅使用扩展名，避免 iOS/Android 对 MIME 类型的不同处理
@@ -64,71 +59,49 @@ export const Footer: React.FC = () => {
     const [isHiding, setIsHiding] = useState<boolean>(false);  // 控制渐出动画
     const [isDragging, setIsDragging] = useState<boolean>(false);  // 拖拽状态
     const [dragOffset, setDragOffset] = useState<number>(0);  // 拖拽偏移量
-    const [db, setDb] = useState<IDBDatabase | null>(null);
     const [searchQuery, setSearchQuery] = useState<string>('');
+    const [playMode, setPlayMode] = useState<number>(0);  // 播放模式：0=顺序播放，1=随机播放，2=单曲循环
     
     
-    // 初始化 IndexedDB
+    // 初始化播放列表管理器
     useEffect(() => {
-        const request = indexedDB.open('MusicPlayerDB', 1);
-        
-        request.onerror = () => {
-            console.error('IndexedDB 打开失败');
-        };
-        
-        request.onsuccess = () => {
-            setDb(request.result);
-        };
-        
-        request.onupgradeneeded = (event) => {
-            const database = (event.target as IDBOpenDBRequest).result;
-            
-            // 创建对象仓库
-            if (!database.objectStoreNames.contains('tracks')) {
-                const store = database.createObjectStore('tracks', { keyPath: 'id' });
-                store.createIndex('name', 'name', { unique: false });
-                store.createIndex('fileName', 'fileName', { unique: false });
-            }
-        };
+        playlistManager.init().catch(err => {
+            console.error('播放列表管理器初始化失败:', err);
+        });
         
         return () => {
-            // 组件卸载时关闭数据库
-            if (db) {
-                db.close();
-            }
+            // 组件卸载时不需要关闭数据库，因为可能在其他地方还在使用
         };
     }, []);
     
     // 保存文件到 IndexedDB
     const saveTrackToDB = useCallback((track: ITrackInfo) => {
-        if (!db) return;
-        
-        const transaction = db.transaction(['tracks'], 'readwrite');
-        const store = transaction.objectStore('tracks');
-        store.put(track);
-    }, [db]);
+        playlistManager.saveTrack(track).catch(err => {
+            console.error('保存音轨失败:', err);
+        });
+    }, []);
     
-        // 从 IndexedDB 加载文件
-        const loadTrackFromDB = useCallback((id: string): Promise<ITrackInfo | undefined> => {
-            return new Promise((resolve, reject) => {
-                if (!db) {
-                    reject(new Error('数据库未初始化'));
-                    return;
-                }
-                
-                const transaction = db.transaction(['tracks'], 'readonly');
-                const store = transaction.objectStore('tracks');
-                const request = store.get(id);
-                
-                request.onsuccess = () => {
-                    resolve(request.result);
-                };
-                
-                request.onerror = () => {
-                    reject(request.error);
-                }
-            });
-        }, [db]);
+        // Deleted:        // 从 IndexedDB 加载文件
+        // Deleted:        const loadTrackFromDB = useCallback((id: string): Promise<ITrackInfo | undefined> => {
+        // Deleted:            return new Promise((resolve, reject) => {
+        // Deleted:                if (!db) {
+        // Deleted:                    reject(new Error('数据库未初始化'));
+        // Deleted:                    return;
+        // Deleted:                }
+        // Deleted:                
+        // Deleted:                const transaction = db.transaction(['tracks'], 'readonly');
+        // Deleted:                const store = transaction.objectStore('tracks');
+        // Deleted:                const request = store.get(id);
+        // Deleted:                
+        // Deleted:                request.onsuccess = () => {
+        // Deleted:                    resolve(request.result);
+        // Deleted:                };
+        // Deleted:                
+        // Deleted:                request.onerror = () => {
+        // Deleted:                    reject(request.error);
+        // Deleted:                }
+        // Deleted:            });
+        // Deleted:        }, [db]);
 
     // 加载 LRC 歌词文件
     const loadLrcFile = useCallback((lrcFile: File) => {
@@ -176,7 +149,13 @@ export const Footer: React.FC = () => {
     const onPreviousTrack = useCallback(() => {
         if (playlist.length === 0) return;
         
-        const newIndex = currentTrackIndex <= 0 ? playlist.length - 1 : currentTrackIndex - 1;
+        // 如果当前没有播放任何歌曲，从最后一首开始
+        let startIndex = currentTrackIndex;
+        if (startIndex < 0 || startIndex >= playlist.length) {
+            startIndex = 0; // 从第一首开始
+        }
+        
+        const newIndex = startIndex <= 0 ? playlist.length - 1 : startIndex - 1;
         setCurrentTrackIndex(newIndex);
         
         const track = playlist[newIndex];
@@ -191,15 +170,43 @@ export const Footer: React.FC = () => {
             if (track.lrcFile) {
                 loadLrcFile(track.lrcFile);
             }
+            
+            // 通知 content.tsx 更新当前播放文件
+            window.dispatchEvent(new CustomEvent('current-playing-file-change', {
+                detail: { fileName: track.fileName }
+            }));
         }
     }, [playlist, currentTrackIndex]);
 
-    // 下一首歌（暂时只保留顺序播放）
+    // 下一首歌（支持多种播放模式）
     const onNextTrack = useCallback((_mode?: number) => {
         if (playlist.length === 0) return;
         
-        // 暂时只实现顺序播放
-        const newIndex = currentTrackIndex >= playlist.length - 1 ? 0 : currentTrackIndex + 1;
+        // 如果当前没有播放任何歌曲，从第一首开始
+        let startIndex = currentTrackIndex;
+        if (startIndex < 0 || startIndex >= playlist.length) {
+            startIndex = 0; // 从第一首开始
+        }
+        
+        let newIndex: number;
+        
+        // 根据播放模式计算下一个索引
+        if (playMode === 2) {
+            // 单曲循环：保持当前索引
+            newIndex = startIndex;
+        } else if (playMode === 1) {
+            // 随机播放：随机选择一个索引（排除当前歌曲）
+            if (playlist.length === 1) {
+                newIndex = 0;
+            } else {
+                do {
+                    newIndex = Math.floor(Math.random() * playlist.length);
+                } while (newIndex === startIndex);
+            }
+        } else {
+            // 顺序播放：下一首，到最后一首后回到第一首
+            newIndex = startIndex >= playlist.length - 1 ? 0 : startIndex + 1;
+        }
         
         setCurrentTrackIndex(newIndex);
         
@@ -215,8 +222,13 @@ export const Footer: React.FC = () => {
             if (track.lrcFile) {
                 loadLrcFile(track.lrcFile);
             }
+            
+            // 通知 content.tsx 更新当前播放文件
+            window.dispatchEvent(new CustomEvent('current-playing-file-change', {
+                detail: { fileName: track.fileName }
+            }));
         }
-    }, [playlist, currentTrackIndex]);
+    }, [playlist, currentTrackIndex, playMode]);
 
     // 处理播放列表关闭（带动画）
     const handleClosePlaylist = useCallback(() => {
@@ -280,11 +292,13 @@ export const Footer: React.FC = () => {
         };
 
         const handlePreviousTrack = () => {
-            // 不执行任何操作，事件已经由 audio.tsx 发送，content.tsx 会处理
+            // 调用上一首功能
+            onPreviousTrack();
         };
 
         const handleNextTrack = (event: Event) => {
-            // 不执行任何操作，事件已经由 audio.tsx 发送，content.tsx 会处理
+            // 调用下一首功能
+            onNextTrack();
         };
         
         // 监听来自 Header 的打开文件事件
@@ -366,6 +380,64 @@ export const Footer: React.FC = () => {
                 setCurrentTrackIndex(customEvent.detail.index);
             }
         };
+        
+        // 监听播放模式变化事件
+        const handlePlayModeChange = (event: Event) => {
+            const customEvent = event as CustomEvent<{ playMode: number }>;
+            if (customEvent.detail?.playMode !== undefined) {
+                setPlayMode(customEvent.detail.playMode);
+            }
+        };
+        
+        // 监听来自 content 的添加文件到播放列表事件
+        const handleAddFilesToPlaylist = (event: Event) => {
+            const customEvent = event as CustomEvent<{ tracks: Array<{ file: File; lrcFile?: File }> }>;
+            if (!customEvent.detail?.tracks || customEvent.detail.tracks.length === 0) {
+                return;
+            }
+            
+            const { tracks } = customEvent.detail;
+            
+            // 将文件添加到播放列表
+            setPlaylist(prev => {
+                const newTracks: ITrackInfo[] = tracks.map(({ file, lrcFile }) => {
+                    const id = `${file.name}-${file.size}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+                    const name = getBaseName(file.name);
+                    
+                    // 保存到 IndexedDB
+                    saveTrackToDB({ id, name, fileName: file.name, file, lrcFile });
+                    
+                    return { id, name, fileName: file.name, file, lrcFile };
+                });
+                
+                const updated = [...prev, ...newTracks];
+                
+                // 如果当前没有播放，自动播放第一首新添加的歌曲
+                if (currentTrackIndex === -1 && newTracks.length > 0) {
+                    const firstTrack = newTracks[0];
+                    const file = firstTrack.file;
+                    if (file) {
+                        // 使用 setTimeout 确保在状态更新后执行
+                        setTimeout(() => {
+                            setCurrentTrackIndex(prev.length); // 设置为新添加的第一首的索引
+                            receiveFile(file, setAudioSrc);
+                            
+                            // 延迟一点等待音频加载后自动播放
+                            setTimeout(() => {
+                                audioRef.current?.play();
+                            }, 200);
+                            
+                            // 如果有 LRC 文件，自动加载歌词
+                            if (firstTrack.lrcFile) {
+                                loadLrcFile(firstTrack.lrcFile);
+                            }
+                        }, 0);
+                    }
+                }
+                
+                return updated;
+            });
+        };
 
         window.addEventListener('toggle-playlist', handleTogglePlaylist);
         window.addEventListener('previous-track', handlePreviousTrack);
@@ -373,6 +445,8 @@ export const Footer: React.FC = () => {
         window.addEventListener('header-file-open' as any, handleHeaderFileOpen as any);
         window.addEventListener('play-file-from-list' as any, handlePlayFileFromList as any);
         window.addEventListener('track-index-change' as any, handleTrackIndexChange as any);
+        window.addEventListener('play-mode-change' as any, handlePlayModeChange as any);
+        window.addEventListener('add-files-to-playlist' as any, handleAddFilesToPlaylist as any);
 
         return () => {
             window.removeEventListener('toggle-playlist', handleTogglePlaylist);
@@ -381,8 +455,10 @@ export const Footer: React.FC = () => {
             window.removeEventListener('header-file-open' as any, handleHeaderFileOpen as any);
             window.removeEventListener('play-file-from-list' as any, handlePlayFileFromList as any);
             window.removeEventListener('track-index-change' as any, handleTrackIndexChange as any);
+            window.removeEventListener('play-mode-change' as any, handlePlayModeChange as any);
+            window.removeEventListener('add-files-to-playlist' as any, handleAddFilesToPlaylist as any);
         };
-    }, [onPreviousTrack, onNextTrack, showPlaylist, playlist]);
+    }, [onPreviousTrack, onNextTrack, showPlaylist, playlist, currentTrackIndex]);
 
     const [audioSrc, setAudioSrc] = useReducer(
         (oldSrc: string, newSrc: string) => {
@@ -523,9 +599,22 @@ export const Footer: React.FC = () => {
         // 如果当前没有播放，播放第一首
         if (currentTrackIndex === -1 && newTracks.length > 0) {
             const firstTrack = newTracks[0];
-            if (firstTrack.file) {
-                receiveFile(firstTrack.file, setAudioSrc);
-                setCurrentTrackIndex(playlist.length);
+            const file = firstTrack.file;
+            if (file) {
+                // 立即设置索引为 0（第一首）
+                setCurrentTrackIndex(0);
+                
+                receiveFile(file, setAudioSrc);
+                
+                // 延迟一点等待音频加载后自动播放
+                setTimeout(() => {
+                    audioRef.current?.play();
+                }, 200);
+                
+                // 如果有 LRC 文件，自动加载歌词
+                if (firstTrack.lrcFile) {
+                    loadLrcFile(firstTrack.lrcFile);
+                }
             }
         }
 

@@ -10,6 +10,7 @@ import { AudioActionType, audioRef, audioStatePubSub } from "../utils/audiomodul
 import { appContext, ChangBits } from "./app.context.js";
 import { AkariNotFound, AkariOdangoLoading } from "./svg.img.js";
 import { FolderSVG, DeleteSVG } from "./svg.js";
+import { playlistManager } from "../utils/playlist-manager.js";
 
 const LazyEditor = lazy(async () =>
     import("./editor.js").then(({ Eidtor }) => {
@@ -81,7 +82,6 @@ export const Content: React.FC = () => {
     const [currentPlayingFile, setCurrentPlayingFile] = useState<string>(''); // 当前播放的文件名
     const [fileObjects, setFileObjects] = useState<Map<string, File>>(new Map()); // 存储文件对象
     const [currentTrackIndex, setCurrentTrackIndex] = useState<number>(-1); // 当前播放索引
-    const [db, setDb] = useState<IDBDatabase | null>(null); // IndexedDB 实例
     
     useEffect(() => {
         function onHashchange() {
@@ -130,6 +130,19 @@ export const Content: React.FC = () => {
         window.addEventListener('file-list-panel-toggle' as any, handlePanelToggle as any);
         return () => window.removeEventListener('file-list-panel-toggle' as any, handlePanelToggle as any);
     }, []);
+    
+    // 监听当前播放文件变化事件（来自 footer.tsx）
+    useEffect(() => {
+        const handleCurrentPlayingFileChange = (event: Event) => {
+            const customEvent = event as CustomEvent<{ fileName: string }>;
+            if (customEvent.detail?.fileName) {
+                setCurrentPlayingFile(customEvent.detail.fileName);
+            }
+        };
+        
+        window.addEventListener('current-playing-file-change' as any, handleCurrentPlayingFileChange as any);
+        return () => window.removeEventListener('current-playing-file-change' as any, handleCurrentPlayingFileChange as any);
+    }, []);
 
     // 过滤后的音频文件列表
     const audioFiles = selectedFiles.filter(isAudioFile);
@@ -139,6 +152,7 @@ export const Content: React.FC = () => {
         ? audioFiles.filter(file => file.toLowerCase().includes(searchQuery.toLowerCase()))
         : audioFiles;
 
+    // 处理清除文件
     const handleClearFiles = () => {
         setSelectedFiles([]);
         setSearchQuery('');
@@ -147,11 +161,9 @@ export const Content: React.FC = () => {
         setFileObjects(new Map());
         
         // 清理 IndexedDB 中的所有 tracks
-        if (db) {
-            const transaction = db.transaction(['tracks'], 'readwrite');
-            const store = transaction.objectStore('tracks');
-            store.clear();
-        }
+        playlistManager.clearAllTracks().catch(err => {
+            console.error('清理播放列表失败:', err);
+        });
     };
 
     // 处理打开文件
@@ -182,50 +194,56 @@ export const Content: React.FC = () => {
                     detail: { fileNames }
                 }));
                 
-                // 注意：不再触发 header-file-open 事件，只记录文件路径，不自动载入
+                // 通知 Footer 组件添加文件到播放列表
+                const audioFiles = Array.from(files).filter(file => 
+                    file.type.startsWith('audio/') || 
+                    ['.ncm', '.qmcflac', '.qmc0', '.qmc1', '.qmc2', '.qmc3', '.qmcogg'].some(ext => file.name.toLowerCase().endsWith(ext))
+                );
+                
+                const lrcFiles = Array.from(files).filter(file => file.name.toLowerCase().endsWith('.lrc'));
+                
+                // 为每个音频文件查找匹配的 LRC 文件
+                const tracks = audioFiles.map(file => {
+                    const baseName = file.name.substring(0, file.name.lastIndexOf('.'));
+                    let matchedLrc: File | undefined;
+                    
+                    for (const lrcFile of lrcFiles) {
+                        const lrcBaseName = lrcFile.name.substring(0, lrcFile.name.lastIndexOf('.'));
+                        if (lrcBaseName === baseName) {
+                            matchedLrc = lrcFile;
+                            break;
+                        }
+                    }
+                    
+                    return { file, lrcFile: matchedLrc };
+                });
+                
+                // 发送事件通知 Footer 添加这些文件到播放列表
+                window.dispatchEvent(new CustomEvent('add-files-to-playlist', {
+                    detail: { tracks }
+                }));
             }
         };
         input.click();
     }, [fileObjects]);
 
-    // 初始化 IndexedDB
+    // 初始化播放列表管理器
     useEffect(() => {
-        const request = indexedDB.open('MusicPlayerDB', 1);
-        
-        request.onerror = () => {
-            console.error('IndexedDB 打开失败');
-        };
-        
-        request.onsuccess = () => {
-            setDb(request.result);
-        };
-        
-        request.onupgradeneeded = (event) => {
-            const database = (event.target as IDBOpenDBRequest).result;
-            
-            // 创建对象仓库
-            if (!database.objectStoreNames.contains('tracks')) {
-                const store = database.createObjectStore('tracks', { keyPath: 'id' });
-                store.createIndex('name', 'name', { unique: false });
-                store.createIndex('fileName', 'fileName', { unique: false });
-            }
-        };
+        playlistManager.init().catch(err => {
+            console.error('播放列表管理器初始化失败:', err);
+        });
         
         return () => {
-            if (db) {
-                db.close();
-            }
+            // 组件卸载时不需要关闭数据库
         };
     }, []);
 
     // 保存文件到 IndexedDB
     const saveTrackToDB = useCallback((track: { id: string; name: string; fileName: string; file?: File; lrcFile?: File }) => {
-        if (!db) return;
-        
-        const transaction = db.transaction(['tracks'], 'readwrite');
-        const store = transaction.objectStore('tracks');
-        store.put(track);
-    }, [db]);
+        playlistManager.saveTrack(track).catch(err => {
+            console.error('保存音轨失败:', err);
+        });
+    }, []);
 
     // 处理点击文件列表中的歌曲（加载并播放）
     const handlePlayFile = useCallback((fileName: string) => {
@@ -275,36 +293,6 @@ export const Content: React.FC = () => {
         
         setCurrentPlayingFile(fileName);
     }, [fileObjects, selectedFiles, saveTrackToDB]);
-
-    // 初始化 IndexedDB
-    useEffect(() => {
-        const request = indexedDB.open('MusicPlayerDB', 1);
-        
-        request.onerror = () => {
-            console.error('IndexedDB 打开失败');
-        };
-        
-        request.onsuccess = () => {
-            setDb(request.result);
-        };
-        
-        request.onupgradeneeded = (event) => {
-            const database = (event.target as IDBOpenDBRequest).result;
-            
-            // 创建对象仓库
-            if (!database.objectStoreNames.contains('tracks')) {
-                const store = database.createObjectStore('tracks', { keyPath: 'id' });
-                store.createIndex('name', 'name', { unique: false });
-                store.createIndex('fileName', 'fileName', { unique: false });
-            }
-        };
-        
-        return () => {
-            if (db) {
-                db.close();
-            }
-        };
-    }, []);
 
     // 上一首歌 - 暂时禁用
     const onPreviousTrack = useCallback(() => {
