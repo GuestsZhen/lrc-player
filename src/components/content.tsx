@@ -257,6 +257,12 @@ export const Content: React.FC = () => {
         window.dispatchEvent(new CustomEvent('play-file-from-list', {
             detail: { file, lrcFile }
         }));
+        
+        // 通知 footer 更新当前播放索引
+        window.dispatchEvent(new CustomEvent('track-index-change', {
+            detail: { index: trackIndex }
+        }));
+        
         setCurrentPlayingFile(fileName);
     }, [fileObjects, selectedFiles, saveTrackToDB]);
 

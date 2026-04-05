@@ -386,12 +386,21 @@ export const Footer: React.FC = () => {
                 });
             }
         };
+        
+        // 监听来自 content 的索引更新事件
+        const handleTrackIndexChange = (event: Event) => {
+            const customEvent = event as CustomEvent<{ index: number }>;
+            if (customEvent.detail?.index !== undefined) {
+                setCurrentTrackIndex(customEvent.detail.index);
+            }
+        };
 
         window.addEventListener('toggle-playlist', handleTogglePlaylist);
         window.addEventListener('previous-track', handlePreviousTrack);
         window.addEventListener('next-track', handleNextTrack);
         window.addEventListener('header-file-open' as any, handleHeaderFileOpen as any);
         window.addEventListener('play-file-from-list' as any, handlePlayFileFromList as any);
+        window.addEventListener('track-index-change' as any, handleTrackIndexChange as any);
 
         return () => {
             window.removeEventListener('toggle-playlist', handleTogglePlaylist);
@@ -399,6 +408,7 @@ export const Footer: React.FC = () => {
             window.removeEventListener('next-track', handleNextTrack);
             window.removeEventListener('header-file-open' as any, handleHeaderFileOpen as any);
             window.removeEventListener('play-file-from-list' as any, handlePlayFileFromList as any);
+            window.removeEventListener('track-index-change' as any, handleTrackIndexChange as any);
         };
     }, [onPreviousTrack, onNextTrack, showPlaylist, playlist]);
 
