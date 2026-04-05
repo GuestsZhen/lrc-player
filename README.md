@@ -1,7 +1,12 @@
 <p align="center">
     <a href="https://lrc-player.github.io">
-        <img src="./public/favicons/lrc-icon.svg" alt="logo" />
+        <img src="./public/favicons/lrc-icon.svg" alt="logo" width="96" />
     </a>
+</p>
+
+<p align="center">
+    <a href="#">中文</a> | 
+    <a href="README.en-US.md">English</a>
 </p>
 
 # 简谱 lrc 播放器
