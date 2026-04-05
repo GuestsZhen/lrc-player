@@ -206,7 +206,7 @@ body, .app-container {
     display: flex;
     align-items: center;
     padding: 10px 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    /* border-bottom: 1px solid rgba(255, 255, 255, 0.05); */ /* 移除列表项之间的分隔线 */
     transition: background-color 0.2s ease;
     cursor: pointer;
 }
