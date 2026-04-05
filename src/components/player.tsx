@@ -223,6 +223,15 @@ export const Player: React.FC<IPlayerProps> = ({ state, dispatch }) => {
         }
     }, [lyric.length]);
     
+    // 额外修复：当歌词数组内容变化时也触发重绘
+    useEffect(() => {
+        if (lyric.length > 0 && ul.current) {
+            const el = ul.current;
+            // 使用 setAttribute 触发 iOS 重绘
+            el.setAttribute('data-repaint', Date.now().toString());
+        }
+    }, [lyric]);
+    
     useEffect(() => {
         const line = ul.current?.children[currentIndex];
         if (line) {
