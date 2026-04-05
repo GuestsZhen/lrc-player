@@ -138,7 +138,7 @@ body, .app-container {
     width: 32px;
     height: 32px;
     border: none;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: transparent; /* 删除背景 */
     color: #eeeeee;
     border-radius: 50%;
     cursor: pointer;
@@ -149,7 +149,7 @@ body, .app-container {
 }
 
 .clear-files-action-btn:hover {
-    background-color: rgba(255, 255, 255, 0.2);
+    background-color: rgba(255, 255, 255, 0.1); /* 悬停时显示轻微背景 */
     transform: scale(1.1);
 }
 
@@ -160,12 +160,12 @@ body, .app-container {
 }
 
 [data-theme="light"] .clear-files-action-btn {
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: transparent; /* 删除背景 */
     color: #1c1c1c;
 }
 
 [data-theme="light"] .clear-files-action-btn:hover {
-    background-color: rgba(0, 0, 0, 0.2);
+    background-color: rgba(0, 0, 0, 0.1); /* 悬停时显示轻微背景 */
 }
 
 /* 关闭按钮 */
@@ -173,7 +173,7 @@ body, .app-container {
     width: 32px;
     height: 32px;
     border: none;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: transparent; /* 删除背景 */
     color: #eeeeee;
     border-radius: 50%;
     cursor: pointer;
@@ -185,17 +185,17 @@ body, .app-container {
 }
 
 .close-files-btn:hover {
-    background-color: rgba(255, 255, 255, 0.2);
+    background-color: rgba(255, 255, 255, 0.1); /* 悬停时显示轻微背景 */
     transform: scale(1.1);
 }
 
 [data-theme="light"] .close-files-btn {
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: transparent; /* 删除背景 */
     color: #1c1c1c;
 }
 
 [data-theme="light"] .close-files-btn:hover {
-    background-color: rgba(0, 0, 0, 0.2);
+    background-color: rgba(0, 0, 0, 0.1); /* 悬停时显示轻微背景 */
 }
 
 .selected-files-list {
