@@ -93,7 +93,11 @@ body, .app-container {
 /* 移动端竖屏模式适配 */
 @media (max-width: 768px) and (orientation: portrait) {
     .selected-files-panel {
+        left: 0;
+        right: 0;
+        max-width: 100%; /* 竖屏模式下宽度100% */
         bottom: 150px; /* 竖屏模式下 Footer 更高，需要留出更多空间 */
+        border-radius: 0; /* 竖屏模式下移除圆角 */
     }
 }
 
