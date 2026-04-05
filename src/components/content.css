@@ -154,8 +154,8 @@ body, .app-container {
 }
 
 .clear-files-action-btn svg {
-    width: 28px; /* 修改为 28px */
-    height: 28px; /* 修改为 28px */
+    width: 28px !important; /* 修改为 28px，强制覆盖 SVG 内联属性 */
+    height: 28px !important; /* 修改为 28px，强制覆盖 SVG 内联属性 */
     fill: currentColor;
 }
 
