@@ -4,6 +4,7 @@ import { type Action, ActionType } from "../hooks/useLrc.js";
 import { audioRef, currentTimePubSub } from "../utils/audiomodule.js";
 import { appContext } from "./app.context.js";
 import { Curser } from "./curser.js";
+import { IOSHint } from "./ios-hint.js";
 
 // 获取对比色（根据背景亮度决定返回黑色或白色）
 const getContrastColor = (hexColor: string): string => {
@@ -39,6 +40,9 @@ export const Player: React.FC<IPlayerProps> = ({ state, dispatch }) => {
 
     // 控制全屏状态
     const [isFullscreen, setIsFullscreen] = useState(false);
+    
+    // 控制 iOS 提示显示
+    const [showIOSHint, setShowIOSHint] = useState(false);
 
     // 控制背景颜色
     const [backgroundColor, setBackgroundColor] = useState(() => {
@@ -125,15 +129,23 @@ export const Player: React.FC<IPlayerProps> = ({ state, dispatch }) => {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    // 监听全屏状态变化
+    // 监听全屏状态变化 - 兼容 iOS
     useEffect(() => {
         const handleFullscreenChange = () => {
-            setIsFullscreen(!!document.fullscreenElement);
+            setIsFullscreen(!!(document.fullscreenElement || 
+                              (document as any).webkitFullscreenElement ||
+                              (document as any).msFullscreenElement));
         };
         
+        // 监听多种全屏事件
         document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+        document.addEventListener('msfullscreenchange', handleFullscreenChange);
+        
         return () => {
             document.removeEventListener('fullscreenchange', handleFullscreenChange);
+            document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+            document.removeEventListener('msfullscreenchange', handleFullscreenChange);
         };
     }, []);
 
@@ -240,16 +252,73 @@ export const Player: React.FC<IPlayerProps> = ({ state, dispatch }) => {
         setShowTime(prev => !prev);
     }, []);
 
-    // 切换全屏
+    // 切换全屏 - 兼容 iOS
     const toggleFullscreen = useCallback(async () => {
         try {
-            if (!document.fullscreenElement) {
-                await document.documentElement.requestFullscreen();
+            const element = document.documentElement;
+            
+            // 检测是否为 iOS 设备
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+            
+            // 检查是否已经在全屏模式
+            const isCurrentlyFullscreen = !!(document.fullscreenElement || 
+                                            (document as any).webkitFullscreenElement ||
+                                            (document as any).msFullscreenElement);
+            
+            if (!isCurrentlyFullscreen) {
+                // iOS 设备特殊处理
+                if (isIOS) {
+                    console.log('iOS device detected, using alternative fullscreen method');
+                    
+                    // 方法1: 尝试标准 API (iOS 16.4+ 可能支持)
+                    if (element.requestFullscreen) {
+                        try {
+                            await element.requestFullscreen();
+                            console.log('Standard fullscreen API succeeded');
+                            return;
+                        } catch (e) {
+                            console.log('Standard API failed, trying alternatives');
+                        }
+                    }
+                    
+                    // 方法2: 尝试 WebKit API
+                    if ((element as any).webkitRequestFullscreen) {
+                        try {
+                            await (element as any).webkitRequestFullscreen();
+                            console.log('WebKit fullscreen API succeeded');
+                            return;
+                        } catch (e) {
+                            console.log('WebKit API failed');
+                        }
+                    }
+                    
+                    // 方法3: iOS 不支持网页全屏，显示友好提示
+                    console.warn('iOS does not support web page fullscreen. Please add to Home Screen for best experience.');
+                    setShowIOSHint(true);
+                    return;
+                }
+                
+                // 非 iOS 设备 - 正常处理
+                if (element.requestFullscreen) {
+                    await element.requestFullscreen();
+                } else if ((element as any).webkitRequestFullscreen) {
+                    await (element as any).webkitRequestFullscreen();
+                } else if ((element as any).msRequestFullscreen) {
+                    await (element as any).msRequestFullscreen();
+                }
             } else {
-                await document.exitFullscreen();
+                // 退出全屏
+                if (document.exitFullscreen) {
+                    await document.exitFullscreen();
+                } else if ((document as any).webkitExitFullscreen) {
+                    await (document as any).webkitExitFullscreen();
+                } else if ((document as any).msExitFullscreen) {
+                    await (document as any).msExitFullscreen();
+                }
             }
         } catch (error) {
             console.error('Fullscreen error:', error);
+            // iOS 可能不支持全屏，静默失败
         }
     }, []);
 
@@ -360,26 +429,31 @@ export const Player: React.FC<IPlayerProps> = ({ state, dispatch }) => {
     );
 
     return (
-        <div 
-            className="player-container"
-            style={{
-                backgroundColor: backgroundColor  // 使用用户设置的颜色作为整个 Player 页面的背景
-            }}
-        >
-            <ul 
-                ref={ul} 
-                className="player-lyric-list" 
-                style={{ 
-                    fontSize: `${fontSize}rem`, 
-                    textAlign,
-                    ['--player-bg-color' as any]: backgroundColor,
-                    ['--player-lyric-color' as any]: lyricColor,
-                    ['--player-sub-opacity' as any]: subLyricOpacity
+        <>
+            <div 
+                className="player-container"
+                style={{
+                    backgroundColor: backgroundColor  // 使用用户设置的颜色作为整个 Player 页面的背景
                 }}
             >
-                {state.lyric.map(LyricLineIter)}
-            </ul>
-        </div>
+                <ul 
+                    ref={ul} 
+                    className="player-lyric-list" 
+                    style={{ 
+                        fontSize: `${fontSize}rem`, 
+                        textAlign,
+                        ['--player-bg-color' as any]: backgroundColor,
+                        ['--player-lyric-color' as any]: lyricColor,
+                        ['--player-sub-opacity' as any]: subLyricOpacity
+                    }}
+                >
+                    {state.lyric.map(LyricLineIter)}
+                </ul>
+            </div>
+            
+            {/* iOS 全屏提示 */}
+            <IOSHint show={showIOSHint} onClose={() => setShowIOSHint(false)} />
+        </>
     );
 };
 

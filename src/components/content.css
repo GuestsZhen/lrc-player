@@ -64,3 +64,362 @@ body, .app-container {
         padding-left: env(safe-area-inset-left);
     }
 }
+
+/* 选中的文件路径显示面板 */
+.selected-files-panel {
+    position: fixed;
+    top: 60px; /* 对接 Header 底部 */
+    bottom: 60px; /* 对接 Footer 顶部，避免遮挡 Footer */
+    left: 10px;
+    right: 10px;
+    max-width: 400px;
+    background-color: rgba(30, 30, 30, 0.95);
+    border-radius: 0 0 0 0; /* 无圆角 */
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    z-index: 10001; /* 高于 Header 按钮 (10000)，确保关闭按钮可点击 */
+    display: flex;
+    flex-direction: column;
+    animation: slide-in-left 0.3s ease-out;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+/* 亮色模式下文件面板颜色调整 */
+[data-theme="light"] .selected-files-panel {
+    background-color: rgba(240, 240, 240, 0.95);
+    color: #1c1c1c;
+}
+
+/* 移动端竖屏模式适配 */
+@media (max-width: 768px) and (orientation: portrait) {
+    .selected-files-panel {
+        bottom: 150px; /* 竖屏模式下 Footer 更高，需要留出更多空间 */
+    }
+}
+
+@keyframes slide-in-left {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.selected-files-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+/* 亮色模式下头部边框颜色 */
+[data-theme="light"] .selected-files-header {
+    border-bottom-color: rgba(0, 0, 0, 0.1);
+}
+
+.header-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+/* 清除文件按钮（带 SVG 图标） */
+.clear-files-action-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #eeeeee;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.clear-files-action-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+.clear-files-action-btn svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+}
+
+[data-theme="light"] .clear-files-action-btn {
+    background-color: rgba(0, 0, 0, 0.1);
+    color: #1c1c1c;
+}
+
+[data-theme="light"] .clear-files-action-btn:hover {
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+/* 关闭按钮 */
+.close-files-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #eeeeee;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+}
+
+.close-files-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+[data-theme="light"] .close-files-btn {
+    background-color: rgba(0, 0, 0, 0.1);
+    color: #1c1c1c;
+}
+
+[data-theme="light"] .close-files-btn:hover {
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.selected-files-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.selected-file-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    transition: background-color 0.2s ease;
+    cursor: pointer;
+}
+
+.selected-file-item:last-child {
+    border-bottom: none;
+}
+
+.selected-file-item:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* 亮色模式下列表项悬停颜色 */
+[data-theme="light"] .selected-file-item:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* 正在播放的文件 - 与播放列表一致 */
+.selected-file-item.playing {
+    background-color: transparent;
+    color: #ffffff;
+    font-weight: bold;
+    font-size: 1.2rem; /* 比普通歌名大 20% */
+}
+
+/* 亮色模式下播放时样式 */
+[data-theme="light"] .selected-file-item.playing {
+    color: #1c1c1c;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.file-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.9rem;
+    color: #eeeeee;
+}
+
+/* 正在播放的文件名颜色 */
+.selected-file-item.playing .file-name {
+    color: #ffffff;
+}
+
+[data-theme="light"] .file-name {
+    color: #1c1c1c;
+}
+
+[data-theme="light"] .selected-file-item.playing .file-name {
+    color: #1c1c1c;
+}
+
+/* 亮色模式下文件名颜色 */
+[data-theme="light"] .file-name {
+    color: #1c1c1c;
+}
+
+/* 搜索框样式 */
+.file-search-box {
+    position: relative;
+    padding: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+/* 亮色模式下搜索框边框 */
+[data-theme="light"] .file-search-box {
+    border-top-color: rgba(0, 0, 0, 0.1);
+}
+
+/* 打开文件按钮 */
+.file-search-open-btn {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    background-color: transparent;
+    color: #eeeeee;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    opacity: 0.8;
+}
+
+.file-search-open-btn:hover {
+    opacity: 1;
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: scale(1.05);
+}
+
+.file-search-open-btn:active {
+    transform: scale(0.95);
+}
+
+.file-search-open-btn svg {
+    width: 24px;
+    height: 24px;
+    fill: currentColor;
+}
+
+.file-search-input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #eeeeee;
+    font-size: 0.85rem;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.file-search-input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.file-search-input:focus {
+    border-color: var(--theme-color);
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* 亮色模式下搜索框样式 */
+[data-theme="light"] .file-search-input {
+    border-color: rgba(0, 0, 0, 0.2);
+    background-color: rgba(0, 0, 0, 0.05);
+    color: #1c1c1c;
+}
+
+[data-theme="light"] .file-search-input::placeholder {
+    color: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .file-search-input:focus {
+    border-color: var(--theme-color);
+    background-color: rgba(0, 0, 0, 0.08);
+}
+
+.file-search-clear {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    border: none;
+    background-color: rgba(255, 255, 255, 0.15);
+    color: #eeeeee;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    margin-left: auto; /* 推到最右边 */
+}
+
+.file-search-clear:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+/* 亮色模式下搜索清除按钮 */
+[data-theme="light"] .file-search-clear {
+    background-color: rgba(0, 0, 0, 0.1);
+    color: #1c1c1c;
+}
+
+[data-theme="light"] .file-search-clear:hover {
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+/* 无音频文件提示 */
+.no-audio-files {
+    padding: 40px 16px;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.9rem;
+}
+
+.no-audio-files p {
+    margin: 0 0 20px 0;
+}
+
+/* 亮色模式下提示文字颜色 */
+[data-theme="light"] .no-audio-files {
+    color: rgba(0, 0, 0, 0.5);
+}
+
+/* 从面板打开文件按钮 */
+.open-file-from-panel-btn {
+    padding: 10px 24px;
+    background-color: var(--theme-color);
+    color: var(--theme-contrast-color);
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    opacity: 1;
+}
+
+.open-file-from-panel-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.open-file-from-panel-btn:active {
+    transform: scale(0.98);
+}

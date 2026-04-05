@@ -1,6 +1,6 @@
 {
     "name": "lrc-player",
-    "version": "6.0.3",
+    "version": "6.0.4",
     "description": "简谱 lrc 播放器｜可能是你所能见到的最好用的歌词制作工具",
     "repository": "https://github.com/GuestsZhen/lrc-player.git",
     "author": "magic-akari <akari.ccino@gmail.com>",
@@ -24,7 +24,10 @@
         "build": "vite build",
         "fix:fmt": "dprint fmt",
         "check:fmt": "dprint check",
-        "check:lint": "oxlint src -D correctness"
+        "check:lint": "oxlint src -D correctness",
+        "version:patch": "node scripts/bump-version.js patch",
+        "version:minor": "node scripts/bump-version.js minor",
+        "version:major": "node scripts/bump-version.js major"
     },
     "imports": {
         "#const/*": "./src/const/*"

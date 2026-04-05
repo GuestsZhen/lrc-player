@@ -15,9 +15,79 @@
     user-select: none;
 }
 
+/* Preferences 页面标题 */
+.header-page-title {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 232;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 60px;
+    padding: 0 80px; /* 留出左右按钮的空间 */
+    pointer-events: none; /* 让点击穿透到下层 */
+}
+
+.header-page-title h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #eeeeee;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 亮色模式下标题颜色调整 */
+[data-theme="light"] .header-page-title h1 {
+    color: #1c1c1c;
+}
+
 /* 头部音频文件名显示 */
 .header-audio-file-name {
-    display: none;
+    position: fixed;
+    top: 70px; /* 在按钮下方 */
+    left: 10px;
+    z-index: 9998;
+    max-width: 300px;
+    padding: 8px 12px;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: #eeeeee;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    animation: fade-in-down 0.3s ease-out;
+}
+
+/* 亮色模式下文件路径颜色调整 */
+[data-theme="light"] .header-audio-file-name {
+    background-color: rgba(240, 240, 240, 0.9);
+    color: #1c1c1c;
+}
+
+@keyframes fade-in-down {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 左上角控制按钮区域 */
+.header-left-controls {
+    position: fixed;
+    top: 10px;
+    left: 20px;
+    z-index: 10000;
 }
 
 /* Editor 菜单按钮 */
@@ -54,7 +124,7 @@
 .header-control-button {
     width: 60px;
     height: 60px;
-    background-color: transparent;
+    background: none !important; /* 完全透明，与 editor 按钮一致，覆盖 footer.css 中的样式 */
     color: #eeeeee;
     border: none;
     border-radius: 8px;
@@ -65,6 +135,7 @@
     justify-content: center;
     opacity: 0.7;
     font-size: 1.5rem;
+    padding: 0; /* 移除可能的 padding */
 }
 
 /* 亮色模式下按钮颜色调整 */
@@ -73,8 +144,8 @@
 }
 
 .header-control-button svg {
-    width: 30px;
-    height: 30px;
+    width: 30px !important; /* 覆盖 footer.css 中的 20px */
+    height: 30px !important; /* 覆盖 footer.css 中的 20px */
     fill: currentColor;
 }
 

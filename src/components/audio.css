@@ -177,30 +177,17 @@ audio::-webkit-media-controls-enclosure {
     .controls-row {
         display: flex;
         align-items: center;
-        justify-content: center;
+        justify-content: space-between;
         gap: 8px;
         padding: 0 16px;
         min-height: 36px;
         position: relative;
     }
     
-    /* 左侧按钮组 - 居中显示 */
-    .controls-left {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-    }
-    
-    /* 右侧速度按钮 - 绝对定位，不影响左侧居中 */
-    .controls-right {
+    /* 左下角播放顺序按钮 - 绝对定位 */
+    .play-mode-button-left {
         position: absolute;
-        right: 16px;
-        display: flex;
-        align-items: center;
-    }
-    
-    .controls-left button {
+        left: 16px;
         width: 40px;
         height: 40px;
         background: none;
@@ -210,32 +197,78 @@ audio::-webkit-media-controls-enclosure {
         transition: all 0.2s ease;
     }
     
-    .controls-left button svg {
+    .play-mode-button-left svg {
         width: 30px;
         height: 30px;
         fill: currentColor;
     }
     
-    .controls-left button:hover:not([disabled]) {
+    .play-mode-button-left:hover:not([disabled]) {
         color: var(--theme-color);
         transform: scale(1.1);
     }
     
-    /* 播放按钮特殊尺寸 - 使用 !important 确保优先级 */
-    .controls-left button.play-button {
-        width: 40px !important;
-        height: 40px !important;
-    }
-    
-    .controls-left button.play-button svg {
-        width: 30px !important;
-        height: 30px !important;
-    }
-    
-    /* 右侧速度按钮 */
-    .controls-right {
+    /* 中间按钮组 - 居中显示 */
+    .controls-center {
         display: flex;
         align-items: center;
+        justify-content: center;
+        gap: 8px;
+        flex: 1;
+    }
+    
+    /* 右侧速度按钮 - 绝对定位，不影响中间居中 */
+    .controls-right {
+        position: absolute;
+        right: 16px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .controls-center button, .controls-right button {
+        width: 40px;
+        height: 40px;
+        background: none;
+        border: none;
+        color: #eeeeee;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .controls-center button svg, .controls-right button svg {
+        width: 30px;
+        height: 30px;
+        fill: currentColor;
+    }
+    
+    /* 竖屏模式下中间按钮组的特殊尺寸 */
+    /* 上一首和下一首按钮 */
+    .controls-center button.previous-button,
+    .controls-center button.next-button {
+        width: 51px !important;
+        height: 51px !important;
+    }
+    
+    .controls-center button.previous-button svg,
+    .controls-center button.next-button svg {
+        width: 50px !important;
+        height: 50px !important;
+    }
+    
+    /* 播放/暂停按钮 */
+    .controls-center button.play-button {
+        width: 81px !important;
+        height: 81px !important;
+    }
+    
+    .controls-center button.play-button svg {
+        width: 80px !important;
+        height: 80px !important;
+    }
+    
+    .controls-center button:hover:not([disabled]), .controls-right button:hover:not([disabled]) {
+        color: var(--theme-color);
+        transform: scale(1.1);
     }
     
     .controls-right .rate-slider {
@@ -477,6 +510,7 @@ progress::-webkit-progress-value {
 /* 设置按钮和下拉菜单 */
 .settings-dropdown-wrapper {
     position: relative;
+    z-index: 10002; /* 确保在播放列表之上 */
 }
 
 .settings-btn {
@@ -518,7 +552,7 @@ progress::-webkit-progress-value {
     padding: 12px;
     min-width: 144px; /* 与 Player 页面字体设置菜单统一宽度 */
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-    z-index: 10001;
+    z-index: 10002; /* 高于播放列表面板 (10000) 和 editor-tools (10001) */
     animation: menu-fade-in 0.3s ease-out; /* 淡入动画 */
 }
 

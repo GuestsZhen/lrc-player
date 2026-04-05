@@ -2,10 +2,14 @@ import ROUTER from "#const/router.json" assert { type: "json" };
 import { useContext, useEffect, useState, useCallback } from "react";
 import { prependHash } from "../utils/router.js";
 import { appContext } from "./app.context.js";
-import { PlaySVG, EditorSVG, FullscreenSVG, FullscreenExitSVG, TuneSVG, SynchronizerSVG, SettingsTSVG } from "./svg.js";
+import { PlaySVG, EditorSVG, FullscreenSVG, FullscreenExitSVG, TuneSVG, SynchronizerSVG, SettingsTSVG, PlaylistSVG } from "./svg.js";
 
 export const Header: React.FC = () => {
     const { lang } = useContext(appContext);
+    
+    // 音频文件路径状态
+    const [audioFileName, setAudioFileName] = useState<string>('');
+    const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
     
     // 判断当前是否在 Player 页面
     const [isPlayerPage, setIsPlayerPage] = useState(() => {
@@ -62,6 +66,9 @@ export const Header: React.FC = () => {
     const [showPlayerSettings, setShowPlayerSettings] = useState(false);
     const [isHiding, setIsHiding] = useState(false);
     
+    // 文件列表面板显示状态
+    const [showFileListPanel, setShowFileListPanel] = useState(false);
+    
     // Player 字体大小
     const [playerFontSize, setPlayerFontSize] = useState(() => {
         return Number(sessionStorage.getItem("player-font-size")) || 1.3;
@@ -72,25 +79,80 @@ export const Header: React.FC = () => {
         return Number(sessionStorage.getItem('player-sub-opacity')) || 0.3;
     });
 
-    // 切换全屏
+    // 切换全屏 - 兼容 iOS
     const toggleFullscreen = async () => {
-        if (!document.fullscreenElement) {
-            await document.documentElement.requestFullscreen();
-            setIsFullscreen(true);
-        } else {
-            await document.exitFullscreen();
-            setIsFullscreen(false);
+        try {
+            const element = document.documentElement;
+            
+            // 检测是否为 iOS 设备
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+            
+            // 检查是否已经在全屏模式
+            const isCurrentlyFullscreen = !!(document.fullscreenElement || 
+                                            (document as any).webkitFullscreenElement ||
+                                            (document as any).msFullscreenElement);
+            
+            if (!isCurrentlyFullscreen) {
+                // iOS 设备特殊处理
+                if (isIOS) {
+                    console.log('iOS device detected in Header');
+                    
+                    // 尝试标准 API (iOS 16.4+)
+                    if (element.requestFullscreen) {
+                        try {
+                            await element.requestFullscreen();
+                            return;
+                        } catch (e) {
+                            console.log('Standard API failed on iOS');
+                        }
+                    }
+                    
+                    // iOS 不支持，提示用户
+                    alert('iOS 浏览器限制：\n\n要获得最佳全屏体验，请：\n1. 点击分享按钮 📤\n2. 选择“添加到主屏幕”\n3. 从主屏幕打开应用');
+                    return;
+                }
+                
+                // 非 iOS 设备
+                if (element.requestFullscreen) {
+                    await element.requestFullscreen();
+                } else if ((element as any).webkitRequestFullscreen) {
+                    await (element as any).webkitRequestFullscreen();
+                } else if ((element as any).msRequestFullscreen) {
+                    await (element as any).msRequestFullscreen();
+                }
+            } else {
+                // 退出全屏
+                if (document.exitFullscreen) {
+                    await document.exitFullscreen();
+                } else if ((document as any).webkitExitFullscreen) {
+                    await (document as any).webkitExitFullscreen();
+                } else if ((document as any).msExitFullscreen) {
+                    await (document as any).msExitFullscreen();
+                }
+            }
+        } catch (error) {
+            console.error('Fullscreen error:', error);
         }
     };
 
-    // 监听全屏状态变化
+    // 监听全屏状态变化 - 兼容 iOS
     useEffect(() => {
         const handleFullscreenChange = () => {
-            setIsFullscreen(!!document.fullscreenElement);
+            setIsFullscreen(!!(document.fullscreenElement || 
+                              (document as any).webkitFullscreenElement ||
+                              (document as any).msFullscreenElement));
         };
         
+        // 监听多种全屏事件
         document.addEventListener('fullscreenchange', handleFullscreenChange);
-        return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+        document.addEventListener('msfullscreenchange', handleFullscreenChange);
+        
+        return () => {
+            document.removeEventListener('fullscreenchange', handleFullscreenChange);
+            document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+            document.removeEventListener('msfullscreenchange', handleFullscreenChange);
+        };
     }, []);
     
     // 关闭 Player 设置菜单（带动画）
@@ -181,9 +243,86 @@ export const Header: React.FC = () => {
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [showEditorMenu]);
+    
+    // 切换文件列表面板
+    const toggleFileListPanel = useCallback(() => {
+        setShowFileListPanel(prev => {
+            const newState = !prev;
+            // 通知 Content 组件面板显示状态
+            window.dispatchEvent(new CustomEvent('file-list-panel-toggle', {
+                detail: { show: newState }
+            }));
+            return newState;
+        });
+    }, []);
+    
+    // 处理打开文件
+    const handleOpenFile = useCallback(() => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.multiple = true; // 允许多选
+        // 不设置 accept 属性，允许选择所有文件类型（Android Chrome 兼容）
+        input.onchange = (e) => {
+            const files = (e.target as HTMLInputElement).files;
+            if (files && files.length > 0) {
+                // 提取所有文件名
+                const fileNames = Array.from(files).map(f => f.name);
+                
+                // 更新状态
+                setAudioFileName(files.length === 1 ? files[0].name : `${files.length} 个文件`);
+                setSelectedFiles(fileNames);
+                
+                // 触发事件通知 Content 组件
+                window.dispatchEvent(new CustomEvent('files-selected', {
+                    detail: { fileNames }
+                }));
+                
+                // 注意：不再触发 header-file-open 事件，只记录文件路径，不自动载入
+            }
+        };
+        input.click();
+    }, []);
+    
+    // 监听来自其他组件的文件路径更新
+    useEffect(() => {
+        const handleFileUpdate = (event: Event) => {
+            const customEvent = event as CustomEvent<{ fileName: string }>;
+            if (customEvent.detail?.fileName) {
+                setAudioFileName(customEvent.detail.fileName);
+            }
+        };
+        
+        window.addEventListener('audio-file-update' as any, handleFileUpdate as any);
+        return () => window.removeEventListener('audio-file-update' as any, handleFileUpdate as any);
+    }, []);
 
     return (
         <>
+            {/* 左上角打开文件按钮 */}
+            <div className="header-left-controls">
+                <button 
+                    className="header-control-button"
+                    onClick={toggleFileListPanel}
+                    title="文件列表"
+                >
+                    <PlaylistSVG />
+                </button>
+            </div>
+            
+            {/* 音频文件路径显示 */}
+            {audioFileName && (
+                <div className="header-audio-file-name">
+                    <span>{audioFileName}</span>
+                </div>
+            )}
+            
+            {/* Preferences 页面标题 */}
+            {isPreferencesPage && (
+                <div className="header-page-title">
+                    <h1>{lang.app.fullname}</h1>
+                </div>
+            )}
+            
             {/* 右上角控制按钮区域 */}
             <div className="header-controls-wrapper">
                 {/* Editor 按钮 - 在 Preferences、Lrc-utils、Synchronizer 和 Tune 页面不显示在第一位 */}
@@ -241,14 +380,16 @@ export const Header: React.FC = () => {
                         <PlaySVG />
                     </a>
                     
-                    {/* 全屏按钮 */}
-                    <button 
-                        className="header-control-button fullscreen-btn"
-                        onClick={toggleFullscreen}
-                        title={isFullscreen ? lang.header.exitFullscreen : lang.header.fullscreen}
-                    >
-                        {isFullscreen ? <FullscreenExitSVG /> : <FullscreenSVG />}
-                    </button>
+                    {/* 全屏按钮 - 只在 Player 页面显示 */}
+                    {isPlayerPage && (
+                        <button 
+                            className="header-control-button fullscreen-btn"
+                            onClick={toggleFullscreen}
+                            title={isFullscreen ? lang.header.exitFullscreen : lang.header.fullscreen}
+                        >
+                            {isFullscreen ? <FullscreenExitSVG /> : <FullscreenSVG />}
+                        </button>
+                    )}
                     
                     {/* Player 页面的字体设置按钮 - 只在 Player 页面显示 */}
                     {/* 文字设定按钮 */}

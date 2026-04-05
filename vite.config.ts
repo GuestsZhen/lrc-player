@@ -9,8 +9,22 @@ import { defineConfig, type HtmlTagDescriptor, type Plugin } from "vite";
 import pkg from "./package.json" with { type: "json" };
 import sw_plugin from "./plugins/sw-plugin";
 
-const hash = execSync("git rev-parse --short HEAD").toString().trim();
-const updateTime = execSync("git log -1 --format=%cI").toString().trim();
+// Try to get git info, fallback to default values if git is not available
+let hash = 'unknown';
+// Always use current time as updateTime to track build/update time
+let updateTime = new Date().toISOString();
+
+try {
+    hash = execSync("git rev-parse --short HEAD").toString().trim();
+    // Also try to get git commit time, but prefer current time for tracking updates
+    const gitCommitTime = execSync("git log -1 --format=%cI").toString().trim();
+    console.log(`Git commit: ${hash}, Commit time: ${gitCommitTime}`);
+} catch (error) {
+    console.warn('Git is not available, using default values for hash');
+}
+
+console.log(`Build/Update time: ${updateTime}`);
+console.log(`Version: ${pkg.version}`);
 
 const json_suffix = ".json";
 const lang_dir = "src/languages";

@@ -1,8 +1,8 @@
 {
     "languageName": "English",
     "app": {
-        "name": "LRC Maker",
-        "fullname": "Akari's LRC Maker"
+        "name": "LRC Player",
+        "fullname": "LRC Player"
     },
     "header": {
         "home": "home",

@@ -40,26 +40,97 @@
     font-weight: 600;
 }
 .playlist-panel {
-    position: absolute;  /* 改为 absolute，参考 editor 的弹出方式 */
-    left: 10px;
-    bottom: 60px;
-    width: 250px; /* 宽度调整为 250px */
-    height: 80vh; /* 高度为屏幕高度的 80% */
-    max-height: 80vh; /* 最大高度限制 */
-    background-color: rgba(0, 0, 0, 0.8);
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    position: fixed;  /* 改为 fixed，实现全屏覆盖 */
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 85vh; /* 默认高度为屏幕的 85% */
+    max-height: 85vh;
+    background-color: rgba(30, 30, 30, 0.95);
+    border-radius: 20px 20px 0 0; /* 顶部圆角 */
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
     z-index: 10000;
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    animation: playlist-fade-in 0.3s ease-out;  /* 渐入效果 */
+    transform: translateY(100%); /* 初始状态隐藏在底部 */
+    transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1); /* iOS 风格的缓动函数 */
+    touch-action: none; /* 防止页面滚动干扰手势 */
+}
+
+/* 显示状态 */
+.playlist-panel.show {
+    transform: translateY(0);
+}
+
+/* 隐藏状态（带动画） */
+.playlist-panel.hiding {
+    transform: translateY(100%);
 }
 
 /* 亮色模式下播放列表背景颜色调整 */
 [data-theme="light"] .playlist-panel {
-    background-color: rgba(184, 184, 184, 0.8);
+    background-color: rgba(240, 240, 240, 0.95);
     color: #1c1c1c;
+}
+
+/* iOS 风格的拖拽手柄 */
+.playlist-drag-handle {
+    width: 100%;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    flex-shrink: 0;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1), transparent);
+}
+
+.playlist-drag-handle:active {
+    cursor: grabbing;
+}
+
+.drag-handle-bar {
+    width: 40px;
+    height: 5px;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+    transition: background-color 0.2s ease;
+}
+
+.playlist-drag-handle:hover .drag-handle-bar {
+    background-color: rgba(255, 255, 255, 0.5);
+}
+
+/* 亮色模式下手柄颜色调整 */
+[data-theme="light"] .drag-handle-bar {
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="light"] .playlist-drag-handle:hover .drag-handle-bar {
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+/* 遮罩层 */
+.playlist-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.35s ease, visibility 0.35s ease;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+.playlist-overlay.show {
+    opacity: 1;
+    visibility: visible;
 }
 
 /* 播放列表渐入动画 */
@@ -75,19 +146,13 @@
 }
 
 /* 播放列表渐出动画 - 用于关闭时 */
-.playlist-panel.playlist-hiding {
-    animation: playlist-fade-out 0.3s ease-in forwards;
+.playlist-panel.hiding {
+    transform: translateY(100%);
 }
 
-@keyframes playlist-fade-out {
-    from {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-    to {
-        opacity: 0;
-        transform: translateY(-20px) scale(0.95);
-    }
+/* 拖拽时的过渡效果（禁用 transition，实现跟手） */
+.playlist-panel.dragging {
+    transition: none;
 }
 
 .playlist-header {
@@ -661,6 +726,24 @@
     color: #ffffff;
     font-weight: bold;
     font-size: 1.2rem;  /* 比普通歌名大 20% */
+}
+
+/* 移动端适配 - 竖屏模式 */
+@media (max-width: 768px) and (orientation: portrait) {
+    .playlist-panel {
+        height: 90vh; /* 竖屏模式下更高 */
+        max-height: 90vh;
+        border-radius: 24px 24px 0 0; /* 更大的圆角 */
+    }
+    
+    .playlist-drag-handle {
+        height: 40px; /* 更大的拖拽区域 */
+    }
+    
+    .drag-handle-bar {
+        width: 50px;
+        height: 6px;
+    }
 }
 
 /* 亮色模式下播放列表项播放时样式 - 不设置背景颜色，只高亮加粗 */

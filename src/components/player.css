@@ -233,9 +233,21 @@
     background-color: #000;
 }
 
-/* 全屏时隐藏 header */
+/* 全屏时隐藏 header - 兼容多种浏览器 */
 .player-container.fullscreen ~ .app-header,
-:fullscreen .app-header {
+:fullscreen .app-header,
+:-webkit-full-screen .app-header,
+:-ms-fullscreen .app-header {
+    display: none !important;
+}
+
+/* iOS Safari/Chrome 全屏样式 */
+html:-webkit-full-screen {
+    width: 100%;
+    height: 100%;
+}
+
+html:-webkit-full-screen .app-header {
     display: none !important;
 }
 

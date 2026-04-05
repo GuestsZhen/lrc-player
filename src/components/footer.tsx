@@ -62,6 +62,8 @@ export const Footer: React.FC = () => {
     const [currentTrackIndex, setCurrentTrackIndex] = useState<number>(-1);
     const [showPlaylist, setShowPlaylist] = useState<boolean>(false);
     const [isHiding, setIsHiding] = useState<boolean>(false);  // 控制渐出动画
+    const [isDragging, setIsDragging] = useState<boolean>(false);  // 拖拽状态
+    const [dragOffset, setDragOffset] = useState<number>(0);  // 拖拽偏移量
     const [db, setDb] = useState<IDBDatabase | null>(null);
     const [searchQuery, setSearchQuery] = useState<string>('');
     
@@ -243,14 +245,55 @@ export const Footer: React.FC = () => {
         }
     }, [playlist, currentTrackIndex]);
 
-    // 处理播放列表关闭（带渐出动画）
+    // 处理播放列表关闭（带动画）
     const handleClosePlaylist = useCallback(() => {
         setIsHiding(true);  // 开始渐出动画
         setTimeout(() => {
             setShowPlaylist(false);  // 动画结束后真正隐藏
             setIsHiding(false);  // 重置动画状态
-        }, 300);  // 与动画时长一致
+            setDragOffset(0);  // 重置拖拽偏移
+        }, 350);  // 与 CSS transition 时间一致
     }, []);
+    
+    // 打开播放列表
+    const handleOpenPlaylist = useCallback(() => {
+        setShowPlaylist(true);
+        setIsHiding(false);
+        setDragOffset(0);
+    }, []);
+    
+    // 手势处理 - 触摸开始
+    const handleTouchStart = useCallback((e: React.TouchEvent) => {
+        setIsDragging(true);
+    }, []);
+    
+    // 手势处理 - 触摸移动
+    const handleTouchMove = useCallback((e: React.TouchEvent) => {
+        if (!isDragging) return;
+        
+        const touch = e.touches[0];
+        const deltaY = touch.clientY;
+        
+        // 只允许向下滑动
+        if (deltaY > 0) {
+            setDragOffset(deltaY);
+        }
+    }, [isDragging]);
+    
+    // 手势处理 - 触摸结束
+    const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+        if (!isDragging) return;
+        
+        setIsDragging(false);
+        
+        // 如果下滑距离超过 100px，关闭面板
+        if (dragOffset > 100) {
+            handleClosePlaylist();
+        } else {
+            // 否则恢复原位
+            setDragOffset(0);
+        }
+    }, [isDragging, dragOffset, handleClosePlaylist]);
 
     // 监听来自 audio 组件的播放列表切换事件
     useEffect(() => {
@@ -271,17 +314,91 @@ export const Footer: React.FC = () => {
             const customEvent = event as CustomEvent<{ playMode?: number }>;
             onNextTrack(customEvent.detail?.playMode);
         };
+        
+        // 监听来自 Header 的打开文件事件
+        const handleHeaderFileOpen = (event: Event) => {
+            const customEvent = event as CustomEvent<{ file: File }>;
+            if (customEvent.detail?.file) {
+                const file = customEvent.detail.file;
+                // 处理文件
+                receiveFile(file, setAudioSrc);
+                
+                // 添加到播放列表
+                const id = `${file.name}-${file.size}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+                const name = getBaseName(file.name);
+                const track: ITrackInfo = { id, name, fileName: file.name, file };
+                setPlaylist(prev => [...prev, track]);
+                setCurrentTrackIndex(playlist.length);
+            }
+        };
+        
+        // 监听来自文件列表的播放事件
+        const handlePlayFileFromList = (event: Event) => {
+            const customEvent = event as CustomEvent<{ file: File; lrcFile?: File }>;
+            if (customEvent.detail?.file) {
+                const file = customEvent.detail.file;
+                const lrcFile = customEvent.detail.lrcFile;
+                
+                // 检查文件是否已在播放列表中
+                const trackIndex = playlist.findIndex(track => track.fileName === file.name);
+                
+                if (trackIndex !== -1) {
+                    // 文件已存在，直接切换到该歌曲
+                    receiveFile(playlist[trackIndex].file!, setAudioSrc);
+                    setCurrentTrackIndex(trackIndex);
+                    
+                    // 自动播放
+                    setTimeout(() => {
+                        audioRef.current?.play();
+                    }, 200);
+                    
+                    // 优先使用传入的 LRC 文件，其次使用播放列表中已有的 LRC 文件
+                    const lrcToLoad = lrcFile || playlist[trackIndex].lrcFile;
+                    if (lrcToLoad) {
+                        loadLrcFile(lrcToLoad);
+                    }
+                } else {
+                    // 文件不存在，添加到播放列表并播放
+                    const id = `${file.name}-${file.size}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+                    const name = getBaseName(file.name);
+                    const track: ITrackInfo = { id, name, fileName: file.name, file, lrcFile };
+                    const newIndex = playlist.length;
+                    
+                    setPlaylist(prev => {
+                        const updated = [...prev, track];
+                        saveTrackToDB(track);
+                        return updated;
+                    });
+                    setCurrentTrackIndex(newIndex);
+                    
+                    // 加载音频并播放
+                    receiveFile(file, setAudioSrc);
+                    setTimeout(() => {
+                        audioRef.current?.play();
+                    }, 200);
+                    
+                    // 如果有 LRC 文件，加载歌词
+                    if (lrcFile) {
+                        loadLrcFile(lrcFile);
+                    }
+                }
+            }
+        };
 
         window.addEventListener('toggle-playlist', handleTogglePlaylist);
         window.addEventListener('previous-track', handlePreviousTrack);
         window.addEventListener('next-track', handleNextTrack);
+        window.addEventListener('header-file-open' as any, handleHeaderFileOpen as any);
+        window.addEventListener('play-file-from-list' as any, handlePlayFileFromList as any);
 
         return () => {
             window.removeEventListener('toggle-playlist', handleTogglePlaylist);
             window.removeEventListener('previous-track', handlePreviousTrack);
             window.removeEventListener('next-track', handleNextTrack);
+            window.removeEventListener('header-file-open' as any, handleHeaderFileOpen as any);
+            window.removeEventListener('play-file-from-list' as any, handlePlayFileFromList as any);
         };
-    }, [onPreviousTrack, onNextTrack, showPlaylist]);
+    }, [onPreviousTrack, onNextTrack, showPlaylist, playlist]);
 
     const [audioSrc, setAudioSrc] = useReducer(
         (oldSrc: string, newSrc: string) => {
@@ -368,6 +485,13 @@ export const Footer: React.FC = () => {
         const files = ev.target.files;
         if (!files || files.length === 0) {
             return;
+        }
+
+        // 更新文件路径到 Header
+        if (files.length > 0) {
+            window.dispatchEvent(new CustomEvent('audio-file-update', {
+                detail: { fileName: files[0].name }
+            }));
         }
 
         // 分离音频文件和 LRC 文件
@@ -502,9 +626,28 @@ export const Footer: React.FC = () => {
             {/* 隐藏的音频文件输入 */}
             <input id="audio-input" type="file" accept={accept} multiple hidden={true} onChange={onAudioInputChange} />
             
+            {/* 遮罩层 */}
+            {(showPlaylist || isHiding) && (
+                <div 
+                    className={`playlist-overlay${showPlaylist ? ' show' : ''}`}
+                    onClick={handleClosePlaylist}
+                />
+            )}
+            
             {/* 播放列表面板 */}
             {(showPlaylist || isHiding) && (
-                <div className={`playlist-panel${isHiding ? ' playlist-hiding' : ''}`}>
+                <div 
+                    className={`playlist-panel${showPlaylist ? ' show' : ''}${isHiding ? ' hiding' : ''}${isDragging ? ' dragging' : ''}`}
+                    style={isDragging ? { transform: `translateY(${dragOffset}px)` } : undefined}
+                    onTouchStart={handleTouchStart}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEnd}
+                >
+                    {/* iOS 风格的拖拽手柄 */}
+                    <div className="playlist-drag-handle" onTouchStart={handleTouchStart}>
+                        <div className="drag-handle-bar" />
+                    </div>
+                    
                     <div className="playlist-header">
                         <span>{lang.playlist.title} ({playlist.length}{lang.playlist.tracks})</span>
                         <div className="playlist-header-actions">

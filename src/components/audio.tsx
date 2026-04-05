@@ -469,20 +469,19 @@ export const LrcAudio: React.FC<ILrcAudioProps> = ({ lang, currentTrackName }) =
                 
                 {/* 第三行：控制按钮 */}
                 <div className="controls-row">
-                    {/* 左侧按钮组 */}
-                    <div className="controls-left">
-                        <button
-                            className="ripple glow loadaudio-button"
-                            title="播放列表"
-                            onClick={() => {
-                                const event = new CustomEvent('toggle-playlist');
-                                window.dispatchEvent(event);
-                            }}
-                        >
-                            <PlaylistSVG />
-                        </button>
+                    {/* 左下角播放顺序按钮 */}
+                    <button 
+                        className="ripple glow play-mode-button-left" 
+                        title={playMode === 0 ? '顺序播放' : playMode === 1 ? '随机播放' : '单曲循环'}
+                        onClick={onPlayModeToggle}
+                    >
+                        {playMode === 0 ? <RepeatSVG /> : playMode === 1 ? <ShuffleSVG /> : <RepeatOneSVG />}
+                    </button>
+                    
+                    {/* 中间按钮组 */}
+                    <div className="controls-center">
                         <button 
-                            className="ripple glow" 
+                            className="ripple glow previous-button" 
                             title="上一首歌" 
                             onClick={onPreviousTrack}
                             disabled={!duration}
@@ -498,19 +497,12 @@ export const LrcAudio: React.FC<ILrcAudioProps> = ({ lang, currentTrackName }) =
                             {paused ? <PlaySVG /> : <PauseSVG />}
                         </button>
                         <button 
-                            className="ripple glow" 
+                            className="ripple glow next-button" 
                             title="下一首歌" 
                             onClick={onNextTrack}
                             disabled={!duration}
                         >
                             <NextSVG />
-                        </button>
-                        <button 
-                            className="ripple glow" 
-                            title={playMode === 0 ? '顺序播放' : playMode === 1 ? '随机播放' : '单曲循环'}
-                            onClick={onPlayModeToggle}
-                        >
-                            {playMode === 0 ? <RepeatSVG /> : playMode === 1 ? <ShuffleSVG /> : <RepeatOneSVG />}
                         </button>
                     </div>
                     
@@ -523,15 +515,12 @@ export const LrcAudio: React.FC<ILrcAudioProps> = ({ lang, currentTrackName }) =
             
             {/* 横屏模式保持原有布局 */}
             <div className="landscape-layout">
-                <button
-                    className="ripple glow loadaudio-button"
-                    title="播放列表"
-                    onClick={() => {
-                        const event = new CustomEvent('toggle-playlist');
-                        window.dispatchEvent(event);
-                    }}
+                <button 
+                    className="ripple glow" 
+                    title={playMode === 0 ? '顺序播放' : playMode === 1 ? '随机播放' : '单曲循环'}
+                    onClick={onPlayModeToggle}
                 >
-                    <PlaylistSVG />
+                    {playMode === 0 ? <RepeatSVG /> : playMode === 1 ? <ShuffleSVG /> : <RepeatOneSVG />}
                 </button>
                 <button 
                     className="ripple glow" 
@@ -556,13 +545,6 @@ export const LrcAudio: React.FC<ILrcAudioProps> = ({ lang, currentTrackName }) =
                     disabled={!duration}
                 >
                     <NextSVG />
-                </button>
-                <button 
-                    className="ripple glow" 
-                    title={playMode === 0 ? '顺序播放' : playMode === 1 ? '随机播放' : '单曲循环'}
-                    onClick={onPlayModeToggle}
-                >
-                    {playMode === 0 ? <RepeatSVG /> : playMode === 1 ? <ShuffleSVG /> : <RepeatOneSVG />}
                 </button>
 
                 <TimeLine duration={duration} paused={paused} />
