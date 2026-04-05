@@ -80,6 +80,8 @@ export const Content: React.FC = () => {
     const [audioSrc, setAudioSrc] = useState<string>(''); // 当前音频源
     const [currentPlayingFile, setCurrentPlayingFile] = useState<string>(''); // 当前播放的文件名
     const [fileObjects, setFileObjects] = useState<Map<string, File>>(new Map()); // 存储文件对象
+    const [currentTrackIndex, setCurrentTrackIndex] = useState<number>(-1); // 当前播放索引
+    const [db, setDb] = useState<IDBDatabase | null>(null); // IndexedDB 实例
     
     useEffect(() => {
         function onHashchange() {
@@ -176,6 +178,45 @@ export const Content: React.FC = () => {
         input.click();
     }, [fileObjects]);
 
+    // 初始化 IndexedDB
+    useEffect(() => {
+        const request = indexedDB.open('MusicPlayerDB', 1);
+        
+        request.onerror = () => {
+            console.error('IndexedDB 打开失败');
+        };
+        
+        request.onsuccess = () => {
+            setDb(request.result);
+        };
+        
+        request.onupgradeneeded = (event) => {
+            const database = (event.target as IDBOpenDBRequest).result;
+            
+            // 创建对象仓库
+            if (!database.objectStoreNames.contains('tracks')) {
+                const store = database.createObjectStore('tracks', { keyPath: 'id' });
+                store.createIndex('name', 'name', { unique: false });
+                store.createIndex('fileName', 'fileName', { unique: false });
+            }
+        };
+        
+        return () => {
+            if (db) {
+                db.close();
+            }
+        };
+    }, []);
+
+    // 保存文件到 IndexedDB
+    const saveTrackToDB = useCallback((track: { id: string; name: string; fileName: string; file?: File; lrcFile?: File }) => {
+        if (!db) return;
+        
+        const transaction = db.transaction(['tracks'], 'readwrite');
+        const store = transaction.objectStore('tracks');
+        store.put(track);
+    }, [db]);
+
     // 处理点击文件列表中的歌曲（加载并播放）
     const handlePlayFile = useCallback((fileName: string) => {
         // 查找对应的文件对象
@@ -201,12 +242,112 @@ export const Content: React.FC = () => {
             }
         }
         
+        // 更新当前播放索引
+        const trackIndex = selectedFiles.indexOf(fileName);
+        if (trackIndex !== -1) {
+            setCurrentTrackIndex(trackIndex);
+        }
+        
+        // 保存到 IndexedDB
+        const id = `${fileName}-${file.size}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+        const name = fileName.substring(0, fileName.lastIndexOf('.'));
+        saveTrackToDB({ id, name, fileName, file, lrcFile });
+        
         // 触发事件通知 Footer 组件播放该文件
         window.dispatchEvent(new CustomEvent('play-file-from-list', {
             detail: { file, lrcFile }
         }));
         setCurrentPlayingFile(fileName);
-    }, [fileObjects]);
+    }, [fileObjects, selectedFiles, saveTrackToDB]);
+
+    // 初始化 IndexedDB
+    useEffect(() => {
+        const request = indexedDB.open('MusicPlayerDB', 1);
+        
+        request.onerror = () => {
+            console.error('IndexedDB 打开失败');
+        };
+        
+        request.onsuccess = () => {
+            setDb(request.result);
+        };
+        
+        request.onupgradeneeded = (event) => {
+            const database = (event.target as IDBOpenDBRequest).result;
+            
+            // 创建对象仓库
+            if (!database.objectStoreNames.contains('tracks')) {
+                const store = database.createObjectStore('tracks', { keyPath: 'id' });
+                store.createIndex('name', 'name', { unique: false });
+                store.createIndex('fileName', 'fileName', { unique: false });
+            }
+        };
+        
+        return () => {
+            if (db) {
+                db.close();
+            }
+        };
+    }, []);
+
+    // 上一首歌
+    const onPreviousTrack = useCallback(() => {
+        if (selectedFiles.length === 0) return;
+        
+        const newIndex = currentTrackIndex <= 0 ? selectedFiles.length - 1 : currentTrackIndex - 1;
+        const fileName = selectedFiles[newIndex];
+        handlePlayFile(fileName);
+        setCurrentTrackIndex(newIndex);
+    }, [selectedFiles, currentTrackIndex, handlePlayFile]);
+
+    // 下一首歌
+    const onNextTrack = useCallback((mode?: number) => {
+        if (selectedFiles.length === 0) return;
+        
+        let newIndex: number;
+        
+        // 播放模式：0=顺序播放，1=随机播放，2=单曲循环
+        if (mode === 1) {
+            // 随机播放
+            const availableIndexes = Array.from({ length: selectedFiles.length }, (_, i) => i)
+                .filter(i => i !== currentTrackIndex);
+            const randomIndex = Math.floor(Math.random() * availableIndexes.length);
+            newIndex = availableIndexes[randomIndex];
+        } else if (mode === 2) {
+            // 单曲循环
+            newIndex = currentTrackIndex;
+            const fileName = selectedFiles[newIndex];
+            handlePlayFile(fileName);
+            return;
+        } else {
+            // 顺序播放
+            newIndex = currentTrackIndex >= selectedFiles.length - 1 ? 0 : currentTrackIndex + 1;
+        }
+        
+        const fileName = selectedFiles[newIndex];
+        handlePlayFile(fileName);
+        setCurrentTrackIndex(newIndex);
+    }, [selectedFiles, currentTrackIndex, handlePlayFile]);
+
+    // 监听来自 footer 的上一曲/下一曲事件
+    useEffect(() => {
+        const handlePreviousTrackEvent = () => {
+            onPreviousTrack();
+        };
+
+        const handleNextTrackEvent = (event: Event) => {
+            const customEvent = event as CustomEvent<{ playMode?: number }>;
+            onNextTrack(customEvent.detail?.playMode);
+        };
+
+        window.addEventListener('previous-track', handlePreviousTrackEvent);
+        window.addEventListener('next-track', handleNextTrackEvent);
+
+        return () => {
+            window.removeEventListener('previous-track', handlePreviousTrackEvent);
+            window.removeEventListener('next-track', handleNextTrackEvent);
+        };
+    }, [onPreviousTrack, onNextTrack]);
 
     const [lrcState, lrcDispatch] = useLrc(() => {
         return {
