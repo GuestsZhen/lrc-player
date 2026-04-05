@@ -1,0 +1,55 @@
+{
+  "hash": "0c936cda",
+  "configHash": "8ad97102",
+  "lockfileHash": "77e82f05",
+  "browserHash": "74b55d4f",
+  "optimized": {
+    "react": {
+      "src": "../../node_modules/.pnpm/react@18.3.1/node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "ada245bd",
+      "needsInterop": true
+    },
+    "react-dom/client": {
+      "src": "../../node_modules/.pnpm/react-dom@18.3.1_react@18.3.1/node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "3502b2b3",
+      "needsInterop": true
+    },
+    "react/jsx-dev-runtime": {
+      "src": "../../node_modules/.pnpm/react@18.3.1/node_modules/react/jsx-dev-runtime.js",
+      "file": "react_jsx-dev-runtime.js",
+      "fileHash": "30d05990",
+      "needsInterop": true
+    },
+    "@lrc-maker/lrc-parser": {
+      "src": "../../node_modules/.pnpm/@lrc-maker+lrc-parser@0.1.17/node_modules/@lrc-maker/lrc-parser/build/esm/lrc-parser.js",
+      "file": "@lrc-maker_lrc-parser.js",
+      "fileHash": "dc467b4c",
+      "needsInterop": false
+    },
+    "react-dom": {
+      "src": "../../node_modules/.pnpm/react-dom@18.3.1_react@18.3.1/node_modules/react-dom/index.js",
+      "file": "react-dom.js",
+      "fileHash": "089124a5",
+      "needsInterop": true
+    },
+    "@wavesurfer/react": {
+      "src": "../../node_modules/.pnpm/@wavesurfer+react@1.0.11_react@18.3.1_wavesurfer.js@7.11.1/node_modules/@wavesurfer/react/dist/index.js",
+      "file": "@wavesurfer_react.js",
+      "fileHash": "f9021e6b",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "chunk-4MPYUGYD": {
+      "file": "chunk-4MPYUGYD.js"
+    },
+    "chunk-WQJA6ET6": {
+      "file": "chunk-WQJA6ET6.js"
+    },
+    "chunk-5WRI5ZAA": {
+      "file": "chunk-5WRI5ZAA.js"
+    }
+  }
+}
