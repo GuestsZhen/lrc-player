@@ -7,6 +7,7 @@ import {
     audioStatePubSub,
     currentTimePubSub,
 } from "../utils/audiomodule.js";
+import { wakeLockManager } from "../utils/screen-wake-lock.js";
 import { appContext, ChangBits } from "./app.context";
 import { loadAudioDialogRef } from "./loadaudio.js";
 import { PauseSVG, PlaySVG, SettingsSVG, PreviousSVG, NextSVG, PlaylistSVG, RepeatSVG, ShuffleSVG, RepeatOneSVG, PreferencesSVG } from "./svg.js";
@@ -311,6 +312,22 @@ export const LrcAudio: React.FC<ILrcAudioProps> = ({ lang, currentTrackName }) =
     const [rate, setRate] = useState(audioRef.playbackRate);
     
     const [localAudioMode, setLocalAudioMode] = useState(false);
+
+    // Wake Lock 屏幕常亮功能
+    useEffect(() => {
+        // 如果正在播放，请求屏幕常亮
+        if (!paused && duration > 0) {
+            wakeLockManager.request();
+        } else {
+            // 暂停时释放屏幕常亮
+            wakeLockManager.release();
+        }
+
+        // 清理函数：组件卸载时释放
+        return () => {
+            wakeLockManager.release();
+        };
+    }, [paused, duration]);
 
     useEffect(() => {
         return audioStatePubSub.sub(self.current, (data: AudioState) => {

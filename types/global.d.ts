@@ -16,6 +16,15 @@ declare global {
 
     interface Navigator {
         standalone: boolean;
+        readonly wakeLock?: {
+            request(type: 'screen'): Promise<WakeLockSentinel>;
+        };
+    }
+
+    interface WakeLockSentinel extends EventTarget {
+        readonly type: 'screen';
+        readonly released: boolean;
+        release(): Promise<void>;
     }
 
     namespace i18n {
