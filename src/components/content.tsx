@@ -227,11 +227,35 @@ export const Content: React.FC = () => {
         input.click();
     }, [fileObjects]);
 
-    // 初始化播放列表管理器
+    // 初始化播放列表管理器并加载已保存的播放列表
     useEffect(() => {
-        playlistManager.init().catch(err => {
-            console.error('播放列表管理器初始化失败:', err);
-        });
+        const loadPlaylist = async () => {
+            try {
+                await playlistManager.init();
+                // 从 IndexedDB 加载所有音轨
+                const tracks = await playlistManager.loadAllTracks();
+                if (tracks.length > 0) {
+                    // 提取文件名列表
+                    const fileNames = tracks.map(track => track.fileName);
+                    setSelectedFiles(fileNames);
+                    console.log(`已从 IndexedDB 恢复 ${fileNames.length} 首歌曲到文件列表`);
+                    
+                    // 恢复上次播放的索引（如果有）
+                    const savedIndex = localStorage.getItem('last-played-index');
+                    if (savedIndex) {
+                        const index = parseInt(savedIndex, 10);
+                        if (index >= 0 && index < fileNames.length) {
+                            setCurrentTrackIndex(index);
+                            setCurrentPlayingFile(fileNames[index]);
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error('加载播放列表失败:', err);
+            }
+        };
+        
+        loadPlaylist();
         
         return () => {
             // 组件卸载时不需要关闭数据库

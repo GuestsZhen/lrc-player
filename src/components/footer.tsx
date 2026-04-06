@@ -63,11 +63,32 @@ export const Footer: React.FC = () => {
     const [playMode, setPlayMode] = useState<number>(0);  // 播放模式：0=顺序播放，1=随机播放，2=单曲循环
     
     
-    // 初始化播放列表管理器
+    // 初始化播放列表管理器并加载已保存的播放列表
     useEffect(() => {
-        playlistManager.init().catch(err => {
-            console.error('播放列表管理器初始化失败:', err);
-        });
+        const loadPlaylist = async () => {
+            try {
+                await playlistManager.init();
+                // 从 IndexedDB 加载所有音轨
+                const tracks = await playlistManager.loadAllTracks();
+                if (tracks.length > 0) {
+                    setPlaylist(tracks);
+                    console.log(`已从 IndexedDB 加载 ${tracks.length} 首歌曲`);
+                    
+                    // 恢复上次播放的索引（如果有）
+                    const savedIndex = localStorage.getItem('last-played-index');
+                    if (savedIndex) {
+                        const index = parseInt(savedIndex, 10);
+                        if (index >= 0 && index < tracks.length) {
+                            setCurrentTrackIndex(index);
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error('加载播放列表失败:', err);
+            }
+        };
+        
+        loadPlaylist();
         
         return () => {
             // 组件卸载时不需要关闭数据库，因为可能在其他地方还在使用
@@ -78,6 +99,16 @@ export const Footer: React.FC = () => {
     const saveTrackToDB = useCallback((track: ITrackInfo) => {
         playlistManager.saveTrack(track).catch(err => {
             console.error('保存音轨失败:', err);
+        });
+        
+        // 同时更新本地状态
+        setPlaylist(prev => {
+            // 检查是否已存在
+            const exists = prev.some(t => t.fileName === track.fileName);
+            if (!exists) {
+                return [...prev, track];
+            }
+            return prev;
         });
     }, []);
     
@@ -378,6 +409,9 @@ export const Footer: React.FC = () => {
             const customEvent = event as CustomEvent<{ index: number }>;
             if (customEvent.detail?.index !== undefined) {
                 setCurrentTrackIndex(customEvent.detail.index);
+                
+                // 保存当前播放索引到 localStorage，以便下次恢复
+                localStorage.setItem('last-played-index', customEvent.detail.index.toString());
             }
         };
         

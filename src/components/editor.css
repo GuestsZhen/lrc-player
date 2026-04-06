@@ -487,6 +487,7 @@
     .tune-header .editor-title {
         text-align: center;
         width: 100%;
+        font-size: 1.2em; /* 竖屏模式下字体大小 */
     }
 
     .tune-controls {
