@@ -37,6 +37,7 @@
         "currentOpacity": "目前透明度",
         "detectKey": "檢測調性",
         "keyDetection": "調性檢測",
+        "songAdjustment": "歌曲調整",
         "detectingKey": "檢測中...",
         "reDetect": "重新檢測",
         "noKeyDetected": "點擊檢測當前歌曲調性",

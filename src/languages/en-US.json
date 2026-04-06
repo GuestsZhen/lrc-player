@@ -37,6 +37,7 @@
         "currentOpacity": "Current Opacity",
         "detectKey": "Detect Key",
         "keyDetection": "Key Detection",
+        "songAdjustment": "Song Adjustment",
         "detectingKey": "Detecting...",
         "reDetect": "Re-detect",
         "noKeyDetected": "Click to detect current song key",

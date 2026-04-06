@@ -418,17 +418,16 @@
 
 .key-display {
     width: 100%;
-    padding: 20px;
+    padding: 5px;  /* 调整内边距 */
     background: linear-gradient(135deg, rgba(var(--theme-rgb), 0.2), rgba(var(--theme-rgb), 0.1));
     border-radius: 8px;
     text-align: center;
 }
 
 .key-name {
-    font-size: 1.8rem;
-    font-weight: 700;
+    font-size: 1.35rem;  /* 当前字体的 1.5 倍 */
+    font-weight: 600;
     color: var(--theme-color);
-    text-shadow: 0 2px 8px rgba(var(--theme-rgb), 0.3);
 }
 
 .re-detect-btn,
@@ -462,8 +461,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 16px;
-    padding: 20px 0;
+    gap: 1px;
+    padding: 1px 0;
 }
 
 .no-key-detected p {

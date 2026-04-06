@@ -83,6 +83,12 @@ export const Header: React.FC = () => {
     const [detectedKey, setDetectedKey] = useState<string>('');
     const [isDetectingKey, setIsDetectingKey] = useState(false);
     const [showKeyDetectionMenu, setShowKeyDetectionMenu] = useState(false);
+    
+    // 音高调节状态（半音数）
+    const [pitchSemitones, setPitchSemitones] = useState(0);
+    
+    // 速度调节状态
+    const [playbackRate, setPlaybackRate] = useState(1.0);
 
     // 切换全屏 - 兼容 iOS
     const toggleFullscreen = async () => {
@@ -577,8 +583,8 @@ export const Header: React.FC = () => {
                         </div>
                     )}
                     
-                    {/* 调性检测按钮 - 只在 Player 页面显示 */}
-                    {isPlayerPage && (
+                    {/* 歌曲调整按钮 - 在 Player 和 Synchronizer 页面显示 */}
+                    {(isPlayerPage || isSynchronizerPage) && (
                         <div style={{ position: 'relative' }}>
                             <button 
                                 className="player-control-button key-detection-btn"
@@ -586,23 +592,19 @@ export const Header: React.FC = () => {
                                     console.log('[Header] Key detection button clicked');
                                     console.log('[Header] Current state:', { showKeyDetectionMenu, detectedKey, isDetectingKey });
                                     setShowKeyDetectionMenu(!showKeyDetectionMenu);
-                                    // 如果菜单打开且还没有检测结果，触发检测
-                                    if (!showKeyDetectionMenu && !detectedKey && !isDetectingKey) {
-                                        console.log('[Header] Triggering key detection...');
-                                        window.dispatchEvent(new CustomEvent('trigger-key-detection'));
-                                    }
                                 }}
-                                title={detectedKey || lang.header.detectKey}
+                                title={lang.header.songAdjustment || '歌曲调整'}
                             >
                                 <MusicKeySVG />
                                 {detectedKey && <span className="key-badge">{detectedKey.split(' ')[0]}</span>}
                             </button>
                             
-                            {/* 调性检测菜单 */}
+                            {/* 歌曲调整菜单 */}
                             {showKeyDetectionMenu && (
                                 <div className={`key-detection-menu${isHiding ? ' menu-hiding' : ''}`}>
+                                    {/* 调性检测 */}
                                     <div className="player-settings-group">
-                                        <div className="player-settings-label">{lang.header.keyDetection || '调性检测'}</div>
+                                        <div className="player-settings-label">{lang.header.songAdjustment || '歌曲调整'}</div>
                                         
                                         {isDetectingKey ? (
                                             <div className="key-detecting">
@@ -625,17 +627,78 @@ export const Header: React.FC = () => {
                                             </div>
                                         ) : (
                                             <div className="no-key-detected">
-                                                <p>{lang.header.noKeyDetected || '点击检测当前歌曲调性'}</p>
                                                 <button 
                                                     className="start-detect-btn"
                                                     onClick={() => {
                                                         window.dispatchEvent(new CustomEvent('trigger-key-detection'));
                                                     }}
                                                 >
-                                                    {lang.header.startDetection || '开始检测'}
+                                                    {lang.header.keyDetection || '调性检测'}
                                                 </button>
                                             </div>
                                         )}
+                                    </div>
+                                    
+                                    {/* 音高调节 */}
+                                    <div className="player-settings-group">
+                                        <div className="player-settings-label">音高调节</div>
+                                        <div className="player-settings-options">
+                                            <button 
+                                                className="player-setting-btn"
+                                                onClick={() => setPitchSemitones(Math.max(-12, pitchSemitones - 1))}
+                                                disabled={pitchSemitones <= -12}
+                                                title="降低一个半音"
+                                            >
+                                                -
+                                            </button>
+                                            <button 
+                                                className="player-setting-btn"
+                                                onClick={() => setPitchSemitones(0)}
+                                                title="重置为原调"
+                                                style={{ minWidth: '50px' }}
+                                            >
+                                                {pitchSemitones > 0 ? '+' : ''}{pitchSemitones}
+                                            </button>
+                                            <button 
+                                                className="player-setting-btn"
+                                                onClick={() => setPitchSemitones(Math.min(12, pitchSemitones + 1))}
+                                                disabled={pitchSemitones >= 12}
+                                                title="升高一个半音"
+                                            >
+                                                +
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* 速度调节 */}
+                                    <div className="player-settings-group">
+                                        <div className="player-settings-label">速度调节</div>
+                                        <div className="player-settings-options">
+                                            <button 
+                                                className="player-setting-btn"
+                                                onClick={() => setPlaybackRate(Math.max(0.5, playbackRate - 0.1))}
+                                                disabled={playbackRate <= 0.5}
+                                                title="减慢速度"
+                                            >
+                                                -
+                                            </button>
+                                            <button 
+                                                className="player-setting-btn"
+                                                onClick={() => setPlaybackRate(1.0)}
+                                                title="重置为正常速度"
+                                                style={{ minWidth: '60px' }}
+                                            >
+                                                {playbackRate.toFixed(1)}x
+                                            </button>
+                                            <button 
+                                                className="player-setting-btn"
+                                                onClick={() => setPlaybackRate(Math.min(2.0, playbackRate + 0.1))}
+                                                disabled={playbackRate >= 2.0}
+                                                title="加快速度"
+                                            >
+                                                +
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             )}
