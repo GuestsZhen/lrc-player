@@ -273,3 +273,15 @@ export const FullscreenExitSVG: React.FC = () => (
         <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z" />
     </svg>
 );
+
+// 音乐调性图标（音符 + 钥匙）
+export const MusicKeySVG: React.FC = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+        <path fill="none" d="M0 0h24v24H0V0z" />
+        {/* 音符 */}
+        <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
+        {/* 钥匙孔 */}
+        <circle cx="18" cy="7" r="2" opacity="0.7" />
+        <path d="M18 9v4h-1v2h2v-2h-1V9z" opacity="0.7" />
+    </svg>
+);

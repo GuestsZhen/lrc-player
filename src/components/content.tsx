@@ -11,6 +11,7 @@ import { appContext, ChangBits } from "./app.context.js";
 import { AkariNotFound, AkariOdangoLoading } from "./svg.img.js";
 import { FolderSVG, DeleteSVG } from "./svg.js";
 import { playlistManager } from "../utils/playlist-manager.js";
+import { simpleKeyDetector } from "../utils/simple-key-detector.js";
 
 const LazyEditor = lazy(async () =>
     import("./editor.js").then(({ Eidtor }) => {
@@ -292,6 +293,11 @@ export const Content: React.FC = () => {
         }));
         
         setCurrentPlayingFile(fileName);
+        
+        // 触发调性检测（延迟执行，避免与 WaveSurfer 冲突）
+        setTimeout(() => {
+            detectAudioKey(file);
+        }, 500);
     }, [fileObjects, selectedFiles, saveTrackToDB]);
 
     // 上一首歌 - 暂时禁用
@@ -303,6 +309,75 @@ export const Content: React.FC = () => {
     const onNextTrack = useCallback((_mode?: number) => {
         console.log('下一曲功能已禁用');
     }, []);
+
+    // 调性检测函数（使用轻量级实现）
+    const detectAudioKey = useCallback(async (file: File) => {
+        // 通知 Header 开始检测
+        window.dispatchEvent(new CustomEvent('key-detection-update', {
+            detail: { fullKey: '', isDetecting: true }
+        }));
+        
+        try {
+            // 执行调性检测
+            const result = await simpleKeyDetector.detectKeyFromFile(file);
+            
+            // 通知 Header 检测结果
+            window.dispatchEvent(new CustomEvent('key-detection-update', {
+                detail: { fullKey: result.fullKey, isDetecting: false }
+            }));
+            
+            console.log('[Content] 调性检测完成:', result);
+        } catch (error: any) {
+            // 忽略 AbortError，这通常是由于快速切换歌曲导致的
+            if (error.name === 'AbortError') {
+                console.log('[Content] 调性检测被中断（正常现象）');
+            } else {
+                console.error('[Content] 调性检测失败:', error);
+            }
+            
+            // 通知 Header 检测失败
+            window.dispatchEvent(new CustomEvent('key-detection-update', {
+                detail: { fullKey: '', isDetecting: false }
+            }));
+        }
+    }, []);
+
+    // 监听手动触发调性检测事件
+    useEffect(() => {
+        const handleTriggerDetection = async () => {
+            console.log('[Content] Received trigger-key-detection event');
+            console.log('[Content] Current playing file:', currentPlayingFile);
+            console.log('[Content] File objects keys:', Array.from(fileObjects.keys()));
+            
+            let fileToDetect: File | undefined;
+            
+            // 优先使用当前播放的文件
+            if (currentPlayingFile && fileObjects.has(currentPlayingFile)) {
+                fileToDetect = fileObjects.get(currentPlayingFile);
+                console.log('[Content] Using current playing file:', fileToDetect?.name);
+            } else {
+                // 如果没有当前播放文件，尝试从 fileObjects 中找到第一个 MP3 文件
+                const audioFileName = Array.from(fileObjects.keys()).find(name => 
+                    name.endsWith('.mp3') || name.endsWith('.wav') || name.endsWith('.flac')
+                );
+                
+                if (audioFileName) {
+                    fileToDetect = fileObjects.get(audioFileName);
+                    console.log('[Content] Using first audio file:', audioFileName);
+                }
+            }
+            
+            if (fileToDetect) {
+                console.log('[Content] Found file:', fileToDetect.name, 'Size:', fileToDetect.size);
+                await detectAudioKey(fileToDetect);
+            } else {
+                console.warn('[Content] No audio file found for key detection');
+            }
+        };
+        
+        window.addEventListener('trigger-key-detection' as any, handleTriggerDetection as any);
+        return () => window.removeEventListener('trigger-key-detection' as any, handleTriggerDetection as any);
+    }, [currentPlayingFile, fileObjects, detectAudioKey]);
 
     const [lrcState, lrcDispatch] = useLrc(() => {
         return {

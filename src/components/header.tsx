@@ -2,7 +2,7 @@ import ROUTER from "#const/router.json" assert { type: "json" };
 import { useContext, useEffect, useState, useCallback } from "react";
 import { prependHash } from "../utils/router.js";
 import { appContext } from "./app.context.js";
-import { PlaySVG, EditorSVG, FullscreenSVG, FullscreenExitSVG, TuneSVG, SynchronizerSVG, SettingsTSVG, PlaylistSVG } from "./svg.js";
+import { PlaySVG, EditorSVG, FullscreenSVG, FullscreenExitSVG, TuneSVG, SynchronizerSVG, SettingsTSVG, PlaylistSVG, MusicKeySVG } from "./svg.js";
 
 export const Header: React.FC = () => {
     const { lang } = useContext(appContext);
@@ -78,6 +78,11 @@ export const Header: React.FC = () => {
     const [playerSubLyricOpacity, setPlayerSubLyricOpacity] = useState(() => {
         return Number(sessionStorage.getItem('player-sub-opacity')) || 0.3;
     });
+    
+    // 调性检测结果
+    const [detectedKey, setDetectedKey] = useState<string>('');
+    const [isDetectingKey, setIsDetectingKey] = useState(false);
+    const [showKeyDetectionMenu, setShowKeyDetectionMenu] = useState(false);
 
     // 切换全屏 - 兼容 iOS
     const toggleFullscreen = async () => {
@@ -208,6 +213,19 @@ export const Header: React.FC = () => {
         
         window.addEventListener('player-font-size-update' as any, handleFontSizeChange as any);
         return () => window.removeEventListener('player-font-size-update' as any, handleFontSizeChange as any);
+    }, []);
+    
+    // 监听调性检测完成事件
+    useEffect(() => {
+        const handleKeyDetected = (event: CustomEvent<{ fullKey: string; isDetecting: boolean }>) => {
+            if (event.detail) {
+                setDetectedKey(event.detail.fullKey || '');
+                setIsDetectingKey(event.detail.isDetecting || false);
+            }
+        };
+        
+        window.addEventListener('key-detection-update' as any, handleKeyDetected as any);
+        return () => window.removeEventListener('key-detection-update' as any, handleKeyDetected as any);
     }, []);
     
     // 点击其他区域时关闭文字设定菜单（带动画）
@@ -525,6 +543,79 @@ export const Header: React.FC = () => {
                                                 +
                                             </button>
                                         </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                    
+                    {/* 调性检测按钮 - 只在 Player 页面显示 */}
+                    {isPlayerPage && (
+                        <div style={{ position: 'relative' }}>
+                            <button 
+                                className="player-control-button key-detection-btn"
+                                onClick={() => {
+                                    console.log('[Header] Key detection button clicked');
+                                    console.log('[Header] Current state:', { showKeyDetectionMenu, detectedKey, isDetectingKey });
+                                    setShowKeyDetectionMenu(!showKeyDetectionMenu);
+                                    // 如果菜单打开且还没有检测结果，触发检测
+                                    if (!showKeyDetectionMenu && !detectedKey && !isDetectingKey) {
+                                        console.log('[Header] Triggering key detection...');
+                                        window.dispatchEvent(new CustomEvent('trigger-key-detection'));
+                                    }
+                                }}
+                                title={detectedKey || lang.header.detectKey}
+                            >
+                                <MusicKeySVG />
+                                {detectedKey && <span className="key-badge">{detectedKey.split(' ')[0]}</span>}
+                            </button>
+                            
+                            {/* 调性检测菜单 */}
+                            {showKeyDetectionMenu && (
+                                <div className="key-detection-menu">
+                                    <div className="key-detection-header">
+                                        <h4>{lang.header.keyDetection || '调性检测'}</h4>
+                                        <button 
+                                            className="close-key-menu"
+                                            onClick={() => setShowKeyDetectionMenu(false)}
+                                        >
+                                            ✕
+                                        </button>
+                                    </div>
+                                    
+                                    <div className="key-detection-content">
+                                        {isDetectingKey ? (
+                                            <div className="key-detecting">
+                                                <div className="detecting-spinner"></div>
+                                                <p>{lang.header.detectingKey || '检测中...'}</p>
+                                            </div>
+                                        ) : detectedKey ? (
+                                            <div className="key-result">
+                                                <div className="key-display">
+                                                    <span className="key-name">{detectedKey}</span>
+                                                </div>
+                                                <button 
+                                                    className="re-detect-btn"
+                                                    onClick={() => {
+                                                        window.dispatchEvent(new CustomEvent('trigger-key-detection'));
+                                                    }}
+                                                >
+                                                    {lang.header.reDetect || '重新检测'}
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="no-key-detected">
+                                                <p>{lang.header.noKeyDetected || '点击检测当前歌曲调性'}</p>
+                                                <button 
+                                                    className="start-detect-btn"
+                                                    onClick={() => {
+                                                        window.dispatchEvent(new CustomEvent('trigger-key-detection'));
+                                                    }}
+                                                >
+                                                    {lang.header.startDetection || '开始检测'}
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             )}

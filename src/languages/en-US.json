@@ -34,7 +34,13 @@
         "subOpacity": "Sub-line Opacity",
         "increaseOpacity": "Increase Opacity",
         "decreaseOpacity": "Decrease Opacity",
-        "currentOpacity": "Current Opacity"
+        "currentOpacity": "Current Opacity",
+        "detectKey": "Detect Key",
+        "keyDetection": "Key Detection",
+        "detectingKey": "Detecting...",
+        "reDetect": "Re-detect",
+        "noKeyDetected": "Click to detect current song key",
+        "startDetection": "Start Detection"
     },
     "audio": {
         "loadAudio": "load audio",

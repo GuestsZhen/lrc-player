@@ -34,7 +34,13 @@
         "subOpacity": "副行透明度",
         "increaseOpacity": "增大透明度",
         "decreaseOpacity": "减小透明度",
-        "currentOpacity": "当前透明度"
+        "currentOpacity": "当前透明度",
+        "detectKey": "检测调性",
+        "keyDetection": "调性检测",
+        "detectingKey": "检测中...",
+        "reDetect": "重新检测",
+        "noKeyDetected": "点击检测当前歌曲调性",
+        "startDetection": "开始检测"
     },
     "audio": {
         "loadAudio": "加载音频",
