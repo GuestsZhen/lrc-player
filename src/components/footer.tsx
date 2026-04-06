@@ -241,14 +241,14 @@ export const Footer: React.FC = () => {
     }, []);
     
     // 打开播放列表
-    const handleOpenPlaylist = useCallback(() => {
+    const _handleOpenPlaylist = useCallback(() => {
         setShowPlaylist(true);
         setIsHiding(false);
         setDragOffset(0);
     }, []);
     
     // 手势处理 - 触摸开始
-    const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    const handleTouchStart = useCallback((_e: React.TouchEvent) => {
         setIsDragging(true);
     }, []);
     
@@ -266,7 +266,7 @@ export const Footer: React.FC = () => {
     }, [isDragging]);
     
     // 手势处理 - 触摸结束
-    const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    const handleTouchEnd = useCallback((_e: React.TouchEvent) => {
         if (!isDragging) return;
         
         setIsDragging(false);
@@ -296,7 +296,7 @@ export const Footer: React.FC = () => {
             onPreviousTrack();
         };
 
-        const handleNextTrack = (event: Event) => {
+        const handleNextTrack = (_event: Event) => {
             // 调用下一首功能
             onNextTrack();
         };

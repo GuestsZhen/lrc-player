@@ -301,12 +301,12 @@ export const Content: React.FC = () => {
     }, [fileObjects, selectedFiles, saveTrackToDB]);
 
     // 上一首歌 - 暂时禁用
-    const onPreviousTrack = useCallback(() => {
+    const _onPreviousTrack = useCallback(() => {
         console.log('上一曲功能已禁用');
     }, []);
 
     // 下一首歌 - 暂时禁用
-    const onNextTrack = useCallback((_mode?: number) => {
+    const _onNextTrack = useCallback((_mode?: number) => {
         console.log('下一曲功能已禁用');
     }, []);
 

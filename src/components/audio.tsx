@@ -10,7 +10,7 @@ import {
 import { wakeLockManager } from "../utils/screen-wake-lock.js";
 import { appContext, ChangBits } from "./app.context";
 import { loadAudioDialogRef } from "./loadaudio.js";
-import { PauseSVG, PlaySVG, SettingsSVG, PreviousSVG, NextSVG, PlaylistSVG, RepeatSVG, ShuffleSVG, RepeatOneSVG, PreferencesSVG } from "./svg.js";
+import { PauseSVG, PlaySVG, SettingsSVG, PreviousSVG, NextSVG, RepeatSVG, ShuffleSVG, RepeatOneSVG, PreferencesSVG } from "./svg.js";
 import { Waveform } from "./waveform";
 
 interface ISliderProps {
@@ -404,11 +404,11 @@ export const LrcAudio: React.FC<ILrcAudioProps> = ({ lang, currentTrackName }) =
         return duration ? convertTimeToTag(duration, fixed, false) : false;
     }, [duration, fixed]);
 
-    const onReplay5s = useCallback((ev: React.MouseEvent<HTMLButtonElement>) => {
+    const _onReplay5s = useCallback((ev: React.MouseEvent<HTMLButtonElement>) => {
         audioRef.step(ev, -5);
     }, []);
 
-    const onForward5s = useCallback((ev: React.MouseEvent<HTMLButtonElement>) => {
+    const _onForward5s = useCallback((ev: React.MouseEvent<HTMLButtonElement>) => {
         audioRef.step(ev, 5);
     }, []);
 
@@ -429,7 +429,7 @@ export const LrcAudio: React.FC<ILrcAudioProps> = ({ lang, currentTrackName }) =
         });
     }, []);
 
-    const onLoadAudioButtonClick = useCallback(() => {
+    const _onLoadAudioButtonClick = useCallback(() => {
         loadAudioDialogRef.open();
     }, []);
 

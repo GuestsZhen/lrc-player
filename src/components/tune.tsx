@@ -349,7 +349,7 @@ export const Tune: React.FC<{
     // 转调后的文本是自动生成的，不需要清除功能
 
     // 上传文本文件
-    const onTextFileUpload = useCallback(
+    const _onTextFileUpload = useCallback(
         (ev: React.ChangeEvent<HTMLInputElement>) => {
             if (ev.target.files === null || ev.target.files.length === 0) {
                 return;
