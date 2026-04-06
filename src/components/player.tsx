@@ -232,32 +232,42 @@ export const Player: React.FC<IPlayerProps> = ({ state, dispatch }) => {
         }
     }, [lyric]);
     
+    // 使用 transform 滚动而不是 window.scrollTo，避免 iOS/Chrome 抖动问题
     useEffect(() => {
         const line = ul.current?.children[currentIndex];
-        if (line) {
+        if (line && ul.current) {
             // 使用 requestAnimationFrame 确保在下一帧执行，避免阻塞渲染
             requestAnimationFrame(() => {
-                // 获取歌词行的位置信息
                 const lineRect = line.getBoundingClientRect();
+                const containerRect = ul.current!.getBoundingClientRect();
                 const viewportHeight = window.innerHeight;
                 
                 // 目标位置：歌词中心点在屏幕 70% 高度处（从下往上）
                 // 即距离顶部 30% 的位置
                 const targetPositionFromTop = viewportHeight * 0.3;
                 
-                // 计算歌词行中心点当前位置
-                const lineCenterY = lineRect.top + (lineRect.height / 2);
+                // 计算歌词行中心点相对于容器的位置
+                const lineCenterY = lineRect.top - containerRect.top + (lineRect.height / 2);
                 
-                // 计算需要滚动的距离
-                const scrollOffset = lineCenterY - targetPositionFromTop;
+                // 计算目标位置相对于容器顶部的偏移
+                const targetOffset = targetPositionFromTop - containerRect.top;
+                
+                // 计算需要移动的距离
+                const scrollOffset = lineCenterY - targetOffset;
+                
+                // 获取当前 transform 值
+                const currentTransform = ul.current.style.transform;
+                const currentTranslateY = currentTransform ? 
+                    parseFloat(currentTransform.match(/translateY\((.+)px\)/)?.[1] || '0') : 0;
+                
+                // 计算新的 translateY 值
+                const newTranslateY = currentTranslateY - scrollOffset;
                 
                 // 只有当偏移量超过一定阈值时才滚动（避免微小抖动）
                 if (Math.abs(scrollOffset) > 5) {
-                    // 使用更平滑的滚动方式
-                    window.scrollTo({
-                        top: window.scrollY + scrollOffset,
-                        behavior: 'smooth'
-                    });
+                    // 使用 transform 代替 window.scrollTo，避免页面抖动
+                    ul.current.style.transition = 'transform 0.5s cubic-bezier(0.25, 0.1, 0.25, 1)';
+                    ul.current.style.transform = `translateY(${newTranslateY}px) translateZ(0)`;
                 }
             });
         }

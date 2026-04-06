@@ -50,14 +50,6 @@
     user-select: none;
 }
 
-@media (width <= 768px) {
-    .lrc-utils-header {
-        left: 0;
-        right: 0;
-        padding: 0;
-    }
-}
-
 /* 按钮组容器 - 居中显示 */
 .button-group.actions {
     display: flex;
@@ -87,6 +79,62 @@
 /* 亮色模式下按钮文字颜色调整 */
 [data-theme="light"] .button-group.actions > button {
     color: var(--font-color);
+}
+
+/* 竖屏模式下的样式 */
+@media (width <= 768px) {
+    .lrc-utils-header {
+        left: 0;
+        right: 0;
+        height: auto;
+        min-height: auto;
+        padding: 2px 2px;
+        overflow: visible;
+    }
+
+    .button-group.actions {
+        flex-wrap: wrap;
+        height: auto;
+        overflow: visible;
+        justify-content: center;
+        width: 40%;
+        gap: 0;
+    }
+
+    /* 竖屏模式下换行元素 */
+    .button-group.actions .button-line-break {
+        display: block;
+        flex-basis: 100%;
+        width: 0;
+        height: 0;
+        order: 3;
+    }
+
+    .button-group.actions > button {
+        flex: 0 0 33.333% !important;
+        max-width: 33.333% !important;
+        min-width: 0 !important;
+        width: 33.333% !important;
+        height: auto !important;
+        min-height: 30px !important;
+        padding: 3px 0 !important;
+        margin: 0 !important;
+        font-size: 0.8rem !important;
+        text-align: center !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+        line-height: 1.1 !important;
+        box-sizing: border-box !important;
+    }
+
+    /* 竖屏模式下面板改为上下布局 */
+    .lrc-utils-main {
+        flex-direction: column;
+    }
+
+    .lrc-utils-panel {
+        min-height: 300px;
+    }
 }
 
 /* Main content 样式 */

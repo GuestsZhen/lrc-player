@@ -300,6 +300,7 @@ export const LrcUtils: React.FC<{
                         <button className="ripple" onClick={() => onToolClick("compressTags")}>{lang.lrcUtils.compressTags}</button>
                         <button className="ripple" onClick={() => onToolClick("removeTags")}>{lang.lrcUtils.removeTags}</button>
                         <button className="ripple" onClick={() => onToolClick("removeEmpty")}>{lang.lrcUtils.removeEmpty}</button>
+                        <span className="button-line-break"></span>
                         <button className="ripple" onClick={() => onToolClick("changeOffset")}>{lang.lrcUtils.changeOffset}</button>
                         <button className="ripple" onClick={() => onToolClick("splitTranslation")}>{lang.lrcUtils.splitTranslation}</button>
                         <button className="ripple" onClick={() => onToolClick("lrcOverwrite")}>{lang.lrcUtils.lrcOverwrite}</button>
