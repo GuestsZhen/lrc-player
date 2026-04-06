@@ -293,49 +293,53 @@
 /* 调性检测菜单 */
 .key-detection-menu {
     position: absolute;
-    top: calc(100% + 8px);
+    top: 100%;
     right: 0;
-    width: 240px;
-    background-color: rgba(0, 0, 0, 0.9);
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-    animation: slide-in-down 0.2s ease-out;
-    z-index: 10001;
-    overflow: hidden;
+    margin-top: 8px;
+    background-color: rgba(30, 30, 30, 0.95); /* 与播放列表面板一致 */
+    border-radius: 8px;
+    padding: 12px;
+    min-width: 144px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    z-index: 103;
+    animation: settings-fade-in 0.3s ease-out; /* 淡入动画 */
+}
+
+/* 菜单淡出动画 - 用于关闭时 */
+.key-detection-menu.menu-hiding {
+    animation: settings-fade-out 0.3s ease-in forwards;
 }
 
 /* 亮色模式下调性检测菜单 */
 [data-theme="light"] .key-detection-menu {
-    background-color: rgba(255, 255, 255, 0.95);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    background-color: rgba(240, 240, 240, 0.95); /* 与播放列表面板一致 */
+    color: #1c1c1c;
 }
 
 .key-detection-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-[data-theme="light"] .key-detection-header {
-    border-bottom-color: rgba(0, 0, 0, 0.1);
+    margin-bottom: 12px;
 }
 
 .key-detection-header h4 {
     margin: 0;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     font-weight: 600;
     color: #eeeeee;
+    text-align: center;
+    flex: 1;
 }
 
+/* 亮色模式下标题颜色调整 */
 [data-theme="light"] .key-detection-header h4 {
     color: #1c1c1c;
 }
 
 .close-key-menu {
-    width: 24px;
-    height: 24px;
+    width: auto;
+    height: auto;
     background: none;
     border: none;
     color: #aaaaaa;
@@ -346,21 +350,23 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 0 4px;
 }
 
 .close-key-menu:hover {
     color: #ffffff;
-    background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
+}
+
+[data-theme="light"] .close-key-menu {
+    color: #666666;
 }
 
 [data-theme="light"] .close-key-menu:hover {
     color: #1c1c1c;
-    background-color: rgba(0, 0, 0, 0.05);
 }
 
 .key-detection-content {
-    padding: 16px;
+    /* 移除 padding，让内容直接使用 player-settings-group 的样式 */
 }
 
 /* 检测中状态 */

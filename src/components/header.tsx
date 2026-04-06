@@ -169,6 +169,15 @@ export const Header: React.FC = () => {
         }, 300);
     }, []);
     
+    // 关闭调性检测菜单（带动画）
+    const closeKeyDetectionMenu = useCallback(() => {
+        setIsHiding(true);
+        setTimeout(() => {
+            setShowKeyDetectionMenu(false);
+            setIsHiding(false);
+        }, 300);
+    }, []);
+    
     // 切换 Player 设置菜单
     const togglePlayerSettingsMenu = useCallback(() => {
         if (showPlayerSettings && !isHiding) {
@@ -227,6 +236,25 @@ export const Header: React.FC = () => {
         window.addEventListener('key-detection-update' as any, handleKeyDetected as any);
         return () => window.removeEventListener('key-detection-update' as any, handleKeyDetected as any);
     }, []);
+    
+    // 点击其他区域时关闭调性检测菜单（带动画）
+    useEffect(() => {
+        if (!showKeyDetectionMenu || isHiding) return;
+        
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as Element;
+            // 如果点击的不是菜单区域，关闭菜单
+            if (!target.closest('.key-detection-menu') && !target.closest('.key-detection-btn')) {
+                closeKeyDetectionMenu();
+            }
+        };
+        
+        document.addEventListener('mousedown', handleClickOutside);
+        
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showKeyDetectionMenu, isHiding]);
     
     // 点击其他区域时关闭文字设定菜单（带动画）
     useEffect(() => {
@@ -572,18 +600,10 @@ export const Header: React.FC = () => {
                             
                             {/* 调性检测菜单 */}
                             {showKeyDetectionMenu && (
-                                <div className="key-detection-menu">
-                                    <div className="key-detection-header">
-                                        <h4>{lang.header.keyDetection || '调性检测'}</h4>
-                                        <button 
-                                            className="close-key-menu"
-                                            onClick={() => setShowKeyDetectionMenu(false)}
-                                        >
-                                            ✕
-                                        </button>
-                                    </div>
-                                    
-                                    <div className="key-detection-content">
+                                <div className={`key-detection-menu${isHiding ? ' menu-hiding' : ''}`}>
+                                    <div className="player-settings-group">
+                                        <div className="player-settings-label">{lang.header.keyDetection || '调性检测'}</div>
+                                        
                                         {isDetectingKey ? (
                                             <div className="key-detecting">
                                                 <div className="detecting-spinner"></div>
