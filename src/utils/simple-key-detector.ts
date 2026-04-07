@@ -20,26 +20,32 @@ const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 
 class SimpleKeyDetector {
     /**
      * 从 AudioBuffer 检测调性
+     * @param audioBuffer 音频缓冲区
+     * @param startTime 开始时间（秒），默认为 0（文件开头）
      */
-    async detectKeyFromBuffer(audioBuffer: AudioBuffer): Promise<KeyDetectionResult> {
+    async detectKeyFromBuffer(audioBuffer: AudioBuffer, startTime: number = 0): Promise<KeyDetectionResult> {
         try {
             // 获取音频数据
             const channelData = audioBuffer.getChannelData(0);
             const sampleRate = audioBuffer.sampleRate;
             
-            // 分析前 30 秒以提高精度
-            const maxSamples = Math.min(channelData.length, sampleRate * 30);
-            const samples = channelData.slice(0, maxSamples);
+            // 计算起始采样点
+            const startSample = Math.floor(startTime * sampleRate);
             
-            console.log('[SimpleKeyDetector] Analyzing', samples.length, 'samples', `(${(samples.length / sampleRate).toFixed(1)}s)`);
+            // 验证起始位置是否有效
+            if (startSample >= channelData.length) {
+                throw new Error(`起始时间 ${startTime}s 超出音频长度`);
+            }
+            
+            // 分析从起始时间点开始的 30 秒
+            const maxSamples = Math.min(channelData.length - startSample, sampleRate * 30);
+            const samples = channelData.slice(startSample, startSample + maxSamples);
             
             // 计算色度特征
             const chroma = this.computeChroma(samples, sampleRate);
             
             // 使用 Krumhansl-Schmiedler 算法匹配键
             const result = this.matchKey(chroma);
-            
-            console.log('[SimpleKeyDetector] Detection result:', result);
             
             return result;
         } catch (error) {
@@ -50,11 +56,13 @@ class SimpleKeyDetector {
     
     /**
      * 从 File 对象检测调性
+     * @param file 音频文件
+     * @param startTime 开始时间（秒），默认为 0（文件开头）
      */
-    async detectKeyFromFile(file: File): Promise<KeyDetectionResult> {
+    async detectKeyFromFile(file: File, startTime: number = 0): Promise<KeyDetectionResult> {
         // 将文件转换为 AudioBuffer
         const audioBuffer = await this.fileToAudioBuffer(file);
-        return await this.detectKeyFromBuffer(audioBuffer);
+        return await this.detectKeyFromBuffer(audioBuffer, startTime);
     }
     
     /**
@@ -94,7 +102,6 @@ class SimpleKeyDetector {
         
         // 增加处理的帧数上限到 500 帧（约 17 秒@48kHz）
         const maxFrames = Math.min(numFrames, 500);
-        console.log('[SimpleKeyDetector] Processing', maxFrames, 'frames out of', numFrames);
         
         for (let i = 0; i < maxFrames; i++) {
             const start = i * hopSize;
@@ -120,8 +127,6 @@ class SimpleKeyDetector {
                 chroma[i] /= max;
             }
         }
-        
-        console.log('[SimpleKeyDetector] Chroma features:', chroma.map((v, i) => `${['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'][i]}:${v.toFixed(3)}`).join(', '));
         
         return chroma;
     }

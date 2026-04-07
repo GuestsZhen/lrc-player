@@ -42,9 +42,26 @@ export const Waveform: React.FC<IWaveformProps> = ({ value, onSeek, className })
     }, [wavesurfer, value]);
 
     useEffect(() => {
-        wavesurfer?.load(audioRef.src).then(() => {
-            wavesurfer?.setTime(value);
-        });
+        let cancelled = false;
+        
+        if (wavesurfer && audioRef.src) {
+            wavesurfer.load(audioRef.src)
+                .then(() => {
+                    if (!cancelled) {
+                        wavesurfer?.setTime(value);
+                    }
+                })
+                .catch((error) => {
+                    // 忽略 AbortError，这是正常的取消操作
+                    if (error.name !== 'AbortError') {
+                        console.error('[Waveform] Load error:', error);
+                    }
+                });
+        }
+        
+        return () => {
+            cancelled = true;
+        };
     }, [wavesurfer, audioRef.src]);
 
     return <div className={`waveform ${className || ""}`} ref={containerRef}></div>;

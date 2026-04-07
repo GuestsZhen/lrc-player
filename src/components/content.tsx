@@ -7,6 +7,7 @@ import { type JSX, lazy, Suspense, useCallback, useContext, useEffect, useRef, u
 import { ActionType as LrcActionType, useLrc } from "../hooks/useLrc.js";
 import { ThemeMode } from "../hooks/usePref.js";
 import { AudioActionType, audioRef, audioStatePubSub } from "../utils/audiomodule.js";
+import { webAudioPlayer } from "../utils/web-audio-player.js";
 import { appContext, ChangBits } from "./app.context.js";
 import { AkariNotFound, AkariOdangoLoading } from "./svg.img.js";
 import { FolderSVG, DeleteSVG } from "./svg.js";
@@ -52,6 +53,12 @@ const LazyGist = lazy(async () =>
 const LazyPreferences = lazy(async () =>
     import("./preferences.js").then(({ Preferences }) => {
         return { default: Preferences };
+    })
+);
+
+const LazyPlayerSoundTouch = lazy(async () =>
+    import("./player-soundtouch.js").then(({ PlayerSoundTouch }) => {
+        return { default: PlayerSoundTouch };
     })
 );
 
@@ -293,11 +300,6 @@ export const Content: React.FC = () => {
         }));
         
         setCurrentPlayingFile(fileName);
-        
-        // 触发调性检测（延迟执行，避免与 WaveSurfer 冲突）
-        setTimeout(() => {
-            detectAudioKey(file);
-        }, 500);
     }, [fileObjects, selectedFiles, saveTrackToDB]);
 
     // 上一首歌 - 暂时禁用
@@ -311,27 +313,23 @@ export const Content: React.FC = () => {
     }, []);
 
     // 调性检测函数（使用轻量级实现）
-    const detectAudioKey = useCallback(async (file: File) => {
+    const detectAudioKey = useCallback(async (file: File, startTime: number = 0) => {
         // 通知 Header 开始检测
         window.dispatchEvent(new CustomEvent('key-detection-update', {
             detail: { fullKey: '', isDetecting: true }
         }));
         
         try {
-            // 执行调性检测
-            const result = await simpleKeyDetector.detectKeyFromFile(file);
+            // 执行调性检测，支持从指定时间点开始
+            const result = await simpleKeyDetector.detectKeyFromFile(file, startTime);
             
             // 通知 Header 检测结果
             window.dispatchEvent(new CustomEvent('key-detection-update', {
                 detail: { fullKey: result.fullKey, isDetecting: false }
             }));
-            
-            console.log('[Content] 调性检测完成:', result);
         } catch (error: any) {
             // 忽略 AbortError，这通常是由于快速切换歌曲导致的
-            if (error.name === 'AbortError') {
-                console.log('[Content] 调性检测被中断（正常现象）');
-            } else {
+            if (error.name !== 'AbortError') {
                 console.error('[Content] 调性检测失败:', error);
             }
             
@@ -345,16 +343,11 @@ export const Content: React.FC = () => {
     // 监听手动触发调性检测事件
     useEffect(() => {
         const handleTriggerDetection = async () => {
-            console.log('[Content] Received trigger-key-detection event');
-            console.log('[Content] Current playing file:', currentPlayingFile);
-            console.log('[Content] File objects keys:', Array.from(fileObjects.keys()));
-            
             let fileToDetect: File | undefined;
             
             // 优先使用当前播放的文件
             if (currentPlayingFile && fileObjects.has(currentPlayingFile)) {
                 fileToDetect = fileObjects.get(currentPlayingFile);
-                console.log('[Content] Using current playing file:', fileToDetect?.name);
             } else {
                 // 如果没有当前播放文件，尝试从 fileObjects 中找到第一个 MP3 文件
                 const audioFileName = Array.from(fileObjects.keys()).find(name => 
@@ -363,15 +356,14 @@ export const Content: React.FC = () => {
                 
                 if (audioFileName) {
                     fileToDetect = fileObjects.get(audioFileName);
-                    console.log('[Content] Using first audio file:', audioFileName);
                 }
             }
             
             if (fileToDetect) {
-                console.log('[Content] Found file:', fileToDetect.name, 'Size:', fileToDetect.size);
-                await detectAudioKey(fileToDetect);
-            } else {
-                console.warn('[Content] No audio file found for key detection');
+                // 获取当前播放时间
+                const currentTime = audioRef.currentTime || 0;
+                // 从当前播放时间开始检测
+                await detectAudioKey(fileToDetect, currentTime);
             }
         };
         
@@ -400,6 +392,24 @@ export const Content: React.FC = () => {
         
         return () => window.removeEventListener('load-lrc', onLoadLrc as EventListener);
     }, [lrcDispatch, trimOptions]);
+    
+    // 监听 LRC 文件加载事件（来自 player-soundtouch.tsx）
+    useEffect(() => {
+        const handleLoadLrcFile = async (event: Event) => {
+            const customEvent = event as CustomEvent<{ lrcFile: File }>;
+            if (customEvent.detail?.lrcFile) {
+                try {
+                    const text = await customEvent.detail.lrcFile.text();
+                    lrcDispatch({ type: LrcActionType.parse, payload: { text, options: {} } });
+                } catch (error) {
+                    console.error('[Content] Failed to load LRC file:', error);
+                }
+            }
+        };
+        
+        window.addEventListener('load-lrc-file' as any, handleLoadLrcFile as any);
+        return () => window.removeEventListener('load-lrc-file' as any, handleLoadLrcFile as any);
+    }, [lrcDispatch]);
 
     useEffect(() => {
         return audioStatePubSub.sub(self.current, (data) => {
@@ -538,6 +548,13 @@ export const Content: React.FC = () => {
 
             case ROUTER.preferences: {
                 return <LazyPreferences />;
+            }
+            
+            case ROUTER.playerSoundTouchJS: {
+                if (lrcState.lyric.length === 0) {
+                    return <AkariNotFound />;
+                }
+                return <LazyPlayerSoundTouch state={lrcState} dispatch={lrcDispatch} />;
             }
             
             default: {

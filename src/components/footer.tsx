@@ -52,6 +52,20 @@ export const Footer: React.FC = () => {
     const { prefState, lang } = useContext(appContext, ChangBits.lang | ChangBits.builtInAudio);
     const keyBindings = useKeyBindings();
     
+    // 检查当前路由，如果是 player-soundtouch 页面则不显示 Footer
+    const [shouldShow, setShouldShow] = useState(() => {
+        return !location.hash.includes('/player-soundtouch/');
+    });
+    
+    useEffect(() => {
+        const checkRoute = () => {
+            setShouldShow(!location.hash.includes('/player-soundtouch/'));
+        };
+        
+        window.addEventListener('hashchange', checkRoute);
+        return () => window.removeEventListener('hashchange', checkRoute);
+    }, []);
+    
     // 播放列表相关状态
     const [playlist, setPlaylist] = useState<ITrackInfo[]>([]);
     const [currentTrackIndex, setCurrentTrackIndex] = useState<number>(-1);
@@ -695,7 +709,7 @@ export const Footer: React.FC = () => {
     );
 
     return (
-        <footer className="app-footer">
+        <footer className="app-footer" style={{ display: shouldShow ? undefined : 'none' }}>
             {/* 隐藏的音频文件输入 */}
             <input id="audio-input" type="file" accept={accept} multiple hidden={true} onChange={onAudioInputChange} />
             

@@ -7,7 +7,6 @@ import {
     audioStatePubSub,
     currentTimePubSub,
 } from "../utils/audiomodule.js";
-import { wakeLockManager } from "../utils/screen-wake-lock.js";
 import { appContext, ChangBits } from "./app.context";
 import { loadAudioDialogRef } from "./loadaudio.js";
 import { PauseSVG, PlaySVG, SettingsSVG, PreviousSVG, NextSVG, RepeatSVG, ShuffleSVG, RepeatOneSVG, PreferencesSVG } from "./svg.js";
@@ -313,22 +312,6 @@ export const LrcAudio: React.FC<ILrcAudioProps> = ({ lang, currentTrackName }) =
     
     const [localAudioMode, setLocalAudioMode] = useState(false);
 
-    // Wake Lock 屏幕常亮功能
-    useEffect(() => {
-        // 如果正在播放，请求屏幕常亮
-        if (!paused && duration > 0) {
-            wakeLockManager.request();
-        } else {
-            // 暂停时释放屏幕常亮
-            wakeLockManager.release();
-        }
-
-        // 清理函数：组件卸载时释放
-        return () => {
-            wakeLockManager.release();
-        };
-    }, [paused, duration]);
-
     useEffect(() => {
         return audioStatePubSub.sub(self.current, (data: AudioState) => {
             switch (data.type) {
@@ -422,12 +405,15 @@ export const LrcAudio: React.FC<ILrcAudioProps> = ({ lang, currentTrackName }) =
     const onPlayModeToggle = useCallback(() => {
         setPlayMode(prev => {
             const newMode = (prev + 1) % 3;
-            // 发送播放模式变化事件
-            const event = new CustomEvent('play-mode-change', { detail: { playMode: newMode } });
-            window.dispatchEvent(event);
             return newMode;
         });
     }, []);
+    
+    // 当 playMode 变化时，发送事件
+    useEffect(() => {
+        const event = new CustomEvent('play-mode-change', { detail: { playMode } });
+        window.dispatchEvent(event);
+    }, [playMode]);
 
     const _onLoadAudioButtonClick = useCallback(() => {
         loadAudioDialogRef.open();

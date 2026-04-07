@@ -170,19 +170,15 @@ export const Synchronizer: React.FC<ISynchronizerProps> = ({ state, dispatch }) 
 
     const onLineClick = useCallback(
         (ev: React.MouseEvent<HTMLUListElement & HTMLLIElement>) => {
-            console.log('[Synchronizer] onLineClick triggered');
             // 不要阻止事件传播，让 li 元素也能收到点击事件
             // ev.stopPropagation();
 
             const target = ev.target as HTMLElement;
-            console.log('[Synchronizer] click target classList:', target.className);
-            console.log('[Synchronizer] click target dataset:', target.dataset);
 
             // 向上查找带有 line 类的父元素
             const lineElement = target.closest('.line') as HTMLElement | null;
             if (lineElement) {
                 const lineKey = Number.parseInt(lineElement.dataset.key!, 10) || 0;
-                console.log('[Synchronizer] selecting line:', lineKey);
 
                 dispatch({ type: ActionType.select, payload: () => lineKey });
             }
@@ -192,23 +188,18 @@ export const Synchronizer: React.FC<ISynchronizerProps> = ({ state, dispatch }) 
 
     const onLineDoubleClick = useCallback(
         (ev: React.MouseEvent<HTMLUListElement | HTMLLIElement>) => {
-            console.log('[Synchronizer] onLineDoubleClick triggered');
             ev.stopPropagation();
 
             if (!audioRef.duration) {
-                console.log('[Synchronizer] no audio duration');
                 return;
             }
 
             const target = ev.target as HTMLElement;
-            console.log('[Synchronizer] doubleclick target classList:', target.className);
-            console.log('[Synchronizer] doubleclick target dataset:', target.dataset);
 
             // 向上查找带有 line 类的父元素
             const lineElement = target.closest('.line') as HTMLElement | null;
             if (lineElement) {
                 const key = Number.parseInt(lineElement.dataset.key!, 10);
-                console.log('[Synchronizer] adjusting line:', key, 'to time:', audioRef.currentTime);
 
                 adjust(ev, 0, key);
             }
@@ -260,15 +251,7 @@ export const Synchronizer: React.FC<ISynchronizerProps> = ({ state, dispatch }) 
                             const textWithoutTime = l.text.replace(/^\[\d{2}:\d{2}\.\d{2,3}\]\s*/, '');
                             return `${timeTag}${textWithoutTime}`;
                         }).join('\n');
-                        
-                        console.log('[Synchronizer] Saving edited lyric:', { 
-                            index: idx, 
-                            originalText: newText, 
-                            cleanText: cleanText,
-                            newTime: newTime,
-                            newLyricText 
-                        });
-                        
+                                                
                         dispatch({
                             type: ActionType.parse,
                             payload: { text: newLyricText, options: trimOptions }
@@ -327,7 +310,6 @@ const LyricLine: React.FC<ILyricLineProps & {
 
     // 处理三击进入编辑
     const handleTripleClick = useCallback(() => {
-        console.log('[LyricLine] Triple click detected, entering edit mode for index:', index);
         setIsEditing(true);
         setEditText(line.text);
         setEditTime(line.time || 0);
@@ -341,21 +323,18 @@ const LyricLine: React.FC<ILyricLineProps & {
     // 处理点击计数
     const handleClick = useCallback(() => {
         clickCount.current++;
-        console.log('[LyricLine] Click count:', clickCount.current, 'index:', index);
 
         if (clickTimer.current) {
             clearTimeout(clickTimer.current);
         }
 
         clickTimer.current = setTimeout(() => {
-            console.log('[LyricLine] Reset click count, index:', index);
             clickCount.current = 0;
             clickTimer.current = null;
         }, 500);
 
         // 检测三击
         if (clickCount.current === 3) {
-            console.log('[LyricLine] Triple click detected! index:', index);
             if (clickTimer.current) {
                 clearTimeout(clickTimer.current);
             }

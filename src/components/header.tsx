@@ -11,9 +11,14 @@ export const Header: React.FC = () => {
     const [audioFileName, setAudioFileName] = useState<string>('');
     const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
     
-    // 判断当前是否在 Player 页面
+    // 判断当前是否在 Player 页面（不包括 player-soundtouch）
     const [isPlayerPage, setIsPlayerPage] = useState(() => {
-        return location.hash.includes(ROUTER.player);
+        return location.hash.includes(ROUTER.player) && !location.hash.includes(ROUTER.playerSoundTouchJS);
+    });
+    
+    // 判断当前是否在 Player-SoundTouch 页面
+    const [isPlayerSoundTouchPage, setIsPlayerSoundTouchPage] = useState(() => {
+        return location.hash.includes(ROUTER.playerSoundTouchJS);
     });
     
     // 判断当前是否在 Preferences 页面
@@ -39,7 +44,8 @@ export const Header: React.FC = () => {
     // 监听路由变化，更新状态
     useEffect(() => {
         const checkRoute = () => {
-            setIsPlayerPage(location.hash.includes(ROUTER.player));
+            setIsPlayerPage(location.hash.includes(ROUTER.player) && !location.hash.includes(ROUTER.playerSoundTouchJS));
+            setIsPlayerSoundTouchPage(location.hash.includes(ROUTER.playerSoundTouchJS));
             setIsPreferencesPage(location.hash.includes(ROUTER.preferences));
             setIsLrcUtilsPage(location.hash.includes(ROUTER.lrcutils));
             setIsSynchronizerPage(location.hash.includes(ROUTER.synchronizer));
@@ -350,16 +356,18 @@ export const Header: React.FC = () => {
 
     return (
         <>
-            {/* 左上角打开文件按钮 */}
-            <div className="header-left-controls">
-                <button 
-                    className="header-control-button file-list-btn"
-                    onClick={toggleFileListPanel}
-                    title="文件列表"
-                >
-                    <PlaylistSVG />
-                </button>
-            </div>
+            {/* 左上角打开文件按钮 - 在 player-soundtouch 页面隐藏 */}
+            {!location.hash.includes('/player-soundtouch/') && (
+                <div className="header-left-controls">
+                    <button 
+                        className="header-control-button file-list-btn"
+                        onClick={toggleFileListPanel}
+                        title="文件列表"
+                    >
+                        <PlaylistSVG />
+                    </button>
+                </div>
+            )}
             
             {/* 音频文件路径显示 */}
             {audioFileName && (
@@ -377,8 +385,8 @@ export const Header: React.FC = () => {
             
             {/* 右上角控制按钮区域 */}
             <div className="header-controls-wrapper">
-                {/* Editor 按钮 - 在 Preferences、Lrc-utils、Synchronizer 和 Tune 页面不显示在第一位 */}
-                {!isPreferencesPage && !isLrcUtilsPage && !isSynchronizerPage && !isTunePage && (
+                {/* Editor 按钮 - 在 Preferences、Lrc-utils、Synchronizer、Tune 和 Player-SoundTouch 页面不显示在第一位 */}
+                {!isPreferencesPage && !isLrcUtilsPage && !isSynchronizerPage && !isTunePage && !isPlayerSoundTouchPage && (
                     <a 
                         className="header-control-button"
                         href={prependHash(ROUTER.editor)}
@@ -388,8 +396,8 @@ export const Header: React.FC = () => {
                     </a>
                 )}
                 
-                {/* Tune 按钮 - 在 Player、Preferences、Lrc-utils、Synchronizer 和 Tune 页面隐藏 */}
-                {!isPlayerPage && !isPreferencesPage && !isLrcUtilsPage && !isSynchronizerPage && !isTunePage && (
+                {/* Tune 按钮 - 在 Player、Preferences、Lrc-utils、Synchronizer、Tune 和 Player-SoundTouch 页面隐藏 */}
+                {!isPlayerPage && !isPreferencesPage && !isLrcUtilsPage && !isSynchronizerPage && !isTunePage && !isPlayerSoundTouchPage && (
                     <a 
                         className="header-control-button"
                         href={prependHash(ROUTER.tune)}
@@ -399,8 +407,8 @@ export const Header: React.FC = () => {
                     </a>
                 )}
                 
-                {/* Synchronizer 按钮 - 在 Player、Preferences、Lrc-utils、Synchronizer 和 Tune 页面隐藏 */}
-                {!isPlayerPage && !isPreferencesPage && !isLrcUtilsPage && !isSynchronizerPage && !isTunePage && (
+                {/* Synchronizer 按钮 - 在 Player、Preferences、Lrc-utils、Synchronizer、Tune 和 Player-SoundTouch 页面隐藏 */}
+                {!isPlayerPage && !isPreferencesPage && !isLrcUtilsPage && !isSynchronizerPage && !isTunePage && !isPlayerSoundTouchPage && (
                     <a 
                         className="header-control-button"
                         href={prependHash(ROUTER.synchronizer)}
@@ -410,7 +418,7 @@ export const Header: React.FC = () => {
                     </a>
                 )}
                 
-                {/* Editor 按钮在 Preferences、Lrc-utils、Synchronizer 和 Tune 页面移动到中间位置 */}
+                {/* Editor 按钮在 Preferences、Lrc-utils、Synchronizer 和 Tune 页面移动到中间位置（不包括 Player-SoundTouch） */}
                 {(isPreferencesPage || isLrcUtilsPage || isSynchronizerPage || isTunePage) && (
                     <a 
                         className="header-control-button"
@@ -432,8 +440,8 @@ export const Header: React.FC = () => {
                         <PlaySVG />
                     </a>
                     
-                    {/* 全屏按钮 - 只在 Player 页面显示 */}
-                    {isPlayerPage && (
+                    {/* 全屏按钮 - 在 Player 和 Player-SoundTouch 页面显示 */}
+                    {(isPlayerPage || location.hash.includes(ROUTER.playerSoundTouchJS)) && (
                         <button 
                             className="header-control-button fullscreen-btn"
                             onClick={toggleFullscreen}
@@ -443,9 +451,9 @@ export const Header: React.FC = () => {
                         </button>
                     )}
                     
-                    {/* Player 页面的字体设置按钮 - 只在 Player 页面显示 */}
+                    {/* Player 页面的字体设置按钮 - 在 Player 和 Player-SoundTouch 页面显示 */}
                     {/* 文字设定按钮 */}
-                    {isPlayerPage && (
+                    {(isPlayerPage || location.hash.includes(ROUTER.playerSoundTouchJS)) && (
                         <div style={{ position: 'relative' }}>
                             <button 
                                 className="player-control-button"
@@ -589,11 +597,9 @@ export const Header: React.FC = () => {
                             <button 
                                 className="player-control-button key-detection-btn"
                                 onClick={() => {
-                                    console.log('[Header] Key detection button clicked');
-                                    console.log('[Header] Current state:', { showKeyDetectionMenu, detectedKey, isDetectingKey });
                                     setShowKeyDetectionMenu(!showKeyDetectionMenu);
                                 }}
-                                title={lang.header.songAdjustment || '歌曲调整'}
+                                title={lang.header.keyDetection || '调性识别'}
                             >
                                 <MusicKeySVG />
                                 {detectedKey && <span className="key-badge">{detectedKey.split(' ')[0]}</span>}
@@ -604,7 +610,7 @@ export const Header: React.FC = () => {
                                 <div className={`key-detection-menu${isHiding ? ' menu-hiding' : ''}`}>
                                     {/* 调性检测 */}
                                     <div className="player-settings-group">
-                                        <div className="player-settings-label">{lang.header.songAdjustment || '歌曲调整'}</div>
+                                        <div className="player-settings-label">{lang.header.keyDetection || '调性识别'}</div>
                                         
                                         {isDetectingKey ? (
                                             <div className="key-detecting">
@@ -639,70 +645,25 @@ export const Header: React.FC = () => {
                                         )}
                                     </div>
                                     
-                                    {/* 音高调节 */}
-                                    <div className="player-settings-group">
-                                        <div className="player-settings-label">音高调节</div>
-                                        <div className="player-settings-options">
-                                            <button 
-                                                className="player-setting-btn"
-                                                onClick={() => setPitchSemitones(Math.max(-12, pitchSemitones - 1))}
-                                                disabled={pitchSemitones <= -12}
-                                                title="降低一个半音"
-                                            >
-                                                -
-                                            </button>
-                                            <button 
-                                                className="player-setting-btn"
-                                                onClick={() => setPitchSemitones(0)}
-                                                title="重置为原调"
-                                                style={{ minWidth: '50px' }}
-                                            >
-                                                {pitchSemitones > 0 ? '+' : ''}{pitchSemitones}
-                                            </button>
-                                            <button 
-                                                className="player-setting-btn"
-                                                onClick={() => setPitchSemitones(Math.min(12, pitchSemitones + 1))}
-                                                disabled={pitchSemitones >= 12}
-                                                title="升高一个半音"
-                                            >
-                                                +
-                                            </button>
-                                        </div>
-                                    </div>
-                                    
-                                    {/* 速度调节 */}
-                                    <div className="player-settings-group">
-                                        <div className="player-settings-label">速度调节</div>
-                                        <div className="player-settings-options">
-                                            <button 
-                                                className="player-setting-btn"
-                                                onClick={() => setPlaybackRate(Math.max(0.5, playbackRate - 0.1))}
-                                                disabled={playbackRate <= 0.5}
-                                                title="减慢速度"
-                                            >
-                                                -
-                                            </button>
-                                            <button 
-                                                className="player-setting-btn"
-                                                onClick={() => setPlaybackRate(1.0)}
-                                                title="重置为正常速度"
-                                                style={{ minWidth: '60px' }}
-                                            >
-                                                {playbackRate.toFixed(1)}x
-                                            </button>
-                                            <button 
-                                                className="player-setting-btn"
-                                                onClick={() => setPlaybackRate(Math.min(2.0, playbackRate + 0.1))}
-                                                disabled={playbackRate >= 2.0}
-                                                title="加快速度"
-                                            >
-                                                +
-                                            </button>
-                                        </div>
-                                    </div>
+
                                 </div>
                             )}
                         </div>
+                    )}
+                    
+                    {/* ST 按钮 - 只在 player 页面显示 */}
+                    {isPlayerPage && (
+                        <button 
+                            className="header-control-button player-soundtouch-btn"
+                            onClick={() => {
+                                // 强制刷新页面以清除 player 页面的状态
+                                window.location.href = prependHash(ROUTER.playerSoundTouchJS);
+                            }}
+                            title="高级播放器（支持音高调节）"
+                            style={{ fontSize: '0.7rem', fontWeight: 'bold', background: 'none', border: 'none', cursor: 'pointer' }}
+                        >
+                            ST
+                        </button>
                     )}
                 </div>
             </div>
