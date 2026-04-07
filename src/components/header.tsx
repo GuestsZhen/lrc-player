@@ -657,7 +657,11 @@ export const Header: React.FC = () => {
                             className="header-control-button player-soundtouch-btn"
                             onClick={() => {
                                 // 强制刷新页面以清除 player 页面的状态
-                                window.location.href = prependHash(ROUTER.playerSoundTouchJS);
+                                window.location.hash = ROUTER.playerSoundTouchJS;
+                                // 使用 reload 确保完全刷新
+                                setTimeout(() => {
+                                    window.location.reload();
+                                }, 50);
                             }}
                             title="高级播放器（支持音高调节）"
                             style={{ fontSize: '0.7rem', fontWeight: 'bold', background: 'none', border: 'none', cursor: 'pointer' }}
