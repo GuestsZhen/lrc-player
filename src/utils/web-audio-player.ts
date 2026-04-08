@@ -52,14 +52,16 @@ export class WebAudioPlayer {
                 try {
                     this.pitchShifter.off();
                     this.pitchShifter.disconnect();
-                } catch (e) {}
+                } catch {
+                }
                 this.pitchShifter = null;
             }
             
             if (this.sourceNode) {
                 try {
                     this.sourceNode.disconnect();
-                } catch (e) {}
+                } catch {
+                }
                 this.sourceNode = null;
             }
             
@@ -104,7 +106,8 @@ export class WebAudioPlayer {
             try {
                 this.pitchShifter.off();
                 this.pitchShifter.disconnect();
-            } catch (e) {}
+            } catch {
+            }
             this.pitchShifter = null;
         }
 
@@ -266,7 +269,8 @@ export class WebAudioPlayer {
         if (this.sourceNode) {
             try {
                 this.sourceNode.disconnect();
-            } catch (e) {}
+            } catch {
+            }
             this.sourceNode = null;
         }
         
@@ -288,7 +292,8 @@ export class WebAudioPlayer {
             try {
                 this.pitchShifter.off();
                 this.pitchShifter.disconnect();
-            } catch (e) {}
+            } catch {
+            }
             this.pitchShifter = null;
         }
         
@@ -296,7 +301,8 @@ export class WebAudioPlayer {
             try {
                 this.sourceNode.stop();
                 this.sourceNode.disconnect();
-            } catch (e) {}
+            } catch {
+            }
             this.sourceNode = null;
         }
         

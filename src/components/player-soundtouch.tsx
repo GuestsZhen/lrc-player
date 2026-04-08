@@ -4,7 +4,7 @@ import { type Action, ActionType } from "../hooks/useLrc.js";
 import { webAudioPlayer } from "../utils/web-audio-player.js";
 import { appContext } from "./app.context.js";
 import { Curser } from "./curser.js";
-import { PlaySVG, PauseSVG, FolderSVG, PlaylistSVG, MusicKeySVG, SettingsSVG } from "./svg.js";
+import { PlaySVG, PauseSVG, PlaylistSVG, MusicKeySVG, SettingsSVG } from "./svg.js";
 import { simpleKeyDetector, type KeyDetectionResult } from "../utils/simple-key-detector.js";
 
 // 存储当前加载的音频文件，用于调性检测
@@ -17,10 +17,10 @@ interface IPlayerProps {
 
 export const PlayerSoundTouch: React.FC<IPlayerProps> = ({ state, dispatch }) => {
     const { currentIndex, lyric } = state;
-    const { prefState, lang } = useContext(appContext);
+    const { prefState } = useContext(appContext);
     
     // UI 状态
-    const [showTime, setShowTime] = useState(false);
+    const [showTime, _setShowTime] = useState(false);
     const [fontSize, setFontSize] = useState(() => {
         return Number(sessionStorage.getItem("player-font-size")) || 1.3;
     });

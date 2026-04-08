@@ -402,7 +402,7 @@ const LyricLine: React.FC<ILyricLineProps & {
     };
 
     // 解析时间字符串为秒数
-    const parseTimeToSeconds = (timeStr: string): number => {
+    const _parseTimeToSeconds = (timeStr: string): number => {
         if (!timeStr) return 0;
         const parts = timeStr.split(':');
         let minutes = 0;

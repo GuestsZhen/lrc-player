@@ -7,7 +7,7 @@ import { type JSX, lazy, Suspense, useCallback, useContext, useEffect, useRef, u
 import { ActionType as LrcActionType, useLrc } from "../hooks/useLrc.js";
 import { ThemeMode } from "../hooks/usePref.js";
 import { AudioActionType, audioRef, audioStatePubSub } from "../utils/audiomodule.js";
-import { webAudioPlayer } from "../utils/web-audio-player.js";
+
 import { appContext, ChangBits } from "./app.context.js";
 import { AkariNotFound, AkariOdangoLoading } from "./svg.img.js";
 import { FolderSVG, DeleteSVG } from "./svg.js";
@@ -86,10 +86,10 @@ export const Content: React.FC = () => {
     const [selectedFiles, setSelectedFiles] = useState<string[]>([]); // 所有文件（后台保留）
     const [searchQuery, setSearchQuery] = useState<string>(''); // 搜索关键词
     const [showFileListPanel, setShowFileListPanel] = useState(false); // 文件列表面板显示状态
-    const [audioSrc, setAudioSrc] = useState<string>(''); // 当前音频源
+    const [_audioSrc, _setAudioSrc] = useState<string>(''); // 当前音频源
     const [currentPlayingFile, setCurrentPlayingFile] = useState<string>(''); // 当前播放的文件名
     const [fileObjects, setFileObjects] = useState<Map<string, File>>(new Map()); // 存储文件对象
-    const [currentTrackIndex, setCurrentTrackIndex] = useState<number>(-1); // 当前播放索引
+    const [_currentTrackIndex, setCurrentTrackIndex] = useState<number>(-1); // 当前播放索引
     
     useEffect(() => {
         function onHashchange() {
@@ -265,7 +265,7 @@ export const Content: React.FC = () => {
         // 查找同名的 LRC 文件
         let lrcFile: File | undefined;
         const baseName = fileName.substring(0, fileName.lastIndexOf('.'));
-        const extension = fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
+        const _extension = fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
         
         // 遍历所有文件，查找同名 LRC 文件
         for (const [name, fileObj] of fileObjects) {

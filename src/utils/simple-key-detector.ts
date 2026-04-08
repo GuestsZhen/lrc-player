@@ -91,7 +91,7 @@ class SimpleKeyDetector {
      * 使用 FFT 提取频率信息并映射到 12 个半音
      */
     private computeChroma(samples: Float32Array, sampleRate: number): number[] {
-        const chroma = new Array(12).fill(0);
+        const chroma = Array.from({ length: 12 }, () => 0);
         
         // 简化：使用时域过零率和能量分布来估计色度
         // 这是一个简化的启发式方法
@@ -241,7 +241,7 @@ class SimpleKeyDetector {
      * 旋转配置文件
      */
     private rotateProfile(profile: number[], shift: number): number[] {
-        const rotated = new Array(12);
+        const rotated = Array.from({ length: 12 }, () => 0);
         for (let i = 0; i < 12; i++) {
             rotated[i] = profile[(i - shift + 12) % 12];
         }

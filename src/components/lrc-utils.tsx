@@ -3,8 +3,7 @@ import { type State as LrcState, stringify, parser } from "@lrc-maker/lrc-parser
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { Action as LrcAction } from "../hooks/useLrc.js";
 import { appContext } from "./app.context.js";
-import { prependHash } from "../utils/router.js";
-import ROUTER from "#const/router.json" assert { type: "json" };
+
 import { CopySVG, DownloadSVG, CloseSVG } from "./svg.js";
 import "./lrc-utils.css";
 
@@ -281,7 +280,7 @@ export const LrcUtils: React.FC<{
     }, []);
 
     // 渲染覆写模式的 padding
-    const timePaddingText = useMemo(() => {
+    const _timePaddingText = useMemo(() => {
         return stringify(
             {
                 info: new Map(),

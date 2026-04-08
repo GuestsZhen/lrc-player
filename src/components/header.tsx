@@ -69,7 +69,7 @@ export const Header: React.FC = () => {
     const [isHiding, setIsHiding] = useState(false);
     
     // 文件列表面板显示状态
-    const [showFileListPanel, setShowFileListPanel] = useState(false);
+    const [_showFileListPanel, setShowFileListPanel] = useState(false);
     
     // Player 字体大小
     const [playerFontSize, setPlayerFontSize] = useState(() => {
@@ -87,10 +87,10 @@ export const Header: React.FC = () => {
     const [showKeyDetectionMenu, setShowKeyDetectionMenu] = useState(false);
     
     // 音高调节状态（半音数）
-    const [pitchSemitones, setPitchSemitones] = useState(0);
+    const [_pitchSemitones, _setPitchSemitones] = useState(0);
     
     // 速度调节状态
-    const [playbackRate, setPlaybackRate] = useState(1.0);
+    const [_playbackRate, _setPlaybackRate] = useState(1.0);
 
     // 切换全屏 - 兼容 iOS
     const toggleFullscreen = async () => {
@@ -115,8 +115,7 @@ export const Header: React.FC = () => {
                         try {
                             await element.requestFullscreen();
                             return;
-                        } catch (e) {
-                            console.log('Standard API failed on iOS');
+                        } catch {
                         }
                     }
                     
@@ -311,7 +310,8 @@ export const Header: React.FC = () => {
     }, []);
     
     // 处理打开文件
-    const handleOpenFile = useCallback(() => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const _handleOpenFile = useCallback(() => {
         const input = document.createElement('input');
         input.type = 'file';
         input.multiple = true; // 允许多选

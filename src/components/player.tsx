@@ -7,15 +7,14 @@ import { Curser } from "./curser.js";
 import { IOSHint } from "./ios-hint.js";
 
 // 获取对比色（根据背景亮度决定返回黑色或白色）
-const getContrastColor = (hexColor: string): string => {
-    const hex = hexColor.replace('#', '');
-    const r = parseInt(hex.substr(0, 2), 16);
-    const g = parseInt(hex.substr(2, 2), 16);
-    const b = parseInt(hex.substr(4, 2), 16);
-    // 计算亮度
-    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-    return brightness > 128 ? '#000000' : '#ffffff';
-};
+// const _getContrastColor = (hexColor: string): string => {
+//     const hex = hexColor.replace('#', '');
+//     const r = parseInt(hex.substr(0, 2), 16);
+//     const g = parseInt(hex.substr(2, 2), 16);
+//     const b = parseInt(hex.substr(4, 2), 16);
+//     const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+//     return brightness > 128 ? '#000000' : '#ffffff';
+// };
 
 interface IPlayerProps {
     state: any;
@@ -25,10 +24,10 @@ interface IPlayerProps {
 export const Player: React.FC<IPlayerProps> = ({ state, dispatch }) => {
     const self = useRef(Symbol(Player.name));
     const { currentIndex, lyric } = state;
-    const { prefState, lang } = useContext(appContext);
+    const { prefState } = useContext(appContext);
     
     // 控制是否显示时间轴（默认隐藏）
-    const [showTime, setShowTime] = useState(false);
+    const [showTime, _setShowTime] = useState(false);
 
     // 控制字体大小
     const [fontSize, setFontSize] = useState(() => {
@@ -39,7 +38,7 @@ export const Player: React.FC<IPlayerProps> = ({ state, dispatch }) => {
     const [textAlign, setTextAlign] = useState<'left' | 'center' | 'right'>('center');
 
     // 控制全屏状态
-    const [isFullscreen, setIsFullscreen] = useState(false);
+    const [_isFullscreen, setIsFullscreen] = useState(false);
     
     // 控制 iOS 提示显示
     const [showIOSHint, setShowIOSHint] = useState(false);
@@ -284,79 +283,50 @@ export const Player: React.FC<IPlayerProps> = ({ state, dispatch }) => {
     }, [dispatch]);
 
     // 切换时间轴显示
-    const toggleTimeDisplay = useCallback(() => {
-        setShowTime(prev => !prev);
-    }, []);
+    // const _toggleTimeDisplay = useCallback(() => {
+    //     setShowTime(prev => !prev);
+    // }, []);
 
     // 切换全屏 - 兼容 iOS
-    const toggleFullscreen = useCallback(async () => {
-        try {
-            const element = document.documentElement;
-            
-            // 检测是否为 iOS 设备
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-            
-            // 检查是否已经在全屏模式
-            const isCurrentlyFullscreen = !!(document.fullscreenElement || 
-                                            (document as any).webkitFullscreenElement ||
-                                            (document as any).msFullscreenElement);
-            
-            if (!isCurrentlyFullscreen) {
-                // iOS 设备特殊处理
-                if (isIOS) {
-                    console.log('iOS device detected, using alternative fullscreen method');
-                    
-                    // 方法1: 尝试标准 API (iOS 16.4+ 可能支持)
-                    if (element.requestFullscreen) {
-                        try {
-                            await element.requestFullscreen();
-                            console.log('Standard fullscreen API succeeded');
-                            return;
-                        } catch (e) {
-                            console.log('Standard API failed, trying alternatives');
-                        }
-                    }
-                    
-                    // 方法2: 尝试 WebKit API
-                    if ((element as any).webkitRequestFullscreen) {
-                        try {
-                            await (element as any).webkitRequestFullscreen();
-                            console.log('WebKit fullscreen API succeeded');
-                            return;
-                        } catch (e) {
-                            console.log('WebKit API failed');
-                        }
-                    }
-                    
-                    // 方法3: iOS 不支持网页全屏，显示友好提示
-                    console.warn('iOS does not support web page fullscreen. Please add to Home Screen for best experience.');
-                    setShowIOSHint(true);
-                    return;
-                }
-                
-                // 非 iOS 设备 - 正常处理
-                if (element.requestFullscreen) {
-                    await element.requestFullscreen();
-                } else if ((element as any).webkitRequestFullscreen) {
-                    await (element as any).webkitRequestFullscreen();
-                } else if ((element as any).msRequestFullscreen) {
-                    await (element as any).msRequestFullscreen();
-                }
-            } else {
-                // 退出全屏
-                if (document.exitFullscreen) {
-                    await document.exitFullscreen();
-                } else if ((document as any).webkitExitFullscreen) {
-                    await (document as any).webkitExitFullscreen();
-                } else if ((document as any).msExitFullscreen) {
-                    await (document as any).msExitFullscreen();
-                }
-            }
-        } catch (error) {
-            console.error('Fullscreen error:', error);
-            // iOS 可能不支持全屏，静默失败
-        }
-    }, []);
+    // const _toggleFullscreen = useCallback(async () => {
+    //     try {
+    //         const element = document.documentElement;
+    //         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    //         const isCurrentlyFullscreen = !!(document.fullscreenElement || 
+    //                                         (document as any).webkitFullscreenElement ||
+    //                                         (document as any).msFullscreenElement);
+    //         
+    //         if (!isCurrentlyFullscreen) {
+    //             if (isIOS) {
+    //                 if (element.requestFullscreen) {
+    //                     try { await element.requestFullscreen(); return; } catch {}
+    //                 }
+    //                 if ((element as any).webkitRequestFullscreen) {
+    //                     try { await (element as any).webkitRequestFullscreen(); return; } catch {}
+    //                 }
+    //                 setShowIOSHint(true);
+    //                 return;
+    //             }
+    //             if (element.requestFullscreen) {
+    //                 await element.requestFullscreen();
+    //             } else if ((element as any).webkitRequestFullscreen) {
+    //                 await (element as any).webkitRequestFullscreen();
+    //             } else if ((element as any).msRequestFullscreen) {
+    //                 await (element as any).msRequestFullscreen();
+    //             }
+    //         } else {
+    //             if (document.exitFullscreen) {
+    //                 await document.exitFullscreen();
+    //             } else if ((document as any).webkitExitFullscreen) {
+    //                 await (document as any).webkitExitFullscreen();
+    //             } else if ((document as any).msExitFullscreen) {
+    //                 await (document as any).msExitFullscreen();
+    //             }
+    //         }
+    //     } catch {
+    //         // iOS 可能不支持全屏，静默失败
+    //     }
+    // }, []);
 
 
     // 初始化对齐方式
