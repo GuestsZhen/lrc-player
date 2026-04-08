@@ -505,7 +505,7 @@ export const PlayerSoundTouch: React.FC<IPlayerProps> = ({ state, dispatch }) =>
                     <input
                         ref={fileInputRef}
                         type="file"
-                        accept="audio/*,.lrc,.mp3,.wav,.flac,.aac,.ogg,.m4a,.wma,.ape,.opus,.ncm"
+                        // 不设置 accept 属性，允许选择所有文件类型（iOS Chrome 兼容）
                         multiple
                         onChange={handleFileSelect}
                         style={{ display: 'none' }}
