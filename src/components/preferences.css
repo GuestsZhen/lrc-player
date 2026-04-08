@@ -1,10 +1,99 @@
 .preferences {
     width: 100%;
-    user-select: none;
+    user-select: text;
     /* 添加顶部边距，避免被固定定位的播放按钮遮挡 */
     padding-top: 80px;
     /* 添加底部边距，避免在竖屏模式下被底部元素遮挡 */
     padding-bottom: 100px;
+}
+
+/* 项目介绍样式 */
+.project-intro {
+    max-width: 1024px;
+    margin: 40px auto 0;
+    padding: 20px;
+    background: var(--background-color);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.project-intro h2 {
+    font-size: 24px;
+    color: var(--primary-color);
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+.intro-section {
+    margin-bottom: 32px;
+    padding: 16px;
+    background: rgba(128, 128, 128, 0.05);
+    border-radius: 6px;
+    border-left: 4px solid var(--primary-color);
+}
+
+.intro-section h3 {
+    font-size: 20px;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+
+.intro-section h4 {
+    font-size: 18px;
+    color: var(--text-secondary);
+    margin: 16px 0 12px 0;
+    font-weight: 500;
+}
+
+.intro-section ul,
+.intro-section ol {
+    margin: 12px 0;
+    padding-left: 24px;
+}
+
+.intro-section li {
+    margin: 8px 0;
+    line-height: 1.6;
+    color: var(--text-primary);
+}
+
+.intro-section p {
+    margin: 12px 0;
+    line-height: 1.6;
+    color: var(--text-primary);
+}
+
+.intro-section a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: opacity 0.2s;
+    user-select: text;
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    cursor: pointer;
+}
+
+.intro-section a:hover {
+    opacity: 0.8;
+    text-decoration: underline;
+}
+
+.credit {
+    margin-top: 32px;
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+    border-left: 4px solid #667eea;
+    border-radius: 8px;
+}
+
+.credit p {
+    font-style: italic;
+    color: var(--text-secondary);
+    line-height: 1.8;
+    user-select: text;
+    -webkit-user-select: text;
+    -moz-user-select: text;
 }
 
 .preferences > ul {

@@ -7,6 +7,8 @@ import {
     audioStatePubSub,
     currentTimePubSub,
 } from "../utils/audiomodule.js";
+import ROUTER from "#const/router.json" assert { type: "json" };
+import { prependHash } from "../utils/router.js";
 import { appContext, ChangBits } from "./app.context";
 import { loadAudioDialogRef } from "./loadaudio.js";
 import { PauseSVG, PlaySVG, SettingsSVG, PreviousSVG, NextSVG, RepeatSVG, ShuffleSVG, RepeatOneSVG, PreferencesSVG } from "./svg.js";
@@ -281,7 +283,7 @@ const RateSlider: React.FC<{ lang: Language }> = ({ lang }) => {
                         {/* Preferences 按钮 - 放在最下面 */}
                         <a 
                             className="settings-dropdown-item" 
-                            href="#/preferences/"
+                            href={prependHash(ROUTER.preferences)}
                             title={lang.header.preferences}
                         >
                             <PreferencesSVG />

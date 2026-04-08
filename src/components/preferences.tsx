@@ -303,11 +303,6 @@ export const Preferences: React.FC = () => {
                     </section>
                 </li>
                 <li>
-                    <section className="list-item about-section">
-                        <span>{lang.preferences.about}</span>
-                    </section>
-                </li>
-                <li>
                     <section className="list-item">
                         <span>{lang.preferences.language}</span>
                         <div className="option-select">
@@ -481,6 +476,131 @@ export const Preferences: React.FC = () => {
                     <section className="list-item">{lang.preferences.clearCache}</section>
                 </li>
             </ul>
+
+            {/* 项目介绍 */}
+            <div className="project-intro">
+                <h2>{lang.preferences.projectIntro.title}</h2>
+
+                {/* 播放器 */}
+                <section className="intro-section">
+                    <h3>{lang.preferences.projectIntro.player.title}</h3>
+                    <ul>
+                        {lang.preferences.projectIntro.player.features.map((feature, index) => (
+                            <li key={index}>{feature}</li>
+                        ))}
+                    </ul>
+                </section>
+
+                {/* 简谱转调工具 */}
+                <section className="intro-section">
+                    <h3>{lang.preferences.projectIntro.tune.title}</h3>
+                    <ul>
+                        {lang.preferences.projectIntro.tune.features.map((feature, index) => (
+                            <li key={index}>{feature}</li>
+                        ))}
+                    </ul>
+                </section>
+
+                {/* 歌词编辑器 */}
+                <section className="intro-section">
+                    <h3>{lang.preferences.projectIntro.editor.title}</h3>
+                    <ul>
+                        {lang.preferences.projectIntro.editor.features.map((feature, index) => (
+                            <li key={index}>{feature}</li>
+                        ))}
+                    </ul>
+                </section>
+
+                {/* 歌词工具箱 */}
+                <section className="intro-section">
+                    <h3>{lang.preferences.projectIntro.utils.title}</h3>
+                    <ul>
+                        {lang.preferences.projectIntro.utils.features.map((feature, index) => (
+                            <li key={index}>{feature}</li>
+                        ))}
+                    </ul>
+                </section>
+
+                {/* 歌词同步器 */}
+                <section className="intro-section">
+                    <h3>{lang.preferences.projectIntro.synchronizer.title}</h3>
+                    <ul>
+                        {lang.preferences.projectIntro.synchronizer.features.map((feature, index) => (
+                            <li key={index}>{feature}</li>
+                        ))}
+                    </ul>
+                </section>
+
+                {/* 偏好设置 */}
+                <section className="intro-section">
+                    <h3>{lang.preferences.projectIntro.preferences.title}</h3>
+                    <ul>
+                        {lang.preferences.projectIntro.preferences.features.map((feature, index) => (
+                            <li key={index}>{feature}</li>
+                        ))}
+                    </ul>
+                </section>
+
+                {/* Gist 云同步 */}
+                <section className="intro-section">
+                    <h3>{lang.preferences.projectIntro.gist.title}</h3>
+                    <ul>
+                        {lang.preferences.projectIntro.gist.features.map((feature, index) => (
+                            <li key={index}>{feature}</li>
+                        ))}
+                    </ul>
+                </section>
+
+                {/* ST播放器 */}
+                <section className="intro-section">
+                    <h3>{lang.preferences.projectIntro.stPlayer.title}</h3>
+                    <ul>
+                        {lang.preferences.projectIntro.stPlayer.features.map((feature, index) => (
+                            <li key={index}>{feature}</li>
+                        ))}
+                    </ul>
+                </section>
+
+                {/* 技术特性 */}
+                <section className="intro-section">
+                    <h3>{lang.preferences.projectIntro.techStack.title}</h3>
+                    <ul>
+                        {lang.preferences.projectIntro.techStack.features.map((feature, index) => (
+                            <li key={index}>{feature}</li>
+                        ))}
+                    </ul>
+                </section>
+
+                {/* 如何使用 */}
+                <section className="intro-section">
+                    <h3>{lang.preferences.projectIntro.usage.title}</h3>
+                    <p>{lang.preferences.projectIntro.usage.basicOperation}</p>
+                    <p>
+                        <a href="https://guestszhen.github.io/lrc-player" target="_blank" rel="noopener noreferrer">
+                            {lang.preferences.projectIntro.usage.onlineDemo}
+                        </a>
+                    </p>
+                    
+                    <h4>{lang.preferences.projectIntro.usage.scenarios.title}</h4>
+                    <ol>
+                        {lang.preferences.projectIntro.usage.scenarios.items.map((item, index) => (
+                            <li key={index}>{item}</li>
+                        ))}
+                    </ol>
+                </section>
+
+                {/* 致谢 */}
+                <section className="intro-section credit">
+                    <p>
+                        {lang.preferences.projectIntro.credit.text}
+                        <br />
+                        {lang.preferences.projectIntro.credit.repoText}
+                        <a href={lang.preferences.projectIntro.credit.repoUrl} target="_blank" rel="noopener noreferrer">
+                            {lang.preferences.projectIntro.credit.repoUrl}
+                        </a>
+                    </p>
+                </section>
+            </div>
         </div>
     );
 };

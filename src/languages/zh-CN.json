@@ -105,6 +105,116 @@
         "leftSpace": "左侧空格",
         "rightSpace": "右侧空格",
         "clearCache": "清除缓存",
+        "projectIntro": {
+            "title": "🎯 核心功能模块",
+            "player": {
+                "title": "播放器 (Player)",
+                "features": [
+                    "🎵 简谱LRC高亮滚动播放 - 通过歌词中 \"/\"符号可实现双行显示",
+                    "🎨 高度自定义：字体大小调节、对齐方式（左/中/右）、背景颜色自定义、歌词颜色自定义、大小调识别",
+                    "🌓 主题自适应（亮色/暗色）",
+                    "🖥️ 全屏模式支持"
+                ]
+            },
+            "tune": {
+                "title": "简谱转调工具 (Tune) ⭐特色功能",
+                "features": [
+                    "🎼 首调唱名法转调（核心特色）",
+                    "🔄 简谱数字与音名映射转换",
+                    "🎹 支持高低八度标记：(5) 表示低音，[5] 表示高音",
+                    "📊 升降号支持（#1, b2 等）",
+                    "🌍 多调式转换（C调、D调等）",
+                    "📋 转换结果预览和导出"
+                ]
+            },
+            "editor": {
+                "title": "歌词编辑器 (Editor)",
+                "features": [
+                    "📝 可视化歌词编辑界面",
+                    "🏷️ 支持插入和管理时间标签",
+                    "💾 歌词导入/导出功能",
+                    "☁️ GitHub Gist 云同步",
+                    "📋 复制和下载歌词文件",
+                    "🔧 歌词元数据编辑（标题、艺术家等）"
+                ]
+            },
+            "utils": {
+                "title": "歌词工具箱 (Lrc-utils)",
+                "features": [
+                    "🔧 多种实用工具：歌词压缩、时间偏移、时间变换、翻译分割、标签移除",
+                    "📥 原文本和处理后文本对比",
+                    "💾 覆盖模式支持"
+                ]
+            },
+            "synchronizer": {
+                "title": "歌词同步器 (Synchronizer)",
+                "features": [
+                    "⏱️ 实时歌词时间轴同步",
+                    "🎮 两种同步模式：选择模式（手动选择行并打点）、高亮模式（跟随播放自动高亮）",
+                    "⌨️ 键盘快捷键支持",
+                    "🔄 平滑滚动到当前行",
+                    "⚡ 时间标签微调功能"
+                ]
+            },
+            "preferences": {
+                "title": "偏好设置 (Preferences)",
+                "features": [
+                    "🎨 主题设置（自动/亮色/暗色）",
+                    "⌨️ 键盘快捷键自定义",
+                    "🌐 多语言切换（EN/ZH-CN/ZH-TW）",
+                    "📝 编辑器配置",
+                    "🎵 音频播放设置"
+                ]
+            },
+            "gist": {
+                "title": "Gist 云同步 (Gist)",
+                "features": [
+                    "☁️ GitHub Gist 集成",
+                    "🔐 OAuth 认证",
+                    "📤 上传歌词到云端",
+                    "📥 从云端加载歌词",
+                    "🗂️ Gist 管理界面"
+                ]
+            },
+            "stPlayer": {
+                "title": "测试版 ST播放器 (Player)",
+                "features": [
+                    "🎵 实现歌曲转调",
+                    "受技术限制，无法调整播放进度，指定时间点（seek）等"
+                ]
+            },
+            "techStack": {
+                "title": "🛠️ 技术特性",
+                "features": [
+                    "前端架构：React 18 + TypeScript + Vite 6",
+                    "音频处理：WaveSurfer.js 波形可视化",
+                    "国际化：三语言支持（英文、简体中文、繁体中文）",
+                    "数据处理：@lrc-maker/lrc-parser 歌词解析库",
+                    "PWA 支持：Service Worker 离线缓存，可安装为桌面应用",
+                    "响应式设计：支持桌面端和移动端"
+                ]
+            },
+            "usage": {
+                "title": "如何使用",
+                "basicOperation": "将文件拖放到页面中加载，使用箭头键和空格键插入时间戳。你可以把这个链接收藏到浏览器书签。",
+                "onlineDemo": "在线体验：https://guestszhen.github.io/lrc-player",
+                "scenarios": {
+                    "title": "💡 应用场景",
+                    "items": [
+                        "音乐制作人：为简谱歌曲制作精准的时间轴歌词",
+                        "KTV 系统：创建卡拉OK字幕文件",
+                        "音乐教育：简谱教学和转调练习",
+                        "歌词爱好者：整理和美化歌词文件",
+                        "开发者：学习 React + TypeScript 最佳实践"
+                    ]
+                }
+            },
+            "credit": {
+                "text": "本程序是基于Akari的lrc-maker制作的，感谢Akari。",
+                "repoText": "项目原地址为：",
+                "repoUrl": "https://github.com/magic-akari/lrc-maker"
+            }
+        },
         "themeMode": {
             "label": "主题模式",
             "auto": "跟随系统",

@@ -111,6 +111,116 @@
         "leftSpace": "Left space",
         "rightSpace": "Right space",
         "clearCache": "Clear caches",
+        "projectIntro": {
+            "title": "🎯 Core Features",
+            "player": {
+                "title": "Player",
+                "features": [
+                    "🎵 Jianpu LRC Highlighted Scrolling Playback - Double-line display via \"/\" symbol in lyrics",
+                    "🎨 Highly Customizable: Font size adjustment, alignment (left/center/right), custom background color, custom lyric color, key signature recognition",
+                    "🌓 Adaptive Theme (Light/Dark)",
+                    "🖥️ Fullscreen Mode Support"
+                ]
+            },
+            "tune": {
+                "title": "Movable-Do Transposition Tool ⭐ Featured",
+                "features": [
+                    "🎼 Movable-Do Solfège Transposition (Core Feature)",
+                    "🔄 Jianpu Number to Note Name Mapping",
+                    "🎹 Octave Marking Support: (5) for lower octave, [5] for higher octave",
+                    "📊 Accidental Support (#1, b2, etc.)",
+                    "🌍 Multi-Key Transposition (C, D, etc.)",
+                    "📋 Preview and Export Results"
+                ]
+            },
+            "editor": {
+                "title": "Lyric Editor",
+                "features": [
+                    "📝 Visual Lyric Editing Interface",
+                    "🏷️ Time Tag Insertion and Management",
+                    "💾 Lyric Import/Export",
+                    "☁️ GitHub Gist Cloud Sync",
+                    "📋 Copy and Download Lyric Files",
+                    "🔧 Lyric Metadata Editing (Title, Artist, etc.)"
+                ]
+            },
+            "utils": {
+                "title": "Lyric Toolbox",
+                "features": [
+                    "🔧 Multiple Utilities: Lyric Compression, Time Offset, Time Transformation, Translation Split, Tag Removal",
+                    "📥 Original vs Processed Text Comparison",
+                    "💾 Overwrite Mode Support"
+                ]
+            },
+            "synchronizer": {
+                "title": "Lyric Synchronizer",
+                "features": [
+                    "⏱️ Real-time Lyric Timeline Synchronization",
+                    "🎮 Two Sync Modes: Selection Mode (manual line selection and timing), Highlight Mode (auto-highlight following playback)",
+                    "⌨️ Keyboard Shortcut Support",
+                    "🔄 Smooth Scroll to Current Line",
+                    "⚡ Time Tag Fine-tuning"
+                ]
+            },
+            "preferences": {
+                "title": "Preferences",
+                "features": [
+                    "🎨 Theme Settings (Auto/Light/Dark)",
+                    "⌨️ Custom Keyboard Shortcuts",
+                    "🌐 Multi-language Switching (EN/ZH-CN/ZH-TW)",
+                    "📝 Editor Configuration",
+                    "🎵 Audio Playback Settings"
+                ]
+            },
+            "gist": {
+                "title": "Gist Cloud Sync",
+                "features": [
+                    "☁️ GitHub Gist Integration",
+                    "🔐 OAuth Authentication",
+                    "📤 Upload Lyrics to Cloud",
+                    "📥 Load Lyrics from Cloud",
+                    "🗂️ Gist Management Interface"
+                ]
+            },
+            "stPlayer": {
+                "title": "Beta ST Player",
+                "features": [
+                    "🎵 Song Transposition Support",
+                    "Due to technical limitations, cannot adjust playback progress or seek to specific time points"
+                ]
+            },
+            "techStack": {
+                "title": "🛠️ Technical Features",
+                "features": [
+                    "Frontend Architecture: React 18 + TypeScript + Vite 6",
+                    "Audio Processing: WaveSurfer.js Waveform Visualization",
+                    "Internationalization: Three-language Support (English, Simplified Chinese, Traditional Chinese)",
+                    "Data Processing: @lrc-maker/lrc-parser Lyric Parsing Library",
+                    "PWA Support: Service Worker Offline Caching, Installable as Desktop App",
+                    "Responsive Design: Supports Desktop and Mobile"
+                ]
+            },
+            "usage": {
+                "title": "How to Use",
+                "basicOperation": "Drag and drop files onto the page to load. Use arrow keys and spacebar to insert timestamps. You can bookmark this link.",
+                "onlineDemo": "Online Demo: https://guestszhen.github.io/lrc-player",
+                "scenarios": {
+                    "title": "💡 Use Cases",
+                    "items": [
+                        "Music Producers: Create precise timeline lyrics for Jianpu songs",
+                        "KTV Systems: Create Karaoke subtitle files",
+                        "Music Education: Jianpu teaching and transposition practice",
+                        "Lyric Enthusiasts: Organize and beautify lyric files",
+                        "Developers: Learn React + TypeScript best practices"
+                    ]
+                }
+            },
+            "credit": {
+                "text": "This program is based on Akari's lrc-maker. Thanks to Akari.",
+                "repoText": "Original project: ",
+                "repoUrl": "https://github.com/magic-akari/lrc-maker"
+            }
+        },
         "themeMode": {
             "label": "Theme Mode",
             "auto": "auto",
