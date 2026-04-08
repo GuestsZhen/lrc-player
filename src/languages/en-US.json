@@ -183,7 +183,7 @@
                 ]
             },
             "stPlayer": {
-                "title": "Beta ST Player",
+                "title": "Beta ST Player (player-soundtouch)",
                 "features": [
                     "🎵 Song Transposition Support",
                     "Due to technical limitations, cannot adjust playback progress or seek to specific time points"

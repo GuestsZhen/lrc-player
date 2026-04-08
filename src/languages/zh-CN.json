@@ -177,7 +177,7 @@
                 ]
             },
             "stPlayer": {
-                "title": "测试版 ST播放器 (Player)",
+                "title": "测试版 ST播放器 (player-soundtouch)",
                 "features": [
                     "🎵 实现歌曲转调",
                     "受技术限制，无法调整播放进度，指定时间点（seek）等"
