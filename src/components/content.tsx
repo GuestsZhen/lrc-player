@@ -174,6 +174,34 @@ export const Content: React.FC = () => {
         });
     };
 
+    // 处理删除单个文件
+    const handleRemoveFile = (fileName: string) => {
+        // 从 selectedFiles 中移除
+        const newSelectedFiles = selectedFiles.filter(f => f !== fileName);
+        setSelectedFiles(newSelectedFiles);
+        
+        // 从 fileObjects 中移除
+        const newFileObjects = new Map(fileObjects);
+        newFileObjects.delete(fileName);
+        setFileObjects(newFileObjects);
+        
+        // 如果删除的是当前播放的文件，停止播放
+        if (fileName === currentPlayingFile) {
+            setCurrentPlayingFile('');
+            setCurrentTrackIndex(-1);
+        }
+        
+        // 从 IndexedDB 中移除该 track（使用 deleteTrack 方法）
+        playlistManager.deleteTrack(fileName).catch((err: unknown) => {
+            console.error('从播放列表移除文件失败:', err);
+        });
+        
+        // 通知 Footer 组件更新播放列表
+        window.dispatchEvent(new CustomEvent('remove-file-from-playlist', {
+            detail: { fileName }
+        }));
+    };
+
     // 处理打开文件
     const handleOpenFileFromPanel = useCallback(() => {
         const input = document.createElement('input');
@@ -604,9 +632,12 @@ export const Content: React.FC = () => {
                                         <li 
                                             key={index} 
                                             className={`selected-file-item ${isPlaying ? 'playing' : ''}`}
-                                            onClick={() => handlePlayFile(fileName)}
                                         >
-                                            <div className="file-name-wrapper">
+                                            <div 
+                                                className="file-name-wrapper"
+                                                onClick={() => handlePlayFile(fileName)}
+                                                style={{ flex: 1, cursor: 'pointer' }}
+                                            >
                                                 <span 
                                                     className="file-name file-name-marquee" 
                                                     title={displayName}
@@ -614,6 +645,16 @@ export const Content: React.FC = () => {
                                                     {displayName}
                                                 </span>
                                             </div>
+                                            <button
+                                                className="remove-file-btn"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleRemoveFile(fileName);
+                                                }}
+                                                title="删除此歌曲"
+                                            >
+                                                ✕
+                                            </button>
                                         </li>
                                     );
                                 })}

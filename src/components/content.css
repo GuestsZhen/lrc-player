@@ -213,7 +213,8 @@ body, .app-container {
     padding: 10px 16px;
     /* border-bottom: 1px solid rgba(255, 255, 255, 0.05); */ /* 移除列表项之间的分隔线 */
     transition: background-color 0.2s ease;
-    cursor: pointer;
+    cursor: default;
+    gap: 8px;
 }
 
 .selected-file-item:last-child {
@@ -298,6 +299,46 @@ body, .app-container {
 [data-theme="light"] .selected-file-item.playing .file-name {
     color: #1c1c1c;
     font-size: 1.5rem;
+}
+
+/* 删除文件按钮 */
+.remove-file-btn {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    border: none;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #eeeeee;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    opacity: 0;
+    flex-shrink: 0;
+}
+
+.selected-file-item:hover .remove-file-btn {
+    opacity: 1;
+}
+
+.remove-file-btn:hover {
+    background-color: rgba(255, 59, 48, 0.8);
+    color: #ffffff;
+    transform: scale(1.1);
+}
+
+/* 亮色模式下删除按钮 */
+[data-theme="light"] .remove-file-btn {
+    background-color: rgba(0, 0, 0, 0.1);
+    color: #1c1c1c;
+}
+
+[data-theme="light"] .remove-file-btn:hover {
+    background-color: rgba(255, 59, 48, 0.8);
+    color: #ffffff;
 }
 
 /* 亮色模式下文件名颜色 */

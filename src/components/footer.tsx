@@ -469,16 +469,48 @@ export const Footer: React.FC = () => {
                             
                             // 如果有 LRC 文件，自动加载歌词
                             if (firstTrack.lrcFile) {
-                                loadLrcFile(firstTrack.lrcFile);
+                                window.dispatchEvent(new CustomEvent('lrc-file-selected', {
+                                    detail: { file: firstTrack.lrcFile }
+                                }));
                             }
-                            
-                            // 更新 Header 显示的歌名
-                            updateCurrentTrackName(prev.length, updated);
                         }, 0);
                     }
                 }
                 
                 return updated;
+            });
+        };
+        
+        // 监听从播放列表删除文件的事件
+        const handleRemoveFileFromPlaylist = (event: Event) => {
+            const customEvent = event as CustomEvent<{ fileName: string }>;
+            if (!customEvent.detail?.fileName) {
+                return;
+            }
+            
+            const { fileName } = customEvent.detail;
+            
+            setPlaylist(prev => {
+                // 找到要删除的文件索引
+                const index = prev.findIndex(track => track.fileName === fileName);
+                if (index === -1) {
+                    return prev; // 文件不在播放列表中
+                }
+                
+                // 创建新的播放列表
+                const newPlaylist = prev.filter(track => track.fileName !== fileName);
+                
+                // 如果删除的是当前播放的文件，停止播放
+                if (index === currentTrackIndex) {
+                    setCurrentTrackIndex(-1);
+                    // 清空音频源
+                    setAudioSrc('');
+                } else if (index < currentTrackIndex) {
+                    // 如果删除的文件在当前播放文件之前，调整索引
+                    setCurrentTrackIndex(currentTrackIndex - 1);
+                }
+                
+                return newPlaylist;
             });
         };
 
@@ -490,6 +522,7 @@ export const Footer: React.FC = () => {
         window.addEventListener('track-index-change' as any, handleTrackIndexChange as any);
         window.addEventListener('play-mode-change' as any, handlePlayModeChange as any);
         window.addEventListener('add-files-to-playlist' as any, handleAddFilesToPlaylist as any);
+        window.addEventListener('remove-file-from-playlist' as any, handleRemoveFileFromPlaylist as any);
 
         return () => {
             window.removeEventListener('toggle-playlist', handleTogglePlaylist);
@@ -500,6 +533,7 @@ export const Footer: React.FC = () => {
             window.removeEventListener('track-index-change' as any, handleTrackIndexChange as any);
             window.removeEventListener('play-mode-change' as any, handlePlayModeChange as any);
             window.removeEventListener('add-files-to-playlist' as any, handleAddFilesToPlaylist as any);
+            window.removeEventListener('remove-file-from-playlist' as any, handleRemoveFileFromPlaylist as any);
         };
     }, [onPreviousTrack, onNextTrack, showPlaylist, playlist, currentTrackIndex]);
 
