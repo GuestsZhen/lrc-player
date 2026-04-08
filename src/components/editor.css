@@ -1,0 +1,520 @@
+.app-editor {
+    position: relative;
+    display: flex;
+    flex: 1 0 auto;
+    flex-direction: column;
+    margin: 70px 6px 6px;  /* 上边距 70px，左右和下边距 6px */
+    padding: 8px;
+    font-size: 1.2rem;
+    background-color: transparent;
+    border: 1px solid var(--theme-color);
+    border-radius: var(--border-radius);
+    transition: box-shadow var(--transition-duration) ease-in-out;
+}
+
+.app-editor:hover, .app-editor:focus-within {
+    box-shadow: 0 0 10px var(--theme-color);
+}
+
+.editor-nav-button:active {
+    transform: translateY(0);
+}
+
+.editor-nav-button svg {
+    width: 24px;
+    height: 24px;
+    fill: currentColor;
+}
+
+.editor-nav-button span {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+@media (width <= 768px) {
+    .editor-right-nav {
+        top: 8px;
+        right: 8px;
+    }
+    
+    .editor-nav-button span {
+        display: none; /* 移动端只显示图标 */
+    }
+}
+
+.app-editor:hover, .app-editor:focus-within {
+    box-shadow: 0 0 10px var(--theme-color);
+}
+
+@media (width <= 768px) {
+    .app-editor {
+        margin: 40px 6px 6px;  /* 竖屏模式：上边距 40px，左右和下边距 6px */
+        border: 0;
+        border-radius: 0;
+    }
+
+    .app-editor:hover, .app-editor:focus-within {
+        box-shadow: none;
+    }
+}
+
+/* Lrc page styles */
+.app-lrc {
+    position: relative;
+    display: flex;
+    flex: 1 0 auto;
+    flex-direction: column;
+    margin: 16px;
+    padding: 8px;
+    font-size: 1.2rem;
+    background-color: transparent;
+    border: 1px solid var(--theme-color);
+    border-radius: var(--border-radius);
+    transition: box-shadow var(--transition-duration) ease-in-out;
+}
+
+.app-lrc:hover, .app-lrc:focus-within {
+    box-shadow: 0 0 10px var(--theme-color);
+}
+
+@media (width <= 768px) {
+    .app-lrc {
+        margin: 0;
+        border: 0;
+        border-radius: 0;
+    }
+
+    .app-lrc:hover, .app-lrc:focus-within {
+        box-shadow: none;
+    }
+}
+
+/* Lrc 歌词列表样式 */
+.lrc-lyric-list {
+    position: relative;
+    width: 100%;
+    max-height: 300px;
+    overflow-y: auto;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 2px solid var(--theme-color);
+}
+
+.lrc-lyric-line {
+    display: flex;
+    align-items: baseline;
+    padding: 8px 12px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.lrc-lyric-line:hover {
+    background-color: var(--theme-color);
+    color: var(--white);
+    transform: translateX(4px);
+}
+
+.lrc-lyric-line .line-time {
+    min-width: 80px;
+    margin-right: 12px;
+    font-family: monospace;
+    opacity: 0.8;
+}
+
+.lrc-lyric-line .line-text {
+    flex: 1;
+    white-space: pre-wrap;
+}
+
+.lrc-lyric-line .line-text-editor {
+    flex: 1;
+    padding: 4px 8px;
+    font-size: inherit;
+    font-family: inherit;
+    color: inherit;
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 2px solid var(--white);
+    border-radius: 4px;
+    outline: none;
+}
+
+.lrc-lyric-line .line-text-editor:focus {
+    border-color: var(--theme-contrast-color);
+    box-shadow: 0 0 8px var(--theme-contrast-color);
+}
+
+.app-editor-infobox {
+    display: none;
+}
+
+@supports (display: grid) {
+    .app-editor-infobox {
+        grid-template-rows: 1fr 1fr 1fr;
+        grid-template-columns: auto 1fr auto;
+    }
+
+    [open] > .app-editor-infobox {
+        display: grid;
+    }
+}
+
+@supports not (display: grid) {
+    .app-editor-infobox {
+        flex-wrap: wrap;
+    }
+
+    [open] > .app-editor-infobox {
+        display: flex;
+    }
+
+    .app-editor-infobox > input {
+        flex: 1 1 calc(100% - 38px);
+    }
+
+    .app-editor-infobox > label:nth-child(3n+1) {
+        flex: 0 0 30px;
+    }
+
+    .app-editor-infobox > label:nth-child(3n+3) {
+        flex: 0 0 8px;
+        text-align: right;
+    }
+}
+
+.app-textarea {
+    flex: 1 0 auto;
+    border: none;
+    overscroll-behavior-y: contain;
+}
+
+.app-editor input, .app-editor textarea {
+    padding: 0;
+    background-color: transparent;
+    border: none;
+    resize: none;
+}
+
+.app-editor > details {
+    padding-bottom: 4px;
+    opacity: 0.6;
+}
+
+.app-editor summary {
+    user-select: none;
+}
+
+.editor-tools {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    padding: 8px;
+    z-index: 10001; /* 确保工具栏在 header-controls-wrapper (z-index: 10000) 之上 */
+}
+
+.editor-tools-item {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    color: var(--font-color);
+    border-radius: 50%;
+}
+
+.editor-tools-item:active {
+    color: currentColor;
+}
+
+.editor-tools-item > svg {
+    width: 24px;
+    height: 24px;
+    color: currentColor;
+}
+
+.editor-tools-item:hover > svg {
+    filter: drop-shadow(0 0 2px var(--theme-color));
+}
+
+/* Tune page styles */
+.app-tune {
+    position: relative;
+    display: flex;
+    flex: 1 0 auto;
+    flex-direction: column;
+    margin: 16px;
+    padding: 8px;
+    font-size: 1.2rem;
+    background-color: transparent;
+    border: 1px solid var(--theme-color);
+    border-radius: var(--border-radius);
+    transition: box-shadow var(--transition-duration) ease-in-out;
+}
+
+.app-tune:hover, .app-tune:focus-within {
+    box-shadow: 0 0 10px var(--theme-color);
+}
+
+/* Tune 页面的 app-editor 特殊样式 - 移除边框和悬停效果 */
+.app-tune.app-editor {
+    border: none !important;
+    margin: 0px 0px 0px;  /* 上右下左：0px 0px 0px */
+    padding: 0;  /* 移除内边距 */
+}
+
+.app-tune.app-editor:hover,
+.app-tune.app-editor:focus-within {
+    box-shadow: none !important;
+}
+
+/* Tune 页面整体 margin 设置为 0 */
+.app-tune {
+    margin: 0;
+}
+
+@media (width <= 768px) {
+    .app-tune {
+        margin: 0;
+        border: 0;
+        border-radius: 0;
+    }
+
+    .app-tune:hover, .app-tune:focus-within {
+        box-shadow: none;
+    }
+}
+
+.tune-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+}
+
+.tune-header .editor-title {
+    margin: 0;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+/* 亮色模式下标题文字颜色调整 */
+[data-theme="light"] .tune-header .editor-title {
+    color: var(--font-color);
+}
+
+.tune-controls {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 12px;
+    padding: 16px 0;
+    align-items: center;
+    justify-content: center;
+}
+
+.tune-control-group {
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+
+.tune-control-group label {
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.tune-control-group select {
+    padding: 4px 3px;
+    font-size: 1rem;
+    border: 2px solid var(--theme-color);
+    border-radius: 4px;
+    background-color: transparent;
+    color: var(--white);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+/* 亮色模式下文字颜色调整 */
+[data-theme="light"] .tune-control-group select {
+    color: var(--font-color);
+}
+
+.tune-control-group select:hover {
+    opacity: 0.9;
+    transform: scale(1.05);
+}
+
+.tune-control-group select:focus {
+    outline: none;
+    box-shadow: 0 0 8px var(--theme-color);
+}
+
+
+.tune-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.tune-button {
+    padding: 8px 20px;
+    font-size: 1rem;
+    font-weight: bold;
+    color: var(--white);
+    background-color: transparent;
+    border: 2px solid var(--theme-color);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+/* 亮色模式下按钮文字颜色调整 */
+[data-theme="light"] .tune-button {
+    color: var(--font-color);
+}
+
+.tune-button:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.tune-button:active {
+    transform: translateY(0);
+}
+
+/* 左右分栏布局 */
+.tune-panels {
+    display: flex;
+    gap: 16px;
+    flex: 1;
+    min-height: 0;
+}
+
+.tune-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--theme-color);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    background-color: transparent;
+}
+
+.tune-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background-color: transparent;
+    color: var(--white);
+    border-bottom: 1px solid var(--theme-color);
+}
+
+/* 亮色模式下标题文字颜色调整 */
+[data-theme="light"] .tune-panel-header {
+    color: var(--font-color);
+}
+
+.tune-panel-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.tune-panel-tools {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    z-index: 10001; /* 确保工具栏在 header-controls-wrapper (z-index: 10000) 之上 */
+    position: relative;
+}
+
+.tune-panel-tool {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    color: var(--white);
+    border-radius: 50%;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+/* 亮色模式下工具按钮 SVG 颜色调整 */
+[data-theme="light"] .tune-panel-tool {
+    color: var(--font-color);
+}
+
+.tune-panel-tool:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+.tune-panel-tool:active {
+    transform: scale(0.95);
+}
+
+.tune-panel-tool > svg {
+    width: 20px;
+    height: 20px;
+    color: currentColor;
+}
+
+.tune-textarea {
+    flex: 1;
+    border: none;
+    padding: 8px;
+    font-size: 0.9rem;
+    resize: none;
+    background-color: transparent;
+    color: var(--font-color);
+    outline: none;
+}
+
+@media (width <= 768px) {
+    .tune-header {
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .tune-header .editor-title {
+        text-align: center;
+        width: 100%;
+        font-size: 1.3em;
+    }
+
+    .tune-controls {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: flex-start;
+    }
+
+    .tune-control-group {
+        width: auto;
+    }
+
+    .tune-actions {
+        width: auto;
+    }
+
+    .tune-button {
+        padding: 6px 12px;
+        font-size: 0.9rem;
+    }
+
+    .tune-panels {
+        flex-direction: column;
+    }
+
+    .tune-panel {
+        min-height: 300px;
+    }
+}

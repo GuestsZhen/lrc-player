@@ -1,0 +1,715 @@
+audio {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 32px;
+    margin-bottom: env(safe-area-inset-bottom);
+    background-color: var(--semi-black-color);
+}
+
+audio::-webkit-media-controls-enclosure {
+    border-radius: 0;
+}
+
+[disabled] {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.lrc-audio {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding-right: env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    color: var(--white);
+    font-size: 14px;
+    background-color: var(--semi-black-color);
+    user-select: none;
+}
+
+.lrc-audio > button, .lrc-audio > span {
+    flex: 0 0 auto;
+}
+
+/* 播放列表按钮 */
+.lrc-audio > button.loadaudio-button {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: #eeeeee;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.lrc-audio > button.loadaudio-button svg {
+    width: 30px;
+    height: 30px;
+    fill: currentColor;
+}
+
+.lrc-audio > button.loadaudio-button:hover {
+    color: var(--theme-color);
+    transform: scale(1.1);
+}
+
+/* 上一首/下一首按钮 */
+.lrc-audio > button:not(.loadaudio-button) {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: #eeeeee;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.lrc-audio > button:not(.loadaudio-button) svg {
+    width: 30px;
+    height: 30px;
+    fill: currentColor;
+}
+
+.lrc-audio > button:not(.loadaudio-button):hover:not([disabled]) {
+    color: var(--theme-color);
+    transform: scale(1.1);
+}
+
+.slider {
+    --slider-height: 32px;
+
+    position: relative;
+    height: var(--slider-height);
+    margin: 0 5px;
+}
+
+.slider > progress, .slider > input {
+    position: absolute;
+    right: 0;
+    left: 0;
+    width: 100%;
+}
+
+.waveform-container {
+    flex: 1;
+}
+
+.waveform-container > .waveform {
+    height: 100%;
+}
+
+/* 竖屏模式样式 */
+@media (width <= 768px) {
+    /* 竖屏模式 - 隐藏横屏布局 */
+    .lrc-audio .landscape-layout {
+        display: none;
+    }
+    
+    /* 显示竖屏布局 */
+    .lrc-audio .portrait-layout {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        justify-content: space-between;
+    }
+    
+    /* 第一行：当前时间 | 歌曲文件名 | 总时长 */
+    .track-info-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 4px 16px 0 16px;
+        min-height: 24px;
+        flex-shrink: 0;
+    }
+    
+    .track-current-time {
+        flex: 0 0 auto;
+        font-size: 0.55rem;  /* 小字体 */
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+        color: #eeeeee;
+    }
+    
+    .track-name-text {
+        flex: 1;
+        font-size: 1.2rem;  /* 大字体 */
+        font-weight: 600;
+        color: #eeeeee;
+        text-align: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-width: 0; /* 关键：让 flex 子项能够正确截断文本 */
+    }
+    
+    .track-duration-time {
+        flex: 0 0 auto;
+        font-size: 0.55rem;  /* 小字体 */
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+        color: #eeeeee;
+        opacity: 0.7;
+    }
+    
+    /* 第二行：进度条 */
+    .timeline-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2px 16px;
+        min-height: 20px;
+        flex-shrink: 0;
+    }
+    
+    .timeline-row .slider {
+        width: 100%;
+    }
+    
+    /* 第三行：控制按钮 */
+    .controls-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 0 16px 4px 16px;
+        min-height: 36px;
+        position: relative;
+        flex-shrink: 0;
+    }
+    
+    /* 左下角播放顺序按钮 - 绝对定位 */
+    .play-mode-button-left {
+        position: absolute;
+        left: 16px;
+        width: 40px;
+        height: 40px;
+        background: none;
+        border: none;
+        color: #eeeeee;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        z-index: 10; /* 确保按钮在最上层 */
+    }
+    
+    .play-mode-button-left svg {
+        width: 30px;
+        height: 30px;
+        fill: currentColor;
+    }
+    
+    .play-mode-button-left:hover:not([disabled]) {
+        color: var(--theme-color);
+        transform: scale(1.1);
+    }
+    
+    /* 中间按钮组 - 居中显示 */
+    .controls-center {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        flex: 1;
+    }
+    
+    /* 右侧速度按钮 - 绝对定位，不影响中间居中 */
+    .controls-right {
+        position: absolute;
+        right: 16px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .controls-center button, .controls-right button {
+        width: 40px;
+        height: 40px;
+        background: none;
+        border: none;
+        color: #eeeeee;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .controls-center button svg, .controls-right button svg {
+        width: 30px;
+        height: 30px;
+        fill: currentColor;
+    }
+    
+    /* 竖屏模式下中间按钮组的特殊尺寸 */
+    /* 上一首和下一首按钮 */
+    .controls-center button.previous-button,
+    .controls-center button.next-button {
+        width: 51px !important;
+        height: 51px !important;
+    }
+    
+    .controls-center button.previous-button svg,
+    .controls-center button.next-button svg {
+        width: 50px !important;
+        height: 50px !important;
+    }
+    
+    /* 播放/暂停按钮 */
+    .controls-center button.play-button {
+        width: 81px !important;
+        height: 81px !important;
+    }
+    
+    .controls-center button.play-button svg {
+        width: 80px !important;
+        height: 80px !important;
+    }
+    
+    .controls-center button:hover:not([disabled]), .controls-right button:hover:not([disabled]) {
+        color: var(--theme-color);
+        transform: scale(1.1);
+    }
+    
+    .controls-right .rate-slider {
+        width: 100px;
+    }
+    
+    .app-main {
+        padding-bottom: 80px; /* 增加底部留白以适应三行布局 */
+    }
+}
+
+/* 横屏模式样式 */
+@media (width > 768px) {
+    /* 横屏模式 - 隐藏竖屏布局 */
+    .lrc-audio .portrait-layout {
+        display: none;
+    }
+    
+    /* 显示横屏布局 */
+    .lrc-audio .landscape-layout {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+    }
+    
+    /* 横屏模式下按钮颜色 */
+    .lrc-audio .landscape-layout > button {
+        color: #eeeeee;
+    }
+    
+    .lrc-audio .landscape-layout > button:hover:not([disabled]) {
+        color: var(--theme-color);
+    }
+    
+    /* 横屏模式下时间轴自动变长 */
+    .lrc-audio .landscape-layout .timeline-wrapper {
+        flex: 1;
+        min-width: 200px;
+    }
+    
+    /* 放大横屏模式按钮中的图标 1.5 倍 */
+    .lrc-audio .landscape-layout > button svg {
+        transform: scale(1.5);
+    }
+}
+
+.lrc-audio > button {
+    height: 32px;
+    color: #eeeeee;
+}
+
+audio + .lrc-audio > .loadaudio-button > svg {
+    animation: drop-shadow-flash 1s ease-in-out infinite;
+}
+
+audio[src] + .lrc-audio > .loadaudio-button > svg {
+    animation: none;
+}
+
+@keyframes drop-shadow-flash {
+    0% {
+        filter: 0;
+    }
+
+    50% {
+        filter: var(--drop-shadow);
+    }
+}
+
+.lrc-audio section {
+    margin: 0 5px;
+}
+
+.timeline-slider {
+    flex: 4 0 auto;
+}
+
+/* 时间轴包装器 */
+.timeline-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 200px;
+}
+
+/* 当前时间 */
+.current-time {
+    flex: 0 0 auto;
+    font-size: 0.9rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+/* 总时长 */
+.duration-time {
+    flex: 0 0 auto;
+    font-size: 0.9rem;
+    font-variant-numeric: tabular-numeric;
+    white-space: nowrap;
+    opacity: 0.7;
+}
+
+.playbackrate-slider {
+    flex: 1 1 auto;
+    max-width: 150px;
+}
+
+input[type="range"] {
+    --thumb-size: 16px;
+
+    height: var(--slider-height);
+    margin: 0;
+    padding: 0;
+    color: var(--theme-color);
+    background-color: transparent;
+    appearance: none;
+}
+
+input[type="range"]:focus {
+    outline: none;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+    height: var(--slider-height);
+    background-color: transparent;
+    border: 0;
+}
+
+input[type="range"]::-moz-range-track {
+    height: var(--slider-height);
+    background-color: transparent;
+    border: 0;
+}
+
+input[type="range"]::-ms-track {
+    top: -6px;
+    color: transparent;
+    background-color: transparent;
+    border-color: transparent;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    z-index: 10;
+    width: var(--thumb-size);
+    height: var(--thumb-size);
+    margin-top: calc((var(--slider-height) - var(--thumb-size)) / 2);
+    background-color: currentColor;
+    border: 0;
+    border-radius: 50%;
+    box-shadow: 0 0 4px 1px var(--black);
+    filter: brightness(120%);
+    transition: box-shadow var(--transition-duration) ease-in-out;
+    -webkit-appearance: none;
+}
+
+input[type="range"]:hover::-webkit-slider-thumb {
+    box-shadow: 0 0 4px 1px var(--white);
+}
+
+input[type="range"]::-moz-range-thumb {
+    z-index: 10;
+    width: var(--thumb-size);
+    height: var(--thumb-size);
+    margin-top: calc((var(--slider-height) - var(--thumb-size)) / 2);
+    background-color: currentColor;
+    border: 0;
+    border-radius: 50%;
+    box-shadow: 0 0 4px 1px var(--black);
+    filter: brightness(120%);
+    transition: box-shadow var(--transition-duration) ease-in-out;
+    -moz-appearance: none;
+}
+
+input[type="range"]:hover::-moz-range-thumb {
+    box-shadow: 0 0 4px var(--white);
+}
+
+input[type="range"]::-ms-fill-upper, input[type="range"]::-ms-fill-lower {
+    background-color: transparent;
+}
+
+input[type="range"]::-ms-thumb {
+    /* In Edge css variables nor work in pseudo elements */
+    width: 16px;
+    height: 16px;
+    margin-top: -1px;
+    background-color: currentColor;
+    border-radius: 50%;
+}
+
+input[type="range"]::-ms-tooltip {
+    display: none;
+}
+
+.slider > progress {
+    --progress-meter-color: var(--theme-color);
+
+    display: inline-block;
+    box-sizing: border-box;
+    height: 4px;
+    margin: calc(var(--slider-height) / 2 - 2px) 0;
+    color: var(--progress-meter-color);
+    vertical-align: 0;
+    background: var(--white);
+    border: none;
+    border-radius: 2px;
+    box-shadow: 0 0 4px var(--black);
+    transition: box-shadow var(--transition-duration) ease-in-out;
+    appearance: none;
+}
+
+.slider:hover progress {
+    box-shadow: 0 0 4px var(--white);
+}
+
+progress::-moz-progress-bar {
+    background-color: var(--progress-meter-color);
+    background-image: linear-gradient(-45deg, #ffffff00 0, #ffffff00 50%, #ffffffcc 62.5%, #ffffff00 75%);
+    background-size: 35px 20px, 100% 100%, 100% 100%;
+    border-radius: 2px;
+}
+
+progress::-webkit-progress-bar {
+    background-color: #eeeeee; /* 暗色模式 */
+    border-radius: 2px;
+    box-shadow: 0 2px 5px #00000044 inset;
+}
+
+/* 亮色模式下进度条背景调整 */
+[data-theme="light"] progress::-webkit-progress-bar {
+    background-color: #d0d0d0;
+}
+
+progress::-webkit-progress-value {
+    background-color: var(--progress-meter-color);
+    background-image: linear-gradient(-45deg, #ffffff00 0, #ffffff00 50%, #ffffffcc 62.5%, #ffffff00 75%);
+    background-repeat: repeat-x;
+    background-size: 40px 40px, 100% 100%, 100% 100%;
+    border-radius: 2px;
+}
+
+/* 设置按钮和下拉菜单 */
+.settings-dropdown-wrapper {
+    position: relative;
+    z-index: 10002; /* 确保在播放列表之上 */
+}
+
+.settings-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: none;
+    border: none;
+    color: var(--white); /* 默认暗色模式 */
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+/* 亮色模式下使用深色 */
+[data-theme="light"] .settings-btn {
+    color: var(--black);
+}
+
+.settings-btn svg {
+    width: 30px;
+    height: 30px;
+    fill: currentColor;
+    transform: scale(1.5); /* 放大图标 1.5 倍 */
+}
+
+.settings-btn:hover {
+    color: var(--theme-color);
+    transform: scale(1.1);
+}
+
+.settings-dropdown-menu {
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    margin-bottom: 8px;
+    background-color: rgba(0, 0, 0, 0.8);
+    border-radius: 8px;
+    padding: 12px;
+    min-width: 144px; /* 与 Player 页面字体设置菜单统一宽度 */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    z-index: 10002; /* 高于播放列表面板 (10000) 和 editor-tools (10001) */
+    animation: menu-fade-in 0.3s ease-out; /* 淡入动画 */
+}
+
+/* 菜单淡入动画 */
+@keyframes menu-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* 菜单淡出动画 - 用于关闭时 */
+.settings-dropdown-menu.menu-hiding {
+    animation: menu-fade-out 0.3s ease-in forwards;
+}
+
+@keyframes menu-fade-out {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.95);
+    }
+}
+
+/* 亮色模式下菜单背景颜色调整 */
+[data-theme="light"] .settings-dropdown-menu {
+    background-color: rgba(184, 184, 184, 0.8);
+    color: #1c1c1c;
+}
+
+.speed-control-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.speed-control-btn {
+    width: 36px;
+    height: 36px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 6px;
+    color: #eeeeee;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 亮色模式下速度控制按钮颜色调整 */
+[data-theme="light"] .speed-control-btn {
+    background-color: rgba(0, 0, 0, 0.1);
+    color: #1c1c1c;
+}
+
+.speed-control-btn:hover:not(:disabled) {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+}
+
+/* 亮色模式下速度控制按钮 hover 状态 */
+[data-theme="light"] .speed-control-btn:hover:not(:disabled) {
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.speed-control-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.speed-control-value {
+    flex: 1;
+    background: none;
+    border: none;
+    color: #ffffff;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 8px;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+/* 亮色模式下速度值输入框颜色调整 */
+[data-theme="light"] .speed-control-value {
+    color: #1c1c1c;
+}
+
+.speed-control-value:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+}
+
+.speed-control-slider {
+    margin-top: 8px;
+}
+
+/* Preferences 按钮样式 */
+.settings-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    color: var(--white); /* 默认暗色模式 */
+    text-decoration: none;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    margin-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 12px;
+}
+
+/* 亮色模式下使用深色 */
+[data-theme="light"] .settings-dropdown-item {
+    color: var(--black);
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.settings-dropdown-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--theme-color);
+}
+
+/* 亮色模式下 hover 背景色调整 */
+[data-theme="light"] .settings-dropdown-item:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.settings-dropdown-item svg {
+    width: 20px;
+    height: 20px;
+}
+
+.slider.playbackrate-slider {
+    --slider-height: 32px;
+}

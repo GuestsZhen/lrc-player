@@ -1,0 +1,11 @@
+{
+    "home": "/player/",
+    "editor": "/editor/",
+    "synchronizer": "/synchronizer/",
+    "player": "/player/",
+    "playerSoundTouchJS": "/player-soundtouch/",
+    "tune": "/tune/",
+    "gist": "/gist/",
+    "preferences": "/preferences/",
+    "lrcutils": "/lrc-utils/"
+}
