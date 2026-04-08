@@ -86,6 +86,20 @@ export const Header: React.FC = () => {
     const [isDetectingKey, setIsDetectingKey] = useState(false);
     const [showKeyDetectionMenu, setShowKeyDetectionMenu] = useState(false);
     
+    // ST (SoundTouch) 调性检测结果
+    const [stDetectedKey, setStDetectedKey] = useState<string>('');
+    const [isStDetectingKey, setIsStDetectingKey] = useState(false);
+    const [showStKeyMenu, setShowStKeyMenu] = useState(false);
+    
+    // ST 音高调节状态（半音数）
+    const [stPitchSemitones, setStPitchSemitones] = useState(0);
+    
+    // ST 速度调节状态
+    const [stPlaybackSpeed, setStPlaybackSpeed] = useState(1.0);
+    
+    // ST 去人声状态
+    const [stVocalRemoval, setStVocalRemoval] = useState(false);
+    
     // 音高调节状态（半音数）
     const [_pitchSemitones, _setPitchSemitones] = useState(0);
     
@@ -262,6 +276,98 @@ export const Header: React.FC = () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, [showKeyDetectionMenu, isHiding]);
+    
+    // 关闭 ST歌曲调整菜单（带动画）
+    const closeStKeyMenu = useCallback(() => {
+        setIsHiding(true);
+        setTimeout(() => {
+            setShowStKeyMenu(false);
+            setIsHiding(false);
+        }, 300);
+    }, []);
+    
+    // 点击其他区域时关闭 ST歌曲调整菜单（带动画）
+    useEffect(() => {
+        if (!showStKeyMenu || isHiding) return;
+        
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as Element;
+            // 如果点击的不是菜单区域，关闭菜单
+            if (!target.closest('.key-detection-menu') && !target.closest('.key-detection-btn')) {
+                closeStKeyMenu();
+            }
+        };
+        
+        document.addEventListener('mousedown', handleClickOutside);
+        
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showStKeyMenu, isHiding, closeStKeyMenu]);
+    
+    // 监听 ST歌曲调整菜单切换事件（从 player-soundtouch.tsx）
+    useEffect(() => {
+        const handleToggleStKeyMenu = () => {
+            if (showStKeyMenu && !isHiding) {
+                closeStKeyMenu();
+            } else {
+                setShowStKeyMenu(true);
+                setIsHiding(false);
+            }
+        };
+        
+        window.addEventListener('toggle-st-key-menu' as any, handleToggleStKeyMenu as any);
+        return () => window.removeEventListener('toggle-st-key-menu' as any, handleToggleStKeyMenu as any);
+    }, [showStKeyMenu, isHiding, closeStKeyMenu]);
+    
+    // 监听 ST调性检测状态更新
+    useEffect(() => {
+        const handleStKeyDetectionStart = () => {
+            setIsStDetectingKey(true);
+        };
+        
+        const handleStKeyDetectionResult = (event: CustomEvent<string>) => {
+            setStDetectedKey(event.detail);
+            setIsStDetectingKey(false);
+        };
+        
+        window.addEventListener('st-key-detection-start' as any, handleStKeyDetectionStart as any);
+        window.addEventListener('st-key-detection-result' as any, handleStKeyDetectionResult as any);
+        return () => {
+            window.removeEventListener('st-key-detection-start' as any, handleStKeyDetectionStart as any);
+            window.removeEventListener('st-key-detection-result' as any, handleStKeyDetectionResult as any);
+        };
+    }, []);
+    
+    // 监听 ST音高调节状态更新
+    useEffect(() => {
+        const handleStPitchChange = (event: CustomEvent<number>) => {
+            setStPitchSemitones(event.detail);
+        };
+        
+        window.addEventListener('st-pitch-change' as any, handleStPitchChange as any);
+        return () => window.removeEventListener('st-pitch-change' as any, handleStPitchChange as any);
+    }, []);
+    
+    // 监听 ST速度调节状态更新
+    useEffect(() => {
+        const handleStSpeedChange = (event: CustomEvent<number>) => {
+            setStPlaybackSpeed(event.detail);
+        };
+        
+        window.addEventListener('st-speed-change' as any, handleStSpeedChange as any);
+        return () => window.removeEventListener('st-speed-change' as any, handleStSpeedChange as any);
+    }, []);
+    
+    // 监听 ST去人声状态更新
+    useEffect(() => {
+        const handleStVocalRemovalChange = (event: CustomEvent<boolean>) => {
+            setStVocalRemoval(event.detail);
+        };
+        
+        window.addEventListener('st-vocal-removal-change' as any, handleStVocalRemovalChange as any);
+        return () => window.removeEventListener('st-vocal-removal-change' as any, handleStVocalRemovalChange as any);
+    }, []);
     
     // 点击其他区域时关闭文字设定菜单（带动画）
     useEffect(() => {
@@ -585,6 +691,137 @@ export const Header: React.FC = () => {
                                             >
                                                 +
                                             </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                    
+                    {/* ST歌曲调整按钮 - 仅在 Player-SoundTouch 页面显示 */}
+                    {isPlayerSoundTouchPage && (
+                        <div style={{ position: 'relative' }}>
+                            <button 
+                                className="player-control-button key-detection-btn"
+                                onClick={() => {
+                                    // 触发 player-soundtouch 页面的 ST歌曲调整菜单
+                                    window.dispatchEvent(new CustomEvent('toggle-st-key-menu'));
+                                }}
+                                title="ST歌曲调整"
+                            >
+                                <MusicKeySVG />
+                            </button>
+                            
+                            {/* ST歌曲调整菜单 - 渲染在 Header 中，相对于按钮定位 */}
+                            {showStKeyMenu && (
+                                <div className={`key-detection-menu${isHiding ? ' menu-hiding' : ''}`}>
+                                    {/* 调性检测 */}
+                                    <div className="player-settings-group">
+                                        <div className="player-settings-label">ST歌曲调整</div>
+                                        
+                                        {isStDetectingKey ? (
+                                            <div className="key-detecting">
+                                                <div className="detecting-spinner"></div>
+                                                <p>检测中...</p>
+                                            </div>
+                                        ) : stDetectedKey ? (
+                                            <div className="key-result">
+                                                <div className="key-display">
+                                                    <span className="key-name">{stDetectedKey}</span>
+                                                </div>
+                                                <button 
+                                                    className="re-detect-btn"
+                                                    onClick={() => {
+                                                        window.dispatchEvent(new CustomEvent('trigger-st-key-detection'));
+                                                    }}
+                                                >
+                                                    重新检测
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="no-key-detected">
+                                                <button 
+                                                    className="start-detect-btn"
+                                                    onClick={() => {
+                                                        window.dispatchEvent(new CustomEvent('trigger-st-key-detection'));
+                                                    }}
+                                                >
+                                                    调性检测
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                    
+                                    {/* 音高调节 */}
+                                    <div className="player-settings-group">
+                                        <div className="player-settings-label">音高调节</div>
+                                        <div className="player-settings-options">
+                                            <button 
+                                                className="player-setting-btn"
+                                                onClick={() => window.dispatchEvent(new CustomEvent('st-adjust-pitch', { detail: -1 }))}
+                                                title="降低一个半音"
+                                            >
+                                                -
+                                            </button>
+                                            <button 
+                                                className="player-setting-btn"
+                                                onClick={() => window.dispatchEvent(new CustomEvent('st-reset-pitch'))}
+                                                title="重置为原调"
+                                                style={{ minWidth: '50px' }}
+                                            >
+                                                {stPitchSemitones === 0 ? '原调' : `${stPitchSemitones > 0 ? '+' : ''}${stPitchSemitones}`}
+                                            </button>
+                                            <button 
+                                                className="player-setting-btn"
+                                                onClick={() => window.dispatchEvent(new CustomEvent('st-adjust-pitch', { detail: 1 }))}
+                                                title="升高一个半音"
+                                            >
+                                                +
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* 速度调节 */}
+                                    <div className="player-settings-group">
+                                        <div className="player-settings-label">速度调节</div>
+                                        <div className="player-settings-options">
+                                            <button 
+                                                className="player-setting-btn"
+                                                onClick={() => window.dispatchEvent(new CustomEvent('st-adjust-speed', { detail: -0.1 }))}
+                                                title="减慢速度"
+                                            >
+                                                -
+                                            </button>
+                                            <button 
+                                                className="player-setting-btn"
+                                                onClick={() => window.dispatchEvent(new CustomEvent('st-reset-speed'))}
+                                                title="重置为正常速度"
+                                                style={{ minWidth: '60px' }}
+                                            >
+                                                {stPlaybackSpeed.toFixed(1)}x
+                                            </button>
+                                            <button 
+                                                className="player-setting-btn"
+                                                onClick={() => window.dispatchEvent(new CustomEvent('st-adjust-speed', { detail: 0.1 }))}
+                                                title="加快速度"
+                                            >
+                                                +
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* 去人声（伴奏模式） */}
+                                    <div className="player-settings-group">
+                                        <div className="player-settings-label">去人声（伴奏模式）</div>
+                                        <div className="player-settings-options">
+                                            <label className="toggle-switch" title="使用相位抵消法去除居中人声，仅播放伴奏">
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={stVocalRemoval}
+                                                    onChange={() => window.dispatchEvent(new CustomEvent('st-toggle-vocal-removal'))}
+                                                />
+                                                <span className="toggle-switch-label"></span>
+                                            </label>
                                         </div>
                                     </div>
                                 </div>

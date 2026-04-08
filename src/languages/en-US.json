@@ -40,7 +40,9 @@
         "detectingKey": "Detecting...",
         "reDetect": "Re-detect",
         "noKeyDetected": "Click to detect current song key",
-        "startDetection": "Start Detection"
+        "startDetection": "Start Detection",
+        "vocalRemoval": "Vocal Removal (Instrumental)",
+        "vocalRemovalTip": "Use phase cancellation to remove center vocals, play instrumental only"
     },
     "audio": {
         "loadAudio": "load audio",
@@ -186,6 +188,7 @@
                 "title": "Beta ST Player (player-soundtouch)",
                 "features": [
                     "🎵 Song Transposition Support",
+                    "🎤 Vocal Removal (Instrumental Mode) - Use phase cancellation to remove center vocals, play instrumental only",
                     "Due to technical limitations, cannot adjust playback progress or seek to specific time points"
                 ]
             },

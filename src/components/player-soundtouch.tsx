@@ -4,7 +4,7 @@ import { type Action, ActionType } from "../hooks/useLrc.js";
 import { webAudioPlayer } from "../utils/web-audio-player.js";
 import { appContext } from "./app.context.js";
 import { Curser } from "./curser.js";
-import { PlaySVG, PauseSVG, PlaylistSVG, MusicKeySVG, SettingsSVG } from "./svg.js";
+import { PlaySVG, PauseSVG, PlaylistSVG, SettingsSVG } from "./svg.js";
 import { simpleKeyDetector, type KeyDetectionResult } from "../utils/simple-key-detector.js";
 
 // 存储当前加载的音频文件，用于调性检测
@@ -50,16 +50,18 @@ export const PlayerSoundTouch: React.FC<IPlayerProps> = ({ state, dispatch }) =>
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
     const [audioFileName, setAudioFileName] = useState<string>('');
+    const [isAudioInitialized, setIsAudioInitialized] = useState(false);  // 音频是否已初始化
     
     // 音高和速度调节
     const [pitchSemitones, setPitchSemitones] = useState(0);
     const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
     
+    // 去人声（伴奏模式）状态
+    const [vocalRemoval, setVocalRemoval] = useState(false);
+    
     // 调性检测状态
     const [detectedKey, setDetectedKey] = useState<string>('');
     const [isDetectingKey, setIsDetectingKey] = useState(false);
-    const [showKeyMenu, setShowKeyMenu] = useState(false);
-    const [isHiding, setIsHiding] = useState(false);
     
     const fileInputRef = useRef<HTMLInputElement>(null);
     const ul = useRef<HTMLUListElement>(null);
@@ -108,44 +110,6 @@ export const PlayerSoundTouch: React.FC<IPlayerProps> = ({ state, dispatch }) =>
     useEffect(() => {
         sessionStorage.setItem("player-font-size", fontSize.toString());
     }, [fontSize]);
-    
-    // 关闭ST歌曲调整菜单（带动画）
-    const closeKeyMenu = useCallback(() => {
-        setIsHiding(true);
-        setTimeout(() => {
-            setShowKeyMenu(false);
-            setIsHiding(false);
-        }, 300);
-    }, []);
-    
-    // 切换ST歌曲调整菜单
-    const toggleKeyMenu = useCallback(() => {
-        if (showKeyMenu && !isHiding) {
-            closeKeyMenu();
-        } else {
-            setShowKeyMenu(true);
-            setIsHiding(false);
-        }
-    }, [showKeyMenu, isHiding, closeKeyMenu]);
-    
-    // 点击外部关闭菜单
-    useEffect(() => {
-        if (!showKeyMenu || isHiding) return;
-        
-        const handleClickOutside = (event: MouseEvent) => {
-            const target = event.target as Element;
-            // 如果点击的不是菜单区域或按钮，关闭菜单
-            if (!target.closest('.key-detection-menu') && !target.closest('.key-detection-btn')) {
-                closeKeyMenu();
-            }
-        };
-        
-        document.addEventListener('mousedown', handleClickOutside);
-        
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [showKeyMenu, isHiding, closeKeyMenu]);
 
     // 监听事件
     useEffect(() => {
@@ -289,6 +253,7 @@ export const PlayerSoundTouch: React.FC<IPlayerProps> = ({ state, dispatch }) =>
         try {
             setAudioFileName(audioFile.name);
             currentAudioFile = audioFile; // 保存文件引用用于调性检测
+            setIsAudioInitialized(false);  // 重置初始化状态
             
             await webAudioPlayer.init({
                 audioFile: audioFile,
@@ -297,6 +262,7 @@ export const PlayerSoundTouch: React.FC<IPlayerProps> = ({ state, dispatch }) =>
             });
             
             setDuration(webAudioPlayer.getDuration());
+            setIsAudioInitialized(true);  // 标记为已初始化
             
             // 如果有匹配的 LRC 文件，触发歌词加载
             if (matchingLrc) {
@@ -310,6 +276,7 @@ export const PlayerSoundTouch: React.FC<IPlayerProps> = ({ state, dispatch }) =>
         } catch (error) {
             console.error('[PlayerSoundTouch] Failed to load file:', error);
             alert('音频文件加载失败');
+            setIsAudioInitialized(false);  // 初始化失败，重置状态
         }
         
         // 清空 input，允许重复选择同一文件
@@ -365,6 +332,8 @@ export const PlayerSoundTouch: React.FC<IPlayerProps> = ({ state, dispatch }) =>
         const newPitch = Math.max(-12, Math.min(12, pitchSemitones + delta));
         setPitchSemitones(newPitch);
         webAudioPlayer.setPitch(newPitch);
+        // 同步到 Header
+        window.dispatchEvent(new CustomEvent('st-pitch-change', { detail: newPitch }));
     };
 
     // 调节速度
@@ -372,6 +341,17 @@ export const PlayerSoundTouch: React.FC<IPlayerProps> = ({ state, dispatch }) =>
         const newSpeed = Math.max(0.5, Math.min(2.0, playbackSpeed + delta));
         setPlaybackSpeed(newSpeed);
         webAudioPlayer.setSpeed(newSpeed);
+        // 同步到 Header
+        window.dispatchEvent(new CustomEvent('st-speed-change', { detail: newSpeed }));
+    };
+
+    // 切换去人声（伴奏模式）
+    const toggleVocalRemoval = () => {
+        const newState = !vocalRemoval;
+        setVocalRemoval(newState);
+        webAudioPlayer.setVocalRemoval(newState);
+        // 同步到 Header
+        window.dispatchEvent(new CustomEvent('st-vocal-removal-change', { detail: newState }));
     };
 
     // 调性检测
@@ -382,11 +362,15 @@ export const PlayerSoundTouch: React.FC<IPlayerProps> = ({ state, dispatch }) =>
         }
         
         setIsDetectingKey(true);
+        // 同步到 Header
+        window.dispatchEvent(new CustomEvent('st-key-detection-start'));
         
         try {
             // 从当前播放时间点开始检测
             const result: KeyDetectionResult = await simpleKeyDetector.detectKeyFromFile(currentAudioFile, currentTime);
             setDetectedKey(result.fullKey);
+            // 同步到 Header
+            window.dispatchEvent(new CustomEvent('st-key-detection-result', { detail: result.fullKey }));
         } catch (error) {
             console.error('[PlayerSoundTouch] Key detection failed:', error);
             alert('调性检测失败：' + (error instanceof Error ? error.message : '未知错误'));
@@ -394,6 +378,53 @@ export const PlayerSoundTouch: React.FC<IPlayerProps> = ({ state, dispatch }) =>
             setIsDetectingKey(false);
         }
     };
+
+    // 监听来自 Header 的 ST歌曲调整命令
+    useEffect(() => {
+        const handleStKeyDetection = () => {
+            detectKey();
+        };
+        
+        const handleStAdjustPitch = (event: CustomEvent<number>) => {
+            adjustPitch(event.detail);
+        };
+        
+        const handleStResetPitch = () => {
+            setPitchSemitones(0);
+            webAudioPlayer.setPitch(0);
+            window.dispatchEvent(new CustomEvent('st-pitch-change', { detail: 0 }));
+        };
+        
+        const handleStAdjustSpeed = (event: CustomEvent<number>) => {
+            adjustSpeed(event.detail);
+        };
+        
+        const handleStResetSpeed = () => {
+            setPlaybackSpeed(1.0);
+            webAudioPlayer.setSpeed(1.0);
+            window.dispatchEvent(new CustomEvent('st-speed-change', { detail: 1.0 }));
+        };
+        
+        const handleStToggleVocalRemoval = () => {
+            toggleVocalRemoval();
+        };
+        
+        window.addEventListener('trigger-st-key-detection' as any, handleStKeyDetection as any);
+        window.addEventListener('st-adjust-pitch' as any, handleStAdjustPitch as any);
+        window.addEventListener('st-reset-pitch' as any, handleStResetPitch as any);
+        window.addEventListener('st-adjust-speed' as any, handleStAdjustSpeed as any);
+        window.addEventListener('st-reset-speed' as any, handleStResetSpeed as any);
+        window.addEventListener('st-toggle-vocal-removal' as any, handleStToggleVocalRemoval as any);
+        
+        return () => {
+            window.removeEventListener('trigger-st-key-detection' as any, handleStKeyDetection as any);
+            window.removeEventListener('st-adjust-pitch' as any, handleStAdjustPitch as any);
+            window.removeEventListener('st-reset-pitch' as any, handleStResetPitch as any);
+            window.removeEventListener('st-adjust-speed' as any, handleStAdjustSpeed as any);
+            window.removeEventListener('st-reset-speed' as any, handleStResetSpeed as any);
+            window.removeEventListener('st-toggle-vocal-removal' as any, handleStToggleVocalRemoval as any);
+        };
+    }, [detectKey, adjustPitch, adjustSpeed, toggleVocalRemoval]);
 
     // 格式化时间
     const formatTime = (seconds: number): string => {
@@ -452,127 +483,6 @@ export const PlayerSoundTouch: React.FC<IPlayerProps> = ({ state, dispatch }) =>
             className="player-container player-soundtouch-container"
             style={{ backgroundColor }}
         >
-            {/* ST歌曲调整按钮 - 固定在文字调节按钮下方，与 Header 样式一致 */}
-            <div style={{ 
-                position: 'fixed',
-                right: '11px',
-                top: '214px',  /* T按钮下方: 10px + 60px(全屏) + 8px + 60px(T按钮) + 8px + 60px + 8px = 214px */
-                zIndex: 250
-            }}>
-                <button 
-                    onClick={toggleKeyMenu}
-                    className="player-control-button key-detection-btn"
-                    style={{
-                        position: 'relative'
-                    }}
-                    title="ST歌曲调整"
-                >
-                    <MusicKeySVG />
-                    {detectedKey && (
-                        <span className="key-badge">{detectedKey.split(' ')[0]}</span>
-                    )}
-                </button>
-                
-                {/* ST歌曲调整菜单 - 与文字设置菜单样式一致 */}
-                {showKeyMenu && (
-                    <div className={`key-detection-menu${isHiding ? ' menu-hiding' : ''}`}>
-                        {/* 调性检测 */}
-                        <div className="player-settings-group">
-                            <div className="player-settings-label">ST歌曲调整</div>
-                            
-                            {isDetectingKey ? (
-                                <div className="key-detecting">
-                                    <div className="detecting-spinner"></div>
-                                    <p>检测中...</p>
-                                </div>
-                            ) : detectedKey ? (
-                                <div className="key-result">
-                                    <div className="key-display">
-                                        <span className="key-name">{detectedKey}</span>
-                                    </div>
-                                    <button 
-                                        className="re-detect-btn"
-                                        onClick={detectKey}
-                                    >
-                                        重新检测
-                                    </button>
-                                </div>
-                            ) : (
-                                <div className="no-key-detected">
-                                    <button 
-                                        className="start-detect-btn"
-                                        onClick={detectKey}
-                                    >
-                                        调性检测
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                        
-                        {/* 音高调节 */}
-                        <div className="player-settings-group">
-                            <div className="player-settings-label">音高调节</div>
-                            <div className="player-settings-options">
-                                <button 
-                                    className="player-setting-btn"
-                                    onClick={() => adjustPitch(-1)}
-                                    disabled={pitchSemitones <= -12}
-                                    title="降低一个半音"
-                                >
-                                    -
-                                </button>
-                                <button 
-                                    className="player-setting-btn"
-                                    onClick={() => { setPitchSemitones(0); webAudioPlayer.setPitch(0); }}
-                                    title="重置为原调"
-                                    style={{ minWidth: '50px' }}
-                                >
-                                    {getCurrentKey()}
-                                </button>
-                                <button 
-                                    className="player-setting-btn"
-                                    onClick={() => adjustPitch(1)}
-                                    disabled={pitchSemitones >= 12}
-                                    title="升高一个半音"
-                                >
-                                    +
-                                </button>
-                            </div>
-                        </div>
-                        
-                        {/* 速度调节 */}
-                        <div className="player-settings-group">
-                            <div className="player-settings-label">速度调节</div>
-                            <div className="player-settings-options">
-                                <button 
-                                    className="player-setting-btn"
-                                    onClick={() => adjustSpeed(-0.1)}
-                                    disabled={playbackSpeed <= 0.5}
-                                    title="减慢速度"
-                                >
-                                    -
-                                </button>
-                                <button 
-                                    className="player-setting-btn"
-                                    onClick={() => { setPlaybackSpeed(1.0); webAudioPlayer.setSpeed(1.0); }}
-                                    title="重置为正常速度"
-                                    style={{ minWidth: '60px' }}
-                                >
-                                    {playbackSpeed.toFixed(1)}x
-                                </button>
-                                <button 
-                                    className="player-setting-btn"
-                                    onClick={() => adjustSpeed(0.1)}
-                                    disabled={playbackSpeed >= 2.0}
-                                    title="加快速度"
-                                >
-                                    +
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </div>
             {/* 文件选择和播放控制 - 参考 lrc-audio 样式 */}
             <div className="soundtouch-controls" style={{
                     position: 'fixed',
@@ -642,7 +552,7 @@ export const PlayerSoundTouch: React.FC<IPlayerProps> = ({ state, dispatch }) =>
                     {/* 播放/暂停按钮 - 居中 */}
                     <button 
                         onClick={togglePlay}
-                        disabled={!audioFileName}
+                        disabled={!isAudioInitialized}
                         className="ripple glow"
                         style={{
                             width: '80px',
@@ -652,14 +562,15 @@ export const PlayerSoundTouch: React.FC<IPlayerProps> = ({ state, dispatch }) =>
                             justifyContent: 'center',
                             background: 'none',
                             border: 'none',
-                            color: audioFileName ? '#eeeeee' : '#666',
-                            cursor: audioFileName ? 'pointer' : 'not-allowed',
+                            color: isAudioInitialized ? '#eeeeee' : '#666',
+                            cursor: isAudioInitialized ? 'pointer' : 'not-allowed',
                             transition: 'all 0.2s ease',
                             position: 'absolute',
                             left: '50%',
                             top: '50%',
                             transform: 'translate(-50%, -50%)'
                         }}
+                        title={!isAudioInitialized ? '等待音频加载...' : (isPlaying ? '暂停' : '播放')}
                     >
                         <div style={{ transform: 'scale(3.33)', transformOrigin: 'center' }}>
                             {isPlaying ? <PauseSVG /> : <PlaySVG />}
@@ -766,7 +677,6 @@ const LyricLine: React.FC<ILyricLineProps> = ({ line, index, highlight, showTime
                 cursor: 'pointer',
                 opacity: highlight ? 1 : opacity
             }}
-            title="点击跳转到此位置"
         >
             {highlight && showTime && <Curser fixed={prefState.fixed} />}
             {showTime && line.time !== undefined && (

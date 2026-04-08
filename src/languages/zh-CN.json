@@ -40,7 +40,9 @@
         "detectingKey": "检测中...",
         "reDetect": "重新检测",
         "noKeyDetected": "点击检测当前歌曲调性",
-        "startDetection": "开始检测"
+        "startDetection": "开始检测",
+        "vocalRemoval": "去人声（伴奏模式）",
+        "vocalRemovalTip": "使用相位抵消法去除居中人声，仅播放伴奏"
     },
     "audio": {
         "loadAudio": "加载音频",
@@ -180,6 +182,7 @@
                 "title": "测试版 ST播放器 (player-soundtouch)",
                 "features": [
                     "🎵 实现歌曲转调",
+                    "🎤 去人声（伴奏模式）- 使用相位抵消法去除居中人声，仅播放伴奏",
                     "受技术限制，无法调整播放进度，指定时间点（seek）等"
                 ]
             },

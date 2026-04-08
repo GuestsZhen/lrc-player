@@ -508,7 +508,6 @@ const LyricLine: React.FC<ILyricLineProps> = ({ line, index, highlight, showTime
                 cursor: 'pointer',
                 opacity: highlight ? 1 : opacity
             }}
-            title="点击跳转到此位置"
         >
             {highlight && showTime && <Curser fixed={prefState.fixed} />}
             {showTime && line.time !== undefined && (

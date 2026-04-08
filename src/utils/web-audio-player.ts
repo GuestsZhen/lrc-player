@@ -19,6 +19,15 @@ export class WebAudioPlayer {
     private pitchShifter: PitchShifter | null = null;
     private gainNode: GainNode | null = null;
     
+    // Vocal Removal 相关节点
+    private vocalRemovalSplitter: ChannelSplitterNode | null = null;
+    private vocalRemovalMerger: ChannelMergerNode | null = null;
+    private vocalRemovalInverterL: GainNode | null = null;  // 左声道反相
+    private vocalRemovalInverterR: GainNode | null = null;  // 右声道反相
+    private vocalRemovalCopyL: GainNode | null = null;      // 左声道复制
+    private vocalRemovalCopyR: GainNode | null = null;      // 右声道复制
+    private isVocalRemovalEnabled: boolean = false;
+    
     private isPlaying: boolean = false;
     private startTime: number = 0;
     private pauseOffset: number = 0;
@@ -38,8 +47,6 @@ export class WebAudioPlayer {
      */
     async init(config: WebAudioConfig): Promise<void> {
         try {
-            console.log('[WebAudioPlayer] Initializing...');
-            
             if (this.isPlaying || this.pitchShifter) {
                 this.stop();
             }
@@ -71,8 +78,6 @@ export class WebAudioPlayer {
             this.audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
             this.duration = this.audioBuffer.duration;
             
-            console.log('[WebAudioPlayer] Audio decoded, duration:', this.duration, 'seconds');
-            
             this.currentPitch = config.initialPitch || 0;
             this.currentSpeed = config.initialSpeed || 1.0;
             
@@ -86,8 +91,6 @@ export class WebAudioPlayer {
             
             this.gainNode = this.audioContext.createGain();
             this.gainNode.connect(this.audioContext.destination);
-            
-            console.log('[WebAudioPlayer] Initialized successfully');
         } catch (error) {
             console.error('[WebAudioPlayer] Initialization failed:', error);
             throw error;
@@ -110,20 +113,60 @@ export class WebAudioPlayer {
             }
             this.pitchShifter = null;
         }
+        
+        // 清理 Vocal Removal 节点（如果存在）
+        if (this.vocalRemovalSplitter) {
+            this.vocalRemovalSplitter.disconnect();
+            this.vocalRemovalSplitter = null;
+        }
+        if (this.vocalRemovalMerger) {
+            this.vocalRemovalMerger.disconnect();
+            this.vocalRemovalMerger = null;
+        }
+        if (this.vocalRemovalInverterL) {
+            this.vocalRemovalInverterL.disconnect();
+            this.vocalRemovalInverterL = null;
+        }
+        if (this.vocalRemovalInverterR) {
+            this.vocalRemovalInverterR.disconnect();
+            this.vocalRemovalInverterR = null;
+        }
+        if (this.vocalRemovalCopyL) {
+            this.vocalRemovalCopyL.disconnect();
+            this.vocalRemovalCopyL = null;
+        }
+        if (this.vocalRemovalCopyR) {
+            this.vocalRemovalCopyR.disconnect();
+            this.vocalRemovalCopyR = null;
+        }
 
         const needPitchShift = Math.abs(this.currentPitch) > 0.01;
         
+        // 断开 gainNode 的所有现有连接
+        this.gainNode.disconnect();
+        
+        // 确定最终输出节点
+        let finalOutputNode: AudioNode;
+        
+        // 如果启用了 Vocal Removal，创建 Vocal Removal 链并连接到 destination
+        if (this.isVocalRemovalEnabled) {
+            const vocalRemovalOutput = this.createVocalRemovalChain(this.gainNode);
+            vocalRemovalOutput.connect(this.audioContext.destination);  // 连接到扬声器
+            finalOutputNode = this.gainNode;  // 音源连接到 gainNode
+        } else {
+            // 不启用 Vocal Removal，gainNode 直接连接到 destination
+            this.gainNode.connect(this.audioContext.destination);
+            finalOutputNode = this.gainNode;
+        }
+        
         if (startOffset > 0 && !needPitchShift) {
             // 无音高调节时，使用原生节点支持 seek
-            console.log('[WebAudioPlayer] Using native AudioBufferSourceNode for seek');
             this.sourceNode = this.audioContext.createBufferSource();
             this.sourceNode.buffer = this.audioBuffer;
-            this.sourceNode.connect(this.gainNode);
+            this.sourceNode.connect(finalOutputNode);
             this.sourceNode.start(0, startOffset);
         } else {
             // 有音高调节或从头播放，使用 PitchShifter
-            console.log('[WebAudioPlayer] Using PitchShifter (pitch:', this.currentPitch, ')');
-            
             this.sourceNode = this.audioContext.createBufferSource();
             this.sourceNode.buffer = this.audioBuffer;
             
@@ -137,8 +180,7 @@ export class WebAudioPlayer {
             this.pitchShifter.tempo = this.currentSpeed;
             
             // 连接节点链（SoundTouchJS 会在连接后自动开始处理）
-            this.pitchShifter.connect(this.gainNode);
-            console.log('[WebAudioPlayer] PitchShifter connected and ready');
+            this.pitchShifter.connect(finalOutputNode);
         }
     }
 
@@ -146,37 +188,27 @@ export class WebAudioPlayer {
      * 播放音频
      */
     play(fromTime?: number): void {
-        console.log('[WebAudioPlayer] play() called with fromTime:', fromTime);
-        console.log('[WebAudioPlayer] Current state - isPlaying:', this.isPlaying, 'audioContext:', !!this.audioContext, 'audioBuffer:', !!this.audioBuffer);
-        
         if (!this.audioContext || !this.audioBuffer) {
-            console.error('[WebAudioPlayer] Not initialized');
             return;
         }
 
         // 如果已经在播放，先停止
         if (this.isPlaying) {
-            console.log('[WebAudioPlayer] Already playing, stopping first');
             this.stop();
         }
 
         // 恢复 AudioContext（如果被挂起）
         if (this.audioContext.state === 'suspended') {
-            console.log('[WebAudioPlayer] Resuming suspended AudioContext');
             this.audioContext.resume();
         }
 
         // 计算起始时间
         const offset = fromTime !== undefined ? fromTime : this.pauseOffset;
         
-        console.log('[WebAudioPlayer] Creating audio chain from', offset, 'seconds');
         this.createAudioChain(offset);
 
         this.startTime = this.audioContext.currentTime - offset;
         this.isPlaying = true;
-        
-        console.log('[WebAudioPlayer] Playing from', offset, 'seconds, pitch:', this.currentPitch, 'semitones');
-        console.log('[WebAudioPlayer] isPlaying set to true');
         
         // 发布播放状态
         audioStatePubSub.pub({ type: AudioActionType.pause, payload: false });
@@ -190,18 +222,13 @@ export class WebAudioPlayer {
                 this.handleEnded();
             };
         }
-        
-        console.log('[WebAudioPlayer] Play completed');
     }
 
     /**
      * 暂停播放
      */
     pause(): void {
-        console.log('[WebAudioPlayer] pause() called, isPlaying:', this.isPlaying);
-        
         if (!this.isPlaying) {
-            console.log('[WebAudioPlayer] Already paused, ignoring');
             return;
         }
 
@@ -209,53 +236,40 @@ export class WebAudioPlayer {
         if (this.audioContext) {
             const elapsed = this.audioContext.currentTime - this.startTime;
             this.pauseOffset = elapsed * this.currentSpeed;
-            console.log('[WebAudioPlayer] Paused at', this.pauseOffset, 'seconds');
         }
 
         // 停止 PitchShifter 处理
         if (this.pitchShifter) {
-            console.log('[WebAudioPlayer] Stopping and disconnecting PitchShifter');
             this.pitchShifter.off();
             try {
                 this.pitchShifter.disconnect();  // ✅ 断开输出，真正停止声音
             } catch (e) {
                 console.error('[WebAudioPlayer] Error disconnecting PitchShifter:', e);
             }
-        } else {
-            console.log('[WebAudioPlayer] No PitchShifter to stop');
         }
         
         // 重要：必须先移除 onended 回调，再调用 stop()
         if (this.sourceNode) {
             try {
-                console.log('[WebAudioPlayer] Removing onended callback');
                 this.sourceNode.onended = null;  // ✅ 先移除回调
                 
                 // 只有在没有使用 PitchShifter 时才调用 stop()
                 // 因为 PitchShifter 模式下 sourceNode 没有调用 start()
                 if (!this.pitchShifter) {
-                    console.log('[WebAudioPlayer] Stopping sourceNode (native mode)');
                     this.sourceNode.stop();  // ✅ 原生模式需要 stop
-                } else {
-                    console.log('[WebAudioPlayer] Skipping stop (PitchShifter mode)');
                 }
                 
-                console.log('[WebAudioPlayer] Disconnecting sourceNode');
                 this.sourceNode.disconnect();
             } catch (e) {
                 console.error('[WebAudioPlayer] Error stopping sourceNode:', e);
             }
             // 不将 sourceNode 设为 null，保留引用
-        } else {
-            console.log('[WebAudioPlayer] No sourceNode to stop');
         }
 
         this.isPlaying = false;
-        console.log('[WebAudioPlayer] isPlaying set to false');
         this.stopTimeUpdateTimer();
         
         audioStatePubSub.pub({ type: AudioActionType.pause, payload: true });
-        console.log('[WebAudioPlayer] Pause completed');
     }
 
     /**
@@ -276,8 +290,6 @@ export class WebAudioPlayer {
         
         this.isPlaying = false;
         this.stopTimeUpdateTimer();
-        
-        console.log('[WebAudioPlayer] Stopped');
     }
 
     /**
@@ -285,8 +297,6 @@ export class WebAudioPlayer {
      */
     seek(time: number): void {
         const wasPlaying = this.isPlaying;
-        
-        console.log('[WebAudioPlayer] Seeking to', time, 'seconds');
         
         if (this.pitchShifter) {
             try {
@@ -319,18 +329,9 @@ export class WebAudioPlayer {
     setPitch(semitones: number): void {
         this.currentPitch = semitones;
         
-        console.log('[WebAudioPlayer] setPitch called:', semitones, 'semitones');
-        console.log('[WebAudioPlayer] pitchShifter exists:', !!this.pitchShifter);
-        console.log('[WebAudioPlayer] isPlaying:', this.isPlaying);
-        
         if (this.pitchShifter) {
             // 如果正在播放，直接更新
             this.pitchShifter.pitchSemitones = semitones;
-            console.log('[WebAudioPlayer] Pitch updated to', semitones, 'semitones');
-            console.log('[WebAudioPlayer] Current pitchSemitones:', this.pitchShifter.pitchSemitones);
-        } else {
-            // 如果还未播放，只保存值，等 play() 时应用
-            console.log('[WebAudioPlayer] pitchShifter not initialized yet, will apply on next play');
         }
     }
 
@@ -342,7 +343,6 @@ export class WebAudioPlayer {
         
         if (this.pitchShifter) {
             this.pitchShifter.tempo = this.currentSpeed;
-            console.log('[WebAudioPlayer] Speed set to', this.currentSpeed, 'x');
         }
     }
 
@@ -424,12 +424,121 @@ export class WebAudioPlayer {
         if (this.onEnded) {
             this.onEnded();
         }
+    }
+
+    /**
+     * 启用/禁用 Vocal Removal（相位抵消法）
+     */
+    setVocalRemoval(enabled: boolean): void {
+        if (this.isVocalRemovalEnabled === enabled) {
+            return; // 状态未改变
+        }
         
-        console.log('[WebAudioPlayer] Playback ended');
+        this.isVocalRemovalEnabled = enabled;
+        
+        // 如果正在播放，需要重新创建音频链以应用更改
+        if (this.isPlaying && this.audioContext) {
+            const currentTime = this.getCurrentTime();
+            this.stop();
+            setTimeout(() => {
+                this.play(currentTime);
+            }, 50);
+        }
+    }
+    
+    /**
+     * 获取 Vocal Removal 状态
+     */
+    getVocalRemoval(): boolean {
+        return this.isVocalRemovalEnabled;
+    }
+    
+    /**
+     * 创建 Vocal Removal 节点链（相位抵消法）
+     * 原理：(L - R) 和 (R - L) 可以消除居中人声
+     * 注意：由于 Web Audio API 限制，一个节点的输出只能连接一次
+     */
+    private createVocalRemovalChain(inputNode: AudioNode): AudioNode {
+        if (!this.audioContext) {
+            throw new Error('AudioContext not initialized');
+        }
+        
+        // 创建节点
+        const splitter = this.audioContext.createChannelSplitter(2);
+        const merger = this.audioContext.createChannelMerger(2);
+        const inverterL = this.audioContext.createGain();  // 左声道反相
+        const inverterR = this.audioContext.createGain();  // 右声道反相
+        
+        // 设置反相增益
+        inverterL.gain.value = -1;
+        inverterR.gain.value = -1;
+        
+        // 保存引用以便清理
+        this.vocalRemovalSplitter = splitter;
+        this.vocalRemovalMerger = merger;
+        this.vocalRemovalInverterL = inverterL;
+        this.vocalRemovalInverterR = inverterR;
+        
+        try {
+            // 输入 -> Splitter
+            inputNode.connect(splitter);
+            
+            // 关键：每个 splitter 输出只能连接一次！
+            // 所以我们不能同时连接到 merger 和 inverter
+            
+            // 解决方案：使用中间节点来复制信号
+            this.vocalRemovalCopyL = this.audioContext.createGain();  // 复制左声道
+            this.vocalRemovalCopyR = this.audioContext.createGain();  // 复制右声道
+            this.vocalRemovalCopyL.gain.value = 1;
+            this.vocalRemovalCopyR.gain.value = 1;
+            
+            // 左声道分支：splitter[0] -> copyL -> [merger, inverterR]
+            splitter.connect(this.vocalRemovalCopyL, 0);                  // L -> copyL
+            this.vocalRemovalCopyL.connect(merger, 0, 0);                 // L -> merger左输入
+            this.vocalRemovalCopyL.connect(inverterR, 0);                 // L -> inverterR（用于右声道）
+            inverterR.connect(merger, 0, 1);             // -L -> merger右输入
+            
+            // 右声道分支：splitter[1] -> copyR -> [merger, inverterL]
+            splitter.connect(this.vocalRemovalCopyR, 1);                  // R -> copyR
+            this.vocalRemovalCopyR.connect(merger, 0, 1);                 // R -> merger右输入
+            this.vocalRemovalCopyR.connect(inverterL, 0);                 // R -> inverterL（用于左声道）
+            inverterL.connect(merger, 0, 0);             // -R -> merger左输入
+        } catch (error) {
+            console.error('[WebAudioPlayer] Failed to create Vocal Removal chain:', error);
+            throw error;
+        }
+        
+        return merger;
     }
 
     destroy(): void {
         this.stop();
+        
+        // 清理 Vocal Removal 节点
+        if (this.vocalRemovalSplitter) {
+            this.vocalRemovalSplitter.disconnect();
+            this.vocalRemovalSplitter = null;
+        }
+        if (this.vocalRemovalMerger) {
+            this.vocalRemovalMerger.disconnect();
+            this.vocalRemovalMerger = null;
+        }
+        if (this.vocalRemovalInverterL) {
+            this.vocalRemovalInverterL.disconnect();
+            this.vocalRemovalInverterL = null;
+        }
+        if (this.vocalRemovalInverterR) {
+            this.vocalRemovalInverterR.disconnect();
+            this.vocalRemovalInverterR = null;
+        }
+        if (this.vocalRemovalCopyL) {
+            this.vocalRemovalCopyL.disconnect();
+            this.vocalRemovalCopyL = null;
+        }
+        if (this.vocalRemovalCopyR) {
+            this.vocalRemovalCopyR.disconnect();
+            this.vocalRemovalCopyR = null;
+        }
         
         if (this.gainNode) {
             this.gainNode.disconnect();
@@ -444,8 +553,6 @@ export class WebAudioPlayer {
         this.audioBuffer = null;
         this.onTimeUpdate = null;
         this.onEnded = null;
-        
-        console.log('[WebAudioPlayer] Destroyed');
     }
 }
 
