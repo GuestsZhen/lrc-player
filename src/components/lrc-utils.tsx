@@ -32,7 +32,7 @@ const compressTags = (state: LrcState, option: any): string => {
 export const LrcUtils: React.FC<{
     lrcState: LrcState;
     lrcDispatch: React.Dispatch<LrcAction>;
-}> = (_props) => {
+}> = ({ lrcState }) => {
     const { prefState, trimOptions, lang } = useContext(appContext);
 
     const inputRef = useRef<HTMLInputLikeElement>(null);
@@ -47,23 +47,24 @@ export const LrcUtils: React.FC<{
     const [timeOffset, setTimeOffset] = useState(0);
     const [transformA, setTransformA] = useState(1);
     const [transformC, setTransformC] = useState(0);
-    const [splitRegex, setSplitRegex] = useState("(.+)\\s*?/\\s*?(.+)");
+    const [splitRegex, setSplitRegex] = useState("(.+)\\s*?/\\s*(.+)");
 
-    // 初始化时从 localStorage 加载歌词
+    // 初始化时使用传入的 lrcState
     useEffect(() => {
-        const lyricText = localStorage.getItem(LSK.lyric) || "";
-        if (inputRef.current) {
+        if (inputRef.current && lrcState) {
+            // 将当前的歌词状态转换为文本并显示
+            const lyricText = stringify(lrcState, prefState);
             inputRef.current.value = lyricText;
         }
-        console.log('[LrcUtils] Loaded lyric from localStorage:', lyricText ? `${lyricText.length} chars` : 'empty');
-    }, []);
+        console.log('[LrcUtils] Initialized with current lrcState');
+    }, [lrcState, prefState]);
 
-    // 输入框 blur 时保存状态
-    const onInputBlur = useCallback(() => {
-        if (inputRef.current) {
-            localStorage.setItem(LSK.lyric, inputRef.current.value);
-        }
-    }, []);
+    // 输入框 blur 时不再自动保存，由 content.tsx 统一管理
+    // const onInputBlur = useCallback(() => {
+    //     if (inputRef.current) {
+    //         localStorage.setItem(LSK.lyric, inputRef.current.value);
+    //     }
+    // }, []);
 
     // 原文本工具函数
     const onCopyOriginalClick = useCallback(() => {
@@ -330,7 +331,6 @@ export const LrcUtils: React.FC<{
                         <textarea
                             ref={inputRef}
                             className="lrc-utils-input"
-                            onBlur={onInputBlur}
                             {...disableCheck}
                         />
                     </div>

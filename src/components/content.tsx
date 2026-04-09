@@ -401,9 +401,9 @@ export const Content: React.FC = () => {
 
     const [lrcState, lrcDispatch] = useLrc(() => {
         return {
-            text: localStorage.getItem(LSK.lyric) || STRINGS.emptyString,
+            text: STRINGS.emptyString,  // 不再从 localStorage 加载，每次启动都是空的
             options: trimOptions,
-            select: Number.parseInt(sessionStorage.getItem(SSK.selectIndex)!, 10) || 0,
+            select: 0,  // 重置选择索引
         };
     });
     
@@ -466,6 +466,12 @@ export const Content: React.FC = () => {
             localStorage.setItem(LSK.preferences, JSON.stringify(prefState));
         }
 
+        function clearLrcOnClose(): void {
+            // 关闭时清除当前打开的歌词文件
+            localStorage.removeItem(LSK.lyric);
+            sessionStorage.removeItem(SSK.selectIndex);
+        }
+
         function onVisibilitychange() {
             if (document.hidden) {
                 saveState();
@@ -473,11 +479,11 @@ export const Content: React.FC = () => {
         }
 
         document.addEventListener("visibilitychange", onVisibilitychange);
-        window.addEventListener("beforeunload", saveState);
+        window.addEventListener("beforeunload", clearLrcOnClose);
 
         return () => {
             document.removeEventListener("visibilitychange", onVisibilitychange);
-            window.removeEventListener("beforeunload", saveState);
+            window.removeEventListener("beforeunload", clearLrcOnClose);
         };
     }, [lrcDispatch, prefState]);
 

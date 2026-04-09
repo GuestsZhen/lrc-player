@@ -469,8 +469,8 @@ export const Footer: React.FC = () => {
                             
                             // 如果有 LRC 文件，自动加载歌词
                             if (firstTrack.lrcFile) {
-                                window.dispatchEvent(new CustomEvent('lrc-file-selected', {
-                                    detail: { file: firstTrack.lrcFile }
+                                window.dispatchEvent(new CustomEvent('load-lrc-file', {
+                                    detail: { lrcFile: firstTrack.lrcFile }
                                 }));
                             }
                         }, 0);

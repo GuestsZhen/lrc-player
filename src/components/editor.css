@@ -331,16 +331,12 @@
     border: 2px solid var(--theme-color);
     border-radius: 4px;
     background-color: transparent;
-    color: var(--white);
+    color: var(--font-color);  /* 使用主题字体颜色，而不是固定白色 */
     cursor: pointer;
     transition: all 0.3s ease;
 }
 
-/* 亮色模式下文字颜色调整 */
-[data-theme="light"] .tune-control-group select {
-    color: var(--font-color);
-}
-
+/* select 悬停和焦点效果 */
 .tune-control-group select:hover {
     opacity: 0.9;
     transform: scale(1.05);
@@ -349,6 +345,13 @@
 .tune-control-group select:focus {
     outline: none;
     box-shadow: 0 0 8px var(--theme-color);
+}
+
+/* 下拉选项样式 - 适配深色主题 */
+.tune-control-group select option {
+    background-color: var(--background-color);
+    color: var(--font-color);
+    padding: 4px;
 }
 
 

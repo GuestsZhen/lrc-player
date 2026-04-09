@@ -68,4 +68,10 @@ build.es6/
 # Local subproject
 lrc-utils2/
 
+# Capacitor generated platforms (auto-generated, do not commit)
+android/
+ios/
+cap-dev.bat
+capacitor.config.ts
+
 .DS_Store
