@@ -88,6 +88,125 @@ http://localhost:5173/#/player-soundtouch/
 - 这是 SoundTouchJS 库的技术限制，无法绕过
 - 建议在不需频繁跳转的场景下使用音高调节功能
 
+## 📊 技术对比
+
+### 核心技术差异
+
+| 对比项 | `/player` (普通播放器) | `/player-soundtouch` (ST播放器) |
+|--------|----------------------|-------------------------------|
+| **音频技术** | HTMLAudioElement | Web Audio API + SoundTouchJS |
+| **音高调节** | ❌ 不支持 | ✅ 支持 (SoundTouchJS PitchShifter) |
+| **速度调节** | ⚠️ 会同时改变音高 | ✅ 独立调节，不影响音高 |
+| **去人声** | ❌ 不支持 | ✅ 支持 (相位抵消法) |
+| **调性检测** | ❌ 不支持 | ✅ 支持 |
+| **Seek 功能** | ✅ 完美支持 | ⚠️ 启用音高调节后受限 |
+| **内存占用** | 低 (流式加载) | 较高 (需加载整个 AudioBuffer) |
+| **CPU 占用** | 低 | 中等 (实时音频处理) |
+| **兼容性** | 所有浏览器 | 现代浏览器 (需支持 Web Audio API) |
+
+### 为什么 `/player` 不支持音高调节？
+
+#### HTMLAudioElement 的技术限制
+
+`/player` 使用浏览器原生的 `HTMLAudioElement`，这是 HTML5 标准音频元素：
+
+```typescript
+// player.tsx 使用 audioRef
+import { audioRef } from '../utils/audiomodule.js';
+
+// HTMLAudioElement 只能这样调节速度：
+audio.playbackRate = 1.5;  // ❌ 速度变快，音高也会变高（像快放磁带）
+
+// 没有音高调节 API：
+audio.pitch = 2;  // ❌ 不存在这个 API
+```
+
+**HTMLAudioElement 的局限性**：
+- 只能控制播放速度 (`playbackRate`)
+- 改变速度会同时改变音高（物理特性）
+- 无法访问底层音频数据进行处理
+- 不支持 Web Audio API 的 AudioNode 链
+
+#### Web Audio API 的优势
+
+`/player-soundtouch` 使用 `Web Audio API` + `SoundTouchJS` 库：
+
+```typescript
+// player-soundtouch.tsx 使用 webAudioPlayer
+import { webAudioPlayer } from '../utils/web-audio-player.js';
+import { PitchShifter } from 'soundtouchjs';
+
+// 可以独立控制：
+webAudioPlayer.setPitch(2);    // ✅ 音高 +2 个半音，速度不变
+webAudioPlayer.setSpeed(1.5);  // ✅ 速度 1.5 倍，音高不变
+```
+
+**工作原理**：
+1. 使用 `AudioContext.decodeAudioData()` 将音频解码为 `AudioBuffer`
+2. 通过 `SoundTouchJS` 的 `PitchShifter` 处理音频数据
+3. 使用 `AudioBufferSourceNode` 播放处理后的音频
+4. 可以添加任意 `AudioNode`（如去人声的 ChannelSplitter/Merger）
+
+### 音频处理链对比
+
+```
+/player (HTMLAudioElement):
+音频文件 → HTMLAudioElement → 扬声器
+          (无法干预中间处理)
+
+/player-soundtouch (Web Audio API):
+音频文件 → AudioBuffer → PitchShifter → GainNode → 扬声器
+                     (可添加任意处理节点)
+                     - 音高调节
+                     - 速度调节  
+                     - 去人声 (相位抵消)
+                     - 均衡器
+                     - 混响等
+```
+
+### 去人声功能实现 (仅 ST播放器)
+
+使用相位抵消法去除居中声道的人声：
+
+```typescript
+// web-audio-player.ts
+// 分离左右声道
+const splitter = audioContext.createChannelSplitter(2);
+
+// 反相左声道
+const inverterL = audioContext.createGain();
+inverterL.gain.value = -1;  // 反相
+
+// 合并声道（L + R）
+const merger = audioContext.createChannelMerger(2);
+
+// 居中的人声会被抵消（相位相反，互相抵消）
+// 左右声道不同的乐器会被保留
+```
+
+### Seek 功能限制说明
+
+**问题**：ST 播放器启用音高调节后，Seek 会从头播放
+
+**原因**：SoundTouchJS 的 `PitchShifter` 是流式处理，不支持随机访问
+
+**解决方案**：
+1. **无音高调节时**：使用原生 `AudioBufferSourceNode.start(0, offset)` 完美支持 Seek
+2. **有音高调节时**：必须使用 `PitchShifter`，只能从头播放
+
+```typescript
+// web-audio-player.ts 中的混合方案
+if (startOffset > 0 && !needPitchShift) {
+    // ✅ 无音高调节：使用原生节点，支持 Seek
+    this.sourceNode.start(0, startOffset);
+} else {
+    // ⚠️ 有音高调节：使用 PitchShifter，从头播放
+    this.pitchShifter = new PitchShifter(...);
+}
+```
+
+---
+
 ## 📊 性能对比
 
 | 特性 | 普通播放器 | 高级播放器 |

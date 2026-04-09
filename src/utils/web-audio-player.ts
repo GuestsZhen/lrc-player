@@ -159,14 +159,22 @@ export class WebAudioPlayer {
             finalOutputNode = this.gainNode;
         }
         
-        if (startOffset > 0 && !needPitchShift) {
+        if (!needPitchShift) {
             // 无音高调节时，使用原生节点支持 seek
             this.sourceNode = this.audioContext.createBufferSource();
             this.sourceNode.buffer = this.audioBuffer;
+            this.sourceNode.playbackRate.value = this.currentSpeed;  // 设置播放速度
             this.sourceNode.connect(finalOutputNode);
-            this.sourceNode.start(0, startOffset);
+            
+            if (startOffset > 0) {
+                // Seek 到指定位置
+                this.sourceNode.start(0, startOffset);
+            } else {
+                // 从头播放
+                this.sourceNode.start();
+            }
         } else {
-            // 有音高调节或从头播放，使用 PitchShifter
+            // 有音高调节时，使用 PitchShifter（不支持 seek）
             this.sourceNode = this.audioContext.createBufferSource();
             this.sourceNode.buffer = this.audioBuffer;
             
@@ -318,19 +326,32 @@ export class WebAudioPlayer {
         
         this.pauseOffset = Math.max(0, Math.min(time, this.duration));
         
-        if (wasPlaying) {
-            this.play(this.pauseOffset);
-        }
+        // 总是从目标位置开始播放（无论之前是否在播放）
+        this.play(this.pauseOffset);
     }
 
     /**
      * 设置音高（半音）
      */
     setPitch(semitones: number): void {
+        const wasPlaying = this.isPlaying;
+        const oldPitch = this.currentPitch;
         this.currentPitch = semitones;
         
-        if (this.pitchShifter) {
-            // 如果正在播放，直接更新
+        // 如果音高从非零变为零（或反之），需要重建音频链
+        const needRebuild = (Math.abs(oldPitch) > 0.01) !== (Math.abs(semitones) > 0.01);
+        
+        if (needRebuild && wasPlaying) {
+            // 保存当前播放位置
+            const currentTime = this.getCurrentTime();
+            
+            // 停止当前播放
+            this.stop();
+            
+            // 重新播放（会自动选择正确的节点链）
+            this.play(currentTime);
+        } else if (this.pitchShifter) {
+            // 如果正在使用 PitchShifter，直接更新参数
             this.pitchShifter.pitchSemitones = semitones;
         }
     }
@@ -339,10 +360,15 @@ export class WebAudioPlayer {
      * 设置播放速度
      */
     setSpeed(speed: number): void {
+        const wasPlaying = this.isPlaying;
         this.currentSpeed = Math.max(0.5, Math.min(2.0, speed));
         
+        // 如果正在使用 PitchShifter，直接更新参数
         if (this.pitchShifter) {
             this.pitchShifter.tempo = this.currentSpeed;
+        } else if (this.sourceNode && wasPlaying) {
+            // 如果使用原生节点，更新 playbackRate
+            this.sourceNode.playbackRate.value = this.currentSpeed;
         }
     }
 
