@@ -149,7 +149,37 @@ npm run build
 npm start
 ```
 
+## 📝 版本管理
 
+### 更新版本号
+
+```bash
+# 小修复（最常用）
+npm run version:patch      # 6.0.4 → 6.0.5
+
+# 新功能
+npm run version:minor      # 6.0.5 → 6.1.0
+
+# 重大变更
+npm run version:major      # 6.1.0 → 7.0.0
+```
+
+### 更新 CHANGELOG
+
+在 `docs/CHANGELOG.md` 的 `[Unreleased]` 部分添加更新内容：
+
+```markdown
+### Added - 新增
+- 你的新功能
+
+### Changed - 修改
+- 你的修改
+
+### Fixed - 修复
+- 你修复的问题
+```
+
+---
 
 ## 生产部署
 
