@@ -123,7 +123,6 @@ export const Footer: React.FC = () => {
         const reader = new FileReader();
         reader.onload = (e) => {
             const lrcContent = e.target?.result as string;
-            console.log(`已加载歌词：${lrcFile.name}`);
             
             // 触发自定义事件加载歌词
             const loadLrcEvent = new CustomEvent('load-lrc', {

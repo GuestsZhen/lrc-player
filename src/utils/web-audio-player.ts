@@ -139,8 +139,6 @@ export class WebAudioPlayer {
             this.vocalRemovalCopyR.disconnect();
             this.vocalRemovalCopyR = null;
         }
-
-        const needPitchShift = Math.abs(this.currentPitch) > 0.01;
         
         // 断开 gainNode 的所有现有连接
         this.gainNode.disconnect();
@@ -159,22 +157,11 @@ export class WebAudioPlayer {
             finalOutputNode = this.gainNode;
         }
         
-        if (!needPitchShift) {
-            // 无音高调节时，使用原生节点支持 seek
-            this.sourceNode = this.audioContext.createBufferSource();
-            this.sourceNode.buffer = this.audioBuffer;
-            this.sourceNode.playbackRate.value = this.currentSpeed;  // 设置播放速度
-            this.sourceNode.connect(finalOutputNode);
-            
-            if (startOffset > 0) {
-                // Seek 到指定位置
-                this.sourceNode.start(0, startOffset);
-            } else {
-                // 从头播放
-                this.sourceNode.start();
-            }
-        } else {
-            // 有音高调节时，使用 PitchShifter（不支持 seek）
+        // ✅ 关键修复：根据是否需要音高/速度调节来选择音频处理方式
+        const needPitchShift = Math.abs(this.currentPitch) > 0.01 || Math.abs(this.currentSpeed - 1.0) > 0.01;
+        
+        if (needPitchShift) {
+            // 需要音高/速度调节：使用 PitchShifter
             this.sourceNode = this.audioContext.createBufferSource();
             this.sourceNode.buffer = this.audioBuffer;
             
@@ -189,6 +176,15 @@ export class WebAudioPlayer {
             
             // 连接节点链（SoundTouchJS 会在连接后自动开始处理）
             this.pitchShifter.connect(finalOutputNode);
+        } else {
+            // 不需要音高/速度调节：使用原生 AudioBufferSourceNode（支持 seek）
+            this.pitchShifter = null;
+            this.sourceNode = this.audioContext.createBufferSource();
+            this.sourceNode.buffer = this.audioBuffer;
+            this.sourceNode.connect(finalOutputNode);
+            
+            // ✅ 关键：原生节点支持从指定位置开始播放
+            this.sourceNode.start(0, startOffset);
         }
     }
 
@@ -197,6 +193,33 @@ export class WebAudioPlayer {
      */
     play(fromTime?: number): void {
         if (!this.audioContext || !this.audioBuffer) {
+            return;
+        }
+
+        // ✅ 关键修复：如果是从 PitchShifter 暂停状态恢复，只需恢复音量
+        if (this.isPlaying && this.pitchShifter && this.gainNode) {
+            // 已经在播放，无需操作
+            return;
+        }
+        
+        // 检查是否是从 PitchShifter 暂停状态恢复（pitchShifter 还存在，但被静音了）
+        const isResumingFromPitchShifterPause = this.pitchShifter !== null && this.sourceNode !== null;
+        
+        if (isResumingFromPitchShifterPause) {
+            // ✅ 从 PitchShifter 暂停恢复：只需恢复音量
+            this.gainNode!.gain.setValueAtTime(1, this.audioContext.currentTime);
+            
+            // 更新 startTime 以反映暂停期间的时间流逝
+            this.startTime = this.audioContext.currentTime - (this.pauseOffset / this.currentSpeed);
+            
+            this.isPlaying = true;
+            
+            // 发布播放状态
+            audioStatePubSub.pub({ type: AudioActionType.pause, payload: false });
+            
+            // 启动时间更新定时器
+            this.startTimeUpdateTimer();
+            
             return;
         }
 
@@ -215,7 +238,10 @@ export class WebAudioPlayer {
         
         this.createAudioChain(offset);
 
-        this.startTime = this.audioContext.currentTime - offset;
+        // ✅ 关键修复：对于原生节点，startTime 需要考虑 offset
+        // getCurrentTime() = (audioContext.currentTime - startTime) * speed
+        // 所以 startTime = audioContext.currentTime - (offset / speed)
+        this.startTime = this.audioContext.currentTime - (offset / this.currentSpeed);
         this.isPlaying = true;
         
         // 发布播放状态
@@ -246,36 +272,28 @@ export class WebAudioPlayer {
             this.pauseOffset = elapsed * this.currentSpeed;
         }
 
-        // 停止 PitchShifter 处理
+        // ✅ 关键修复：根据是否使用 PitchShifter 选择不同的暂停策略
         if (this.pitchShifter) {
-            this.pitchShifter.off();
-            try {
-                this.pitchShifter.disconnect();  // ✅ 断开输出，真正停止声音
-            } catch (e) {
-                console.error('[WebAudioPlayer] Error disconnecting PitchShifter:', e);
+            // 使用 PitchShifter：通过 GainNode 静音
+            if (this.gainNode) {
+                this.gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
+            }
+        } else {
+            // 使用原生节点：必须停止节点（原生节点不能暂停后恢复）
+            if (this.sourceNode) {
+                try {
+                    this.sourceNode.onended = null;  // 移除回调，防止触发 handleEnded
+                    this.sourceNode.stop();
+                    this.sourceNode.disconnect();
+                } catch {}
+                this.sourceNode = null;
             }
         }
         
-        // 重要：必须先移除 onended 回调，再调用 stop()
-        if (this.sourceNode) {
-            try {
-                this.sourceNode.onended = null;  // ✅ 先移除回调
-                
-                // 只有在没有使用 PitchShifter 时才调用 stop()
-                // 因为 PitchShifter 模式下 sourceNode 没有调用 start()
-                if (!this.pitchShifter) {
-                    this.sourceNode.stop();  // ✅ 原生模式需要 stop
-                }
-                
-                this.sourceNode.disconnect();
-            } catch (e) {
-                console.error('[WebAudioPlayer] Error stopping sourceNode:', e);
-            }
-            // 不将 sourceNode 设为 null，保留引用
-        }
+        // 停止时间更新定时器
+        this.stopTimeUpdateTimer();
 
         this.isPlaying = false;
-        this.stopTimeUpdateTimer();
         
         audioStatePubSub.pub({ type: AudioActionType.pause, payload: true });
     }
@@ -306,52 +324,103 @@ export class WebAudioPlayer {
     seek(time: number): void {
         const wasPlaying = this.isPlaying;
         
+        // ✅ 关键修复：检查是否需要切换音频处理方式
+        const needPitchShift = Math.abs(this.currentPitch) > 0.01 || Math.abs(this.currentSpeed - 1.0) > 0.01;
+        
         if (this.pitchShifter) {
             try {
                 this.pitchShifter.off();
                 this.pitchShifter.disconnect();
-            } catch {
-            }
+            } catch {}
             this.pitchShifter = null;
         }
         
         if (this.sourceNode) {
             try {
+                // ✅ 关键修复：先移除 onended 回调，防止 stop() 触发 handleEnded
+                this.sourceNode.onended = null;
                 this.sourceNode.stop();
                 this.sourceNode.disconnect();
-            } catch {
-            }
+            } catch {}
             this.sourceNode = null;
         }
         
-        this.pauseOffset = Math.max(0, Math.min(time, this.duration));
+        // ✅ 关键修复：PitchShifter 不支持 seek，只能从头播放
+        // 如果需要 PitchShifter，强制从头播放
+        let actualStartOffset = time;
+        if (needPitchShift) {
+            actualStartOffset = 0;
+        }
+        
+        this.pauseOffset = Math.max(0, Math.min(actualStartOffset, this.duration));
+        
+        // ✅ 关键修复：先将 isPlaying 设为 false，强制 play() 重新创建音频链
+        this.isPlaying = false;
         
         // 总是从目标位置开始播放（无论之前是否在播放）
         this.play(this.pauseOffset);
+        
+        // ✅ 如果从头播放，重置 startTime
+        if (actualStartOffset === 0) {
+            this.pauseOffset = 0;
+            if (this.audioContext) {
+                this.startTime = this.audioContext.currentTime;
+            }
+        }
     }
 
     /**
      * 设置音高（半音）
      */
     setPitch(semitones: number): void {
-        const wasPlaying = this.isPlaying;
-        const oldPitch = this.currentPitch;
+        const wasUsingPitchShifter = this.pitchShifter !== null;
         this.currentPitch = semitones;
         
-        // 如果音高从非零变为零（或反之），需要重建音频链
-        const needRebuild = (Math.abs(oldPitch) > 0.01) !== (Math.abs(semitones) > 0.01);
+        // 检查是否需要切换音频处理方式
+        const needPitchShift = Math.abs(this.currentPitch) > 0.01 || Math.abs(this.currentSpeed - 1.0) > 0.01;
         
-        if (needRebuild && wasPlaying) {
-            // 保存当前播放位置
-            const currentTime = this.getCurrentTime();
-            
-            // 停止当前播放
-            this.stop();
-            
-            // 重新播放（会自动选择正确的节点链）
-            this.play(currentTime);
+        if (needPitchShift && !wasUsingPitchShifter) {
+            // 从原生节点切换到 PitchShifter，需要重建音频链
+            if (this.isPlaying && this.audioContext) {
+                // ✅ 关键修复：不停止定时器，直接重建音频链，从头播放
+                // 1. 先断开旧节点
+                if (this.sourceNode) {
+                    try {
+                        this.sourceNode.onended = null;
+                        this.sourceNode.disconnect();
+                    } catch {}
+                    this.sourceNode = null;
+                }
+                
+                // 2. 重新创建音频链，从 0 开始
+                this.createAudioChain(0);
+                
+                // 3. 重置 pauseOffset 和 startTime
+                this.pauseOffset = 0;
+                this.startTime = this.audioContext.currentTime;
+            }
+        } else if (!needPitchShift && wasUsingPitchShifter) {
+            // 从 PitchShifter 切换到原生节点，需要重建音频链
+            if (this.isPlaying && this.audioContext) {
+                // ✅ 关键修复：不停止定时器，直接重建音频链，从头播放
+                // 1. 先断开旧节点
+                if (this.pitchShifter) {
+                    try {
+                        this.pitchShifter.off();
+                        this.pitchShifter.disconnect();
+                    } catch {}
+                    this.pitchShifter = null;
+                }
+                
+                // 2. 重新创建音频链，从 0 开始
+                this.createAudioChain(0);
+                
+                // 3. 重置 pauseOffset 和 startTime
+                this.pauseOffset = 0;
+                this.startTime = this.audioContext.currentTime;
+            }
         } else if (this.pitchShifter) {
-            // 如果正在使用 PitchShifter，直接更新参数
+            // 继续使用 PitchShifter，直接更新参数
             this.pitchShifter.pitchSemitones = semitones;
         }
     }
@@ -360,15 +429,55 @@ export class WebAudioPlayer {
      * 设置播放速度
      */
     setSpeed(speed: number): void {
-        const wasPlaying = this.isPlaying;
+        const wasUsingPitchShifter = this.pitchShifter !== null;
         this.currentSpeed = Math.max(0.5, Math.min(2.0, speed));
         
-        // 如果正在使用 PitchShifter，直接更新参数
-        if (this.pitchShifter) {
+        // 检查是否需要切换音频处理方式
+        const needPitchShift = Math.abs(this.currentPitch) > 0.01 || Math.abs(this.currentSpeed - 1.0) > 0.01;
+        
+        if (needPitchShift && !wasUsingPitchShifter) {
+            // 从原生节点切换到 PitchShifter，需要重建音频链
+            if (this.isPlaying && this.audioContext) {
+                // ✅ 关键修复：不停止定时器，直接重建音频链，从头播放
+                // 1. 先断开旧节点
+                if (this.sourceNode) {
+                    try {
+                        this.sourceNode.onended = null;
+                        this.sourceNode.disconnect();
+                    } catch {}
+                    this.sourceNode = null;
+                }
+                
+                // 2. 重新创建音频链，从 0 开始
+                this.createAudioChain(0);
+                
+                // 3. 重置 pauseOffset 和 startTime
+                this.pauseOffset = 0;
+                this.startTime = this.audioContext.currentTime;
+            }
+        } else if (!needPitchShift && wasUsingPitchShifter) {
+            // 从 PitchShifter 切换到原生节点，需要重建音频链
+            if (this.isPlaying && this.audioContext) {
+                // ✅ 关键修复：不停止定时器，直接重建音频链，从头播放
+                // 1. 先断开旧节点
+                if (this.pitchShifter) {
+                    try {
+                        this.pitchShifter.off();
+                        this.pitchShifter.disconnect();
+                    } catch {}
+                    this.pitchShifter = null;
+                }
+                
+                // 2. 重新创建音频链，从 0 开始
+                this.createAudioChain(0);
+                
+                // 3. 重置 pauseOffset 和 startTime
+                this.pauseOffset = 0;
+                this.startTime = this.audioContext.currentTime;
+            }
+        } else if (this.pitchShifter) {
+            // 继续使用 PitchShifter，直接更新参数
             this.pitchShifter.tempo = this.currentSpeed;
-        } else if (this.sourceNode && wasPlaying) {
-            // 如果使用原生节点，更新 playbackRate
-            this.sourceNode.playbackRate.value = this.currentSpeed;
         }
     }
 
@@ -462,13 +571,40 @@ export class WebAudioPlayer {
         
         this.isVocalRemovalEnabled = enabled;
         
-        // 如果正在播放，需要重新创建音频链以应用更改
-        if (this.isPlaying && this.audioContext) {
-            const currentTime = this.getCurrentTime();
-            this.stop();
+        // ✅ 使用 gainNode 静音过渡，然后重建音频链
+        if (this.isPlaying && this.audioContext && this.gainNode) {
+            // ✅ 关键修复：PitchShifter 状态下切换去人声会从头播放（已知问题）
+            // 所以直接从头播放，确保歌词同步
+            const shouldResetToStart = this.pitchShifter !== null;
+            const startOffset = shouldResetToStart ? 0 : this.getCurrentTime();
+            
+            // 1. 快速淡出
+            const fadeOutTime = this.audioContext.currentTime;
+            this.gainNode.gain.setValueAtTime(this.gainNode.gain.value, fadeOutTime);
+            this.gainNode.gain.linearRampToValueAtTime(0, fadeOutTime + 0.05);
+            
+            // 2. 短暂延迟后停止并重新播放
             setTimeout(() => {
-                this.play(currentTime);
-            }, 50);
+                this.stop();
+                
+                // 3. 重新创建音频链
+                this.play(startOffset);
+                
+                // 4. 如果从头播放，重置 pauseOffset 和 startTime
+                if (shouldResetToStart) {
+                    this.pauseOffset = 0;
+                    if (this.audioContext) {
+                        this.startTime = this.audioContext.currentTime;
+                    }
+                }
+                
+                // 5. 淡入恢复音量
+                if (this.gainNode && this.audioContext) {
+                    const fadeInTime = this.audioContext.currentTime;
+                    this.gainNode.gain.setValueAtTime(0, fadeInTime);
+                    this.gainNode.gain.linearRampToValueAtTime(1, fadeInTime + 0.05);
+                }
+            }, 60);
         }
     }
     

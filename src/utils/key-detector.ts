@@ -11,18 +11,12 @@ let EssentiaExtractor: any = null;
 async function loadEssentia() {
     if (!EssentiaModule) {
         try {
-            console.log('[KeyDetector] Loading essentia.js module...');
             const module = await import('essentia.js');
-            console.log('[KeyDetector] Module exports:', Object.keys(module));
             
             // essentia.js 导出的是 { Essentia, EssentiaWASM, ... }
             EssentiaModule = module.Essentia;
             EssentiaWASM = module.EssentiaWASM;
             EssentiaExtractor = module.EssentiaExtractor;
-            
-            console.log('[KeyDetector] Essentia module loaded:', typeof EssentiaModule);
-            console.log('[KeyDetector] EssentiaWASM loaded:', typeof EssentiaWASM);
-            console.log('[KeyDetector] EssentiaExtractor loaded:', typeof EssentiaExtractor);
         } catch (error) {
             console.error('[KeyDetector] Failed to load Essentia module:', error);
             throw error;

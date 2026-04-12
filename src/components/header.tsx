@@ -81,6 +81,26 @@ export const Header: React.FC = () => {
         return Number(sessionStorage.getItem('player-sub-opacity')) || 0.3;
     });
     
+    // Player 背景颜色
+    const [playerBgColor, setPlayerBgColor] = useState(() => {
+        const savedColor = sessionStorage.getItem('player-bg-color');
+        if (savedColor) return savedColor;
+        const themeMode = localStorage.getItem('preferences') 
+            ? JSON.parse(localStorage.getItem('preferences') || '{}').themeMode 
+            : 0;
+        return themeMode === 1 ? '#ededed' : '#2e2e2e';
+    });
+    
+    // Player 歌词颜色
+    const [playerLyricColor, setPlayerLyricColor] = useState(() => {
+        const savedColor = sessionStorage.getItem('player-lyric-color');
+        if (savedColor) return savedColor;
+        const themeMode = localStorage.getItem('preferences') 
+            ? JSON.parse(localStorage.getItem('preferences') || '{}').themeMode 
+            : 0;
+        return themeMode === 1 ? '#eeeeee' : '#ffffff';
+    });
+    
     // 调性检测结果
     const [detectedKey, setDetectedKey] = useState<string>('');
     const [isDetectingKey, setIsDetectingKey] = useState(false);
@@ -99,6 +119,32 @@ export const Header: React.FC = () => {
     
     // ST 去人声状态
     const [stVocalRemoval, setStVocalRemoval] = useState(false);
+    
+    // 根据检测到的调和半音偏移计算当前调
+    const getStCurrentKey = (): string => {
+        if (!stDetectedKey) {
+            // 如果没有检测到调，显示半音数
+            return stPitchSemitones === 0 ? '原调' : (stPitchSemitones > 0 ? `+${stPitchSemitones}` : stPitchSemitones.toString());
+        }
+        
+        // 提取基础调（如 "C" from "C Major"）
+        const baseKey = stDetectedKey.split(' ')[0];
+        
+        // 定义所有调的顺序（包括升降号）
+        const keys = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        
+        // 找到基础调的索引
+        const baseIndex = keys.indexOf(baseKey);
+        if (baseIndex === -1) {
+            // 如果找不到，返回原始格式
+            return `${baseKey}${stPitchSemitones > 0 ? '+' : ''}${stPitchSemitones}`;
+        }
+        
+        // 计算新的调索引（处理循环）
+        const newIndex = (baseIndex + stPitchSemitones + 12) % 12;
+        
+        return keys[newIndex];
+    };
     
     // 音高调节状态（半音数）
     const [_pitchSemitones, _setPitchSemitones] = useState(0);
@@ -122,8 +168,6 @@ export const Header: React.FC = () => {
             if (!isCurrentlyFullscreen) {
                 // iOS 设备特殊处理
                 if (isIOS) {
-                    console.log('iOS device detected in Header');
-                    
                     // 尝试标准 API (iOS 16.4+)
                     if (element.requestFullscreen) {
                         try {
@@ -243,6 +287,28 @@ export const Header: React.FC = () => {
         
         window.addEventListener('player-font-size-update' as any, handleFontSizeChange as any);
         return () => window.removeEventListener('player-font-size-update' as any, handleFontSizeChange as any);
+    }, []);
+    
+    // 监听背景颜色变化事件
+    useEffect(() => {
+        const handleBgColorChange = (event: CustomEvent<string>) => {
+            const newColor = event.detail;
+            setPlayerBgColor(newColor);
+        };
+        
+        window.addEventListener('player-bg-color-change' as any, handleBgColorChange as any);
+        return () => window.removeEventListener('player-bg-color-change' as any, handleBgColorChange as any);
+    }, []);
+    
+    // 监听歌词颜色变化事件
+    useEffect(() => {
+        const handleLyricColorChange = (event: CustomEvent<string>) => {
+            const newColor = event.detail;
+            setPlayerLyricColor(newColor);
+        };
+        
+        window.addEventListener('player-lyric-color-change' as any, handleLyricColorChange as any);
+        return () => window.removeEventListener('player-lyric-color-change' as any, handleLyricColorChange as any);
     }, []);
     
     // 监听调性检测完成事件
@@ -416,8 +482,7 @@ export const Header: React.FC = () => {
     }, []);
     
     // 处理打开文件
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const _handleOpenFile = useCallback(() => {
+    const handleOpenFile = useCallback(() => {
         const input = document.createElement('input');
         input.type = 'file';
         input.multiple = true; // 允许多选
@@ -470,8 +535,23 @@ export const Header: React.FC = () => {
 
     return (
         <>
-            {/* 左上角打开文件按钮 - 在 player-soundtouch 页面隐藏 */}
-            {!location.hash.includes('/player-soundtouch/') && (
+            {/* 左上角按钮 - 根据页面显示不同按钮 */}
+            {location.hash.includes('/player-soundtouch/') ? (
+                // player-soundtouch 页面：显示打开文件按钮，触发 player-soundtouch 的文件选择
+                <div className="header-left-controls">
+                    <button 
+                        className="header-control-button file-list-btn"
+                        onClick={() => {
+                            // 触发 player-soundtouch 页面的文件选择
+                            window.dispatchEvent(new CustomEvent('trigger-st-file-open'));
+                        }}
+                        title="打开文件"
+                    >
+                        <PlaylistSVG />
+                    </button>
+                </div>
+            ) : (
+                // 其他页面：显示文件列表按钮
                 <div className="header-left-controls">
                     <button 
                         className="header-control-button file-list-btn"
@@ -641,13 +721,13 @@ export const Header: React.FC = () => {
                                         <div className="player-settings-color-picker">
                                             <input
                                                 type="color"
-                                                value="#2e2e2e"
+                                                value={playerBgColor}
                                                 onChange={(e) => window.dispatchEvent(new CustomEvent('player-bg-color-change', { detail: e.target.value }))}
                                                 className="player-color-input"
                                                 title={lang.header.selectBgColor}
                                             />
-                                            <div className="player-color-preview" style={{ backgroundColor: '#2e2e2e' }}>
-                                                #2e2e2e
+                                            <div className="player-color-preview" style={{ backgroundColor: playerBgColor }}>
+                                                {playerBgColor}
                                             </div>
                                         </div>
                                     </div>
@@ -656,13 +736,13 @@ export const Header: React.FC = () => {
                                         <div className="player-settings-color-picker">
                                             <input
                                                 type="color"
-                                                value="#ffffff"
+                                                value={playerLyricColor}
                                                 onChange={(e) => window.dispatchEvent(new CustomEvent('player-lyric-color-change', { detail: e.target.value }))}
                                                 className="player-color-input"
                                                 title={lang.header.selectLyricColor}
                                             />
-                                            <div className="player-color-preview" style={{ backgroundColor: '#ffffff', color: '#000000' }}>
-                                                #ffffff
+                                            <div className="player-color-preview" style={{ backgroundColor: playerLyricColor, color: '#000000' }}>
+                                                {playerLyricColor}
                                             </div>
                                         </div>
                                     </div>
@@ -769,7 +849,7 @@ export const Header: React.FC = () => {
                                                 title="重置为原调"
                                                 style={{ minWidth: '50px' }}
                                             >
-                                                {stPitchSemitones === 0 ? '原调' : `${stPitchSemitones > 0 ? '+' : ''}${stPitchSemitones}`}
+                                                {getStCurrentKey()}
                                             </button>
                                             <button 
                                                 className="player-setting-btn"

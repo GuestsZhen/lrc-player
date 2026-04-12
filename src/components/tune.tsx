@@ -285,9 +285,6 @@ export const Tune: React.FC<{
 
     // 复制转调后的文本
     const onCopyTransposedClick = useCallback(() => {
-        console.log('[DEBUG] 复制转调文本，transposedText:', transposedText);
-        console.log('[DEBUG] transposedText length:', transposedText?.length);
-        
         // 直接使用 transposedText，不依赖 DOM
         if (transposedText) {
             const tempTextarea = document.createElement('textarea');
@@ -296,7 +293,6 @@ export const Tune: React.FC<{
             tempTextarea.select();
             document.execCommand('copy');
             document.body.removeChild(tempTextarea);
-            console.log('[DEBUG] 复制成功');
         } else {
             console.warn('[DEBUG] transposedText 为空');
         }
@@ -317,19 +313,15 @@ export const Tune: React.FC<{
 
     // 下载转调后的文本
     const onDownloadTransposedClick = useCallback(() => {
-        console.log('[DEBUG] 下载转调文本，transposedText:', transposedText);
-        console.log('[DEBUG] transposedText length:', transposedText?.length);
-        
         // 直接使用 transposedText，不依赖 DOM
         if (transposedText) {
-            const blob = new Blob([transposedText], { type: "text/plain;charset=UTF-8" });
+            const blob = new Blob([transposedText], { type: 'text/plain' });
             const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
+            const a = document.createElement('a');
             a.href = url;
-            a.download = "transposed-lyric.lrc";
+            a.download = 'transposed.txt';
             a.click();
             URL.revokeObjectURL(url);
-            console.log('[DEBUG] 下载成功');
         } else {
             console.warn('[DEBUG] transposedText 为空');
         }

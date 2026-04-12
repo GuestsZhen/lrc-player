@@ -4,7 +4,7 @@ import { type Action, ActionType } from "../hooks/useLrc.js";
 import { webAudioPlayer } from "../utils/web-audio-player.js";
 import { appContext } from "./app.context.js";
 import { Curser } from "./curser.js";
-import { PlaySVG, PauseSVG, PlaylistSVG, SettingsSVG } from "./svg.js";
+import { PlaySVG, PauseSVG, SettingsSVG } from "./svg.js";
 import { simpleKeyDetector, type KeyDetectionResult } from "../utils/simple-key-detector.js";
 
 // 存储当前加载的音频文件，用于调性检测
@@ -52,6 +52,10 @@ export const PlayerSoundTouch: React.FC<IPlayerProps> = ({ state, dispatch }) =>
     const [audioFileName, setAudioFileName] = useState<string>('');
     const [isAudioInitialized, setIsAudioInitialized] = useState(false);  // 音频是否已初始化
     
+    // 进度条拖拽状态
+    const [isSeeking, setIsSeeking] = useState(false);
+    const [seekTime, setSeekTime] = useState(0);
+    
     // 音高和速度调节
     const [pitchSemitones, setPitchSemitones] = useState(0);
     const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
@@ -91,6 +95,17 @@ export const PlayerSoundTouch: React.FC<IPlayerProps> = ({ state, dispatch }) =>
     useEffect(() => {
         sessionStorage.setItem('player-bg-color', backgroundColor);
         localStorage.setItem('player-bg-color', backgroundColor);
+    }, [backgroundColor]);
+    
+    // 设置 html 元素背景色为用户选择的颜色（仅在 Player-SoundTouch 页面）
+    useEffect(() => {
+        const originalHtmlBgColor = document.documentElement.style.backgroundColor;
+        document.documentElement.style.setProperty('background-color', backgroundColor, 'important');
+        
+        return () => {
+            // 组件卸载时恢复原来的背景色
+            document.documentElement.style.backgroundColor = originalHtmlBgColor;
+        };
     }, [backgroundColor]);
     
     useEffect(() => {
@@ -261,6 +276,12 @@ export const PlayerSoundTouch: React.FC<IPlayerProps> = ({ state, dispatch }) =>
                 initialSpeed: playbackSpeed
             });
             
+            // ✅ 关键修复：设置时间更新回调，同步 React 状态并更新歌词索引
+            webAudioPlayer.setTimeUpdateCallback((time: number) => {
+                setCurrentTime(time);
+                dispatch({ type: ActionType.refresh, payload: time });
+            });
+            
             setDuration(webAudioPlayer.getDuration());
             setIsAudioInitialized(true);  // 标记为已初始化
             
@@ -312,19 +333,37 @@ export const PlayerSoundTouch: React.FC<IPlayerProps> = ({ state, dispatch }) =>
         setCurrentTime(time);
     };
 
+    // 进度条拖动处理
+    const handleProgressChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        const newTime = parseFloat(e.target.value);
+        seekTo(newTime);
+    }, [seekTo]);
+
+    const handleProgressInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        const newTime = parseFloat(e.target.value);
+        setSeekTime(newTime);
+    }, []);
+
+    const handleProgressMouseUp = useCallback(() => {
+        if (seekTime !== currentTime) {
+            seekTo(seekTime);
+        }
+    }, [seekTime, currentTime, seekTo]);
+
     // 点击歌词跳转
     const onLineClick = useCallback(
         (ev: React.MouseEvent<HTMLLIElement>) => {
             ev.stopPropagation();
-            const target = ev.currentTarget;
-            const key = Number.parseInt(target.dataset.key!, 10);
+            const key = parseInt(ev.currentTarget.dataset.key || '0', 10);
             const lineTime = lyric[key]?.time;
             
-            if (lineTime !== undefined) {
+            if (lineTime !== undefined && !isNaN(lineTime)) {
                 seekTo(lineTime);
+            } else {
+                console.warn('[PlayerSoundTouch] 无效的时间值');
             }
         },
-        [lyric]
+        [seekTo, lyric]
     );
 
     // 调节音高
@@ -409,12 +448,20 @@ export const PlayerSoundTouch: React.FC<IPlayerProps> = ({ state, dispatch }) =>
             toggleVocalRemoval();
         };
         
+        // 监听来自 Header 的打开文件事件
+        const handleTriggerFileOpen = () => {
+            if (fileInputRef.current) {
+                fileInputRef.current.click();
+            }
+        };
+        
         window.addEventListener('trigger-st-key-detection' as any, handleStKeyDetection as any);
         window.addEventListener('st-adjust-pitch' as any, handleStAdjustPitch as any);
         window.addEventListener('st-reset-pitch' as any, handleStResetPitch as any);
         window.addEventListener('st-adjust-speed' as any, handleStAdjustSpeed as any);
         window.addEventListener('st-reset-speed' as any, handleStResetSpeed as any);
         window.addEventListener('st-toggle-vocal-removal' as any, handleStToggleVocalRemoval as any);
+        window.addEventListener('trigger-st-file-open' as any, handleTriggerFileOpen as any);
         
         return () => {
             window.removeEventListener('trigger-st-key-detection' as any, handleStKeyDetection as any);
@@ -423,6 +470,7 @@ export const PlayerSoundTouch: React.FC<IPlayerProps> = ({ state, dispatch }) =>
             window.removeEventListener('st-adjust-speed' as any, handleStAdjustSpeed as any);
             window.removeEventListener('st-reset-speed' as any, handleStResetSpeed as any);
             window.removeEventListener('st-toggle-vocal-removal' as any, handleStToggleVocalRemoval as any);
+            window.removeEventListener('trigger-st-file-open' as any, handleTriggerFileOpen as any);
         };
     }, [detectKey, adjustPitch, adjustSpeed, toggleVocalRemoval]);
 
@@ -490,12 +538,12 @@ export const PlayerSoundTouch: React.FC<IPlayerProps> = ({ state, dispatch }) =>
                     left: 0,
                     right: 0,
                     width: '100%',
-                    height: '100px',
-                    minHeight: '100px',
+                    height: '110px',
+                    minHeight: '110px',
                     zIndex: 233,
                     display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
                     padding: '10px 20px env(safe-area-inset-bottom) 20px',
                     backgroundColor: '#202020cc',  // var(--semi-black-color)
                     color: '#eeeeee',  // var(--white)
@@ -511,111 +559,130 @@ export const PlayerSoundTouch: React.FC<IPlayerProps> = ({ state, dispatch }) =>
                         style={{ display: 'none' }}
                     />
                     
-                    {/* 左侧：文件按钮 + 当前时间 */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                        {/* 载入文件按钮 - 使用 PlaylistSVG，45px */}
+                    {/* 进度条 - 顶部 */}
+                    {audioFileName && duration > 0 && (
+                        <div style={{ 
+                            width: '100%',
+                            padding: '0 10px'
+                        }}>
+                            <div className="slider timeline-slider" style={{ width: '100%' }}>
+                                <progress value={duration > 0 ? currentTime / duration : 0} />
+                                <input
+                                    type="range"
+                                    className="timeline"
+                                    min={0}
+                                    max={duration}
+                                    step={1}
+                                    value={isSeeking ? seekTime : currentTime}
+                                    onChange={handleProgressChange}
+                                    onInput={handleProgressInput}
+                                    onMouseUp={handleProgressMouseUp}
+                                    onTouchEnd={handleProgressMouseUp}
+                                    style={{ 
+                                        width: '100%'
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    )}
+                    
+                    {/* 底部控制按钮区域 */}
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: '100%'
+                    }}>
+                        {/* 左侧：当前时间 */}
+                        <div style={{ 
+                            flex: 1,
+                            display: 'flex',
+                            justifyContent: 'flex-end',
+                            paddingRight: '20px'
+                        }}>
+                            {audioFileName && (
+                                <div style={{ 
+                                    fontSize: '0.9rem',
+                                    fontVariantNumeric: 'tabular-nums',
+                                    minWidth: '50px',
+                                    textAlign: 'right'
+                                }}>
+                                    {formatTime(isSeeking ? seekTime : currentTime)}
+                                </div>
+                            )}
+                        </div>
+                    
+                        {/* 播放/暂停按钮 - 居中 */}
                         <button 
-                            onClick={() => fileInputRef.current?.click()}
-                            className="ripple glow loadaudio-button"
+                            onClick={togglePlay}
+                            disabled={!isAudioInitialized}
+                            className="ripple glow"
                             style={{
-                                width: '45px',
-                                height: '45px',
+                                width: '80px',
+                                height: '80px',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 background: 'none',
                                 border: 'none',
                                 color: '#eeeeee',
-                                cursor: 'pointer',
+                                cursor: isAudioInitialized ? 'pointer' : 'not-allowed',
                                 transition: 'all 0.2s ease',
-                                opacity: 0.7
+                                opacity: isAudioInitialized ? 1 : 0.5
                             }}
+                            title={!isAudioInitialized ? '等待音频加载...' : (isPlaying ? '暂停' : '播放')}
                         >
-                            <div style={{ transform: 'scale(1.875)', transformOrigin: 'center' }}>
-                                <PlaylistSVG />
+                            <div style={{ transform: 'scale(3.33)', transformOrigin: 'center' }}>
+                                {isPlaying ? <PauseSVG /> : <PlaySVG />}
                             </div>
                         </button>
                         
-                        {/* 当前时间 */}
-                        {audioFileName && (
-                            <div style={{ 
-                                fontSize: '0.9rem',
-                                fontVariantNumeric: 'tabular-nums',
-                                minWidth: '40px',
-                                textAlign: 'left'
-                            }}>
-                                {formatTime(currentTime)}
-                            </div>
-                        )}
-                    </div>
-                    
-                    {/* 播放/暂停按钮 - 居中 */}
-                    <button 
-                        onClick={togglePlay}
-                        disabled={!isAudioInitialized}
-                        className="ripple glow"
-                        style={{
-                            width: '80px',
-                            height: '80px',
+                        {/* 右侧：总时长 + 设置按钮 */}
+                        <div style={{ 
+                            flex: 1,
                             display: 'flex',
                             alignItems: 'center',
-                            justifyContent: 'center',
-                            background: 'none',
-                            border: 'none',
-                            color: isAudioInitialized ? '#eeeeee' : '#666',
-                            cursor: isAudioInitialized ? 'pointer' : 'not-allowed',
-                            transition: 'all 0.2s ease',
-                            position: 'absolute',
-                            left: '50%',
-                            top: '50%',
-                            transform: 'translate(-50%, -50%)'
-                        }}
-                        title={!isAudioInitialized ? '等待音频加载...' : (isPlaying ? '暂停' : '播放')}
-                    >
-                        <div style={{ transform: 'scale(3.33)', transformOrigin: 'center' }}>
-                            {isPlaying ? <PauseSVG /> : <PlaySVG />}
+                            paddingLeft: '20px'
+                        }}>
+                            {audioFileName && (
+                                <div style={{ 
+                                    fontSize: '0.9rem',
+                                    fontVariantNumeric: 'tabular-nums',
+                                    minWidth: '50px',
+                                    textAlign: 'left'
+                                }}>
+                                    {formatTime(duration)}
+                                </div>
+                            )}
+                            
+                            {/* 设置按钮 - 使用 marginLeft: 'auto' 始终靠右 */}
+                            <a 
+                                href="#/preferences/"
+                                className="ripple glow"
+                                style={{
+                                    width: '45px',
+                                    height: '45px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    background: 'none',
+                                    border: 'none',
+                                    color: '#eeeeee',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s ease',
+                                    opacity: 0.7,
+                                    textDecoration: 'none',
+                                    marginLeft: 'auto'  // ✅ 关键：始终推到最右边
+                                }}
+                                title="速度设置"
+                            >
+                                <div style={{ transform: 'scale(1.875)', transformOrigin: 'center' }}>
+                                    <SettingsSVG />
+                                </div>
+                            </a>
                         </div>
-                    </button>
-                    
-                    {/* 右侧：总时长 + 设置按钮 */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                        {audioFileName && (
-                            <div style={{ 
-                                fontSize: '0.9rem',
-                                fontVariantNumeric: 'tabular-nums',
-                                minWidth: '40px',
-                                textAlign: 'right'
-                            }}>
-                                {formatTime(duration)}
-                            </div>
-                        )}
-                        
-                        {/* 设置按钮 - 链接到 preferences 页面 */}
-                        <a 
-                            href="#/preferences/"
-                            className="ripple glow"
-                            style={{
-                                width: '45px',
-                                height: '45px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                background: 'none',
-                                border: 'none',
-                                color: '#eeeeee',
-                                cursor: 'pointer',
-                                transition: 'all 0.2s ease',
-                                opacity: 0.7,
-                                textDecoration: 'none'
-                            }}
-                            title="速度设置"
-                        >
-                            <div style={{ transform: 'scale(1.875)', transformOrigin: 'center' }}>
-                                <SettingsSVG />
-                            </div>
-                        </a>
                     </div>
-            </div>
+                </div>
             {/* 控制面板始终显示，无关闭按钮 */}
             {/* 歌词列表 */}
             <ul 

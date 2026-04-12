@@ -483,23 +483,10 @@ html:-webkit-full-screen .app-header {
     display: none;
 }
 
-/* Player-SoundTouch 页面的歌词列表 - 减去底部控制栏的高度 */
-.player-soundtouch-container .player-lyric-list {
-    height: calc(100vh - 100px) !important;
-    padding: 20px 0 70vh 0 !important;  /* 底部添加 70vh 的 padding，确保最后一行能滚动到 70% 位置 */
-    /* 隐藏滚动条但保持可滚动 */
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE/Edge */
-}
-
-/* Webkit 浏览器（Chrome, Safari, Edge）隐藏滚动条 */
-.player-soundtouch-container .player-lyric-list::-webkit-scrollbar {
-    display: none;
-}
 
 .player-line {
     align-items: baseline;
-    padding: 6px 4rem 6px 0;
+    padding: 6px 4rem;  /* 左右对称 padding，防止高亮放大时超出屏幕 */
     font-size: inherit;
     white-space: pre-wrap;
     border-top: solid 2px transparent;

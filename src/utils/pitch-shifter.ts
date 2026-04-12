@@ -42,8 +42,6 @@ export class PitchShifterManager {
 
             // 连接到输出
             this.shifter.connect(this.gainNode);
-
-            console.log('[PitchShifter] Initialized with', options.semitones, 'semitones');
         } catch (error) {
             console.error('[PitchShifter] Initialization failed:', error);
             throw error;
@@ -56,7 +54,6 @@ export class PitchShifterManager {
     play(): void {
         if (this.shifter) {
             this.shifter.play();
-            console.log('[PitchShifter] Playing');
         }
     }
 
@@ -66,7 +63,6 @@ export class PitchShifterManager {
     stop(): void {
         if (this.shifter) {
             this.shifter.off();
-            console.log('[PitchShifter] Stopped');
         }
     }
 
@@ -85,8 +81,6 @@ export class PitchShifterManager {
         // 直接设置半音数
         this.shifter.pitchSemitones = semitones;
         this.shifter.tempo = 1.0; // 始终保持原速
-
-        console.log('[PitchShifter] Pitch updated to', semitones, 'semitones');
     }
 
     /**
@@ -108,7 +102,6 @@ export class PitchShifterManager {
             this.gainNode.disconnect();
             this.gainNode = null;
         }
-        console.log('[PitchShifter] Destroyed');
     }
 }
 

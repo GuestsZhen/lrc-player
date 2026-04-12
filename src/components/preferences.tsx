@@ -133,7 +133,6 @@ export const Preferences: React.FC = () => {
         if ('indexedDB' in window) {
             const deleteRequest = indexedDB.deleteDatabase('MusicPlayerDB');
             deleteRequest.onsuccess = () => {
-                console.log('IndexedDB MusicPlayerDB 已清除');
             };
             deleteRequest.onerror = () => {
                 console.error('清除 IndexedDB 失败');

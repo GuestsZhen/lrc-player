@@ -56,7 +56,6 @@ export const LrcUtils: React.FC<{
             const lyricText = stringify(lrcState, prefState);
             inputRef.current.value = lyricText;
         }
-        console.log('[LrcUtils] Initialized with current lrcState');
     }, [lrcState, prefState]);
 
     // 输入框 blur 时不再自动保存，由 content.tsx 统一管理
