@@ -13,9 +13,11 @@
 
 ## 🎯 迁移目标
 
-### 核心原则：Web 与 Android 共存
+### 核心原则：Web 与 Android 共存 + 完全离线
 
-**重要**: 本次迁移必须保证 **Web 版本完全不受影响**，所有改动都是**增量式**的。
+**重要**: 
+1. 本次迁移必须保证 **Web 版本完全不受影响**，所有改动都是**增量式**的。
+2. **Android App 必须是完全离线版本**，不依赖网络连接即可使用所有核心功能。
 
 #### 双端架构设计
 
@@ -113,6 +115,7 @@ if (isAndroidNative()) {
 ✅ **符合规范** - 完全遵循 Android Scoped Storage 要求  
 ✅ **Google Play 友好** - 无需特殊权限，审核通过率高  
 ✅ **Web 兼容** - Web 版本功能完全保留，互不影响  
+✅ **完全离线** - 所有核心功能无需网络即可使用  
 
 ### 技术选型理由
 相比 SAF (Storage Access Framework)，选择 MediaStore 的原因：
@@ -914,6 +917,72 @@ useEffect(() => {
 
 ## 5️⃣ Android 原生配置
 
+### 5.0 离线功能配置
+
+#### 离线架构设计
+
+```
+Android App (完全离线)
+├── 本地资源
+│   ├── HTML/CSS/JS (打包在 APK 中)
+│   ├── 字体文件
+│   └── 图标资源
+├── 本地数据
+│   ├── MediaStore 音频文件
+│   ├── Capacitor Storage (偏好设置)
+│   └── IndexedDB (歌词缓存)
+└── 本地处理
+    ├── Web Audio API (音频播放)
+    ├── SoundTouchJS (音高调节)
+    └── LRC Parser (歌词解析)
+```
+
+**核心原则**：
+- ✅ 所有代码和资源打包在 APK 中
+- ✅ 音频文件从本地 MediaStore 读取
+- ✅ 歌词文件从本地存储加载
+- ✅ 所有音频处理在本地完成
+- ❌ 不依赖任何外部 CDN
+- ❌ 不需要网络连接
+
+#### 禁用网络权限（可选）
+
+如果希望**强制离线**，可以在 `AndroidManifest.xml` 中移除网络权限：
+
+```xml
+<!-- 移除以下权限以强制离线 -->
+<!-- <uses-permission android:name="android.permission.INTERNET" /> -->
+<!-- <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /> -->
+```
+
+**注意**：移除网络权限后，GitHub Gist 同步功能将不可用。
+
+#### 配置 WebView 离线模式
+
+在 `capacitor.config.ts` 中：
+
+```typescript
+const config: CapacitorConfig = {
+  appId: 'com.lrcplayer.app',
+  appName: 'LRC Player',
+  webDir: 'build',
+  server: {
+    androidScheme: 'https',
+    cleartext: false,
+    // ✅ 关键配置：使用本地资源
+    url: undefined,  // 不使用远程 URL
+  },
+  android: {
+    // ✅ 禁用混合内容（强制本地资源）
+    allowMixedContent: false,
+    // ✅ 启用本地资源调试
+    webContentsDebuggingEnabled: true,
+    // ✅ 捕获输入事件
+    captureInput: true,
+  },
+};
+```
+
 ### 5.1 添加权限
 
 在 `android/app/src/main/AndroidManifest.xml` 中添加：
@@ -1530,7 +1599,96 @@ npm run cap:run:android
 | 文件加载 | 用户选择 | 自动扫描 |
 | 播放列表 | 手动添加 | 自动填充 |
 | 权限请求 | 无 | 首次启动 |
-| 离线使用 | Service Worker | 原生缓存 |
+| **离线使用** | **Service Worker** | **完全离线** ✅ |
+
+### 离线功能详解
+
+#### 离线架构
+
+```
+Android App (完全离线)
+├── 本地资源 (打包在 APK)
+│   ├── HTML/CSS/JS
+│   ├── 字体和图标
+│   └── Web Workers
+├── 本地数据
+│   ├── MediaStore 音频文件
+│   ├── Capacitor Storage (设置)
+│   └── IndexedDB (歌词缓存)
+└── 本地处理
+    ├── Web Audio API
+    ├── SoundTouchJS
+    └── LRC Parser
+```
+
+#### 核心离线功能
+
+✅ **完全可用的功能：**
+1. **音频播放** - 从 MediaStore 读取本地音频文件
+2. **歌词显示** - 本地 LRC 文件解析和滚动
+3. **简谱转调** - 本地计算，无需服务器
+4. **音高/速度调节** - SoundTouchJS 本地处理
+5. **去人声功能** - Web Audio API 相位抵消
+6. **歌词编辑** - 本地文本编辑
+7. **歌词同步** - 本地打点和时间轴调整
+8. **偏好设置** - Capacitor Storage 持久化
+9. **播放列表** - MediaStore 扫描结果缓存
+
+❌ **需要网络的功能（可选）：**
+- GitHub Gist 同步（如保留此功能）
+- 在线更新检查
+- 错误报告
+
+#### 禁用网络权限（强制离线）
+
+如果希望**强制离线**，在 `AndroidManifest.xml` 中移除：
+
+```xml
+<!-- 注释掉或删除以下权限 -->
+<!-- <uses-permission android:name="android.permission.INTERNET" /> -->
+<!-- <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /> -->
+```
+
+**效果：**
+- ✅ App 无法访问网络
+- ✅ 所有功能仍然正常工作
+- ❌ Gist 同步功能不可用
+- ❌ 无法检查更新
+
+#### WebView 离线配置
+
+在 `capacitor.config.ts` 中确保：
+
+```typescript
+const config: CapacitorConfig = {
+  server: {
+    // ✅ 使用本地资源，不加载远程 URL
+    url: undefined,
+    // ✅ 禁用混合内容
+    allowMixedContent: false,
+  },
+};
+```
+
+#### 离线测试清单
+
+```bash
+# 1. 断开网络连接
+# 2. 运行 App
+# 3. 测试以下功能：
+
+✅ 扫描音乐文件夹
+✅ 播放音频文件
+✅ 显示歌词
+✅ 简谱转调
+✅ 音高/速度调节
+✅ 去人声功能
+✅ 歌词编辑
+✅ 保存偏好设置
+✅ 播放列表管理
+
+# 所有功能应该正常工作！
+```
 
 ### 维护建议
 
@@ -1612,9 +1770,10 @@ console.log('Platform:', Capacitor.getPlatform());
 
 ---
 
-**文档版本**: 1.2.0  
+**文档版本**: 1.3.0  
 **最后更新**: 2026-04-12  
 **适用 Capacitor 版本**: 6.x+  
 **适用 Android 版本**: 10+ (API 29+)  
 **Web 兼容性**: ✅ 完全兼容，零影响  
-**双端架构**: ✅ Web + Android 共存
+**双端架构**: ✅ Web + Android 共存  
+**离线支持**: ✅ 完全离线，无需网络
