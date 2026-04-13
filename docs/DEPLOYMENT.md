@@ -106,14 +106,97 @@ git push origin master
 
 ## 常见问题
 
-### 1. 部署失败 - 包管理器不匹配
+### 1. GitHub Actions 找不到 pnpm（重要）
 
-**问题**: 工作流使用 npm，但项目使用 pnpm
+**问题**: 
+```
+Error: Unable to locate executable file: pnpm.
+Please verify either the file path exists or the file can be found
+within a directory specified by the PATH environment variable.
+```
 
-**解决**: 确保 `deploy.yml` 中：
-- 使用 `cache: 'pnpm'`
-- 安装 pnpm: `uses: pnpm/action-setup@v2`
-- 使用 `pnpm install` 和 `pnpm run build`
+**原因**: 
+- `pnpm/action-setup` 版本过旧或配置顺序错误
+- 缓存配置不正确导致 pnpm 未正确安装
+
+**解决方案**: 
+
+确保 `.github/workflows/deploy.yml` 使用以下配置：
+
+```yaml
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ✅ 步骤 1: 先设置 Node.js（不带缓存）
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # ✅ 步骤 2: 安装 pnpm（使用 v4 版本）
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.11.0
+          run_install: false
+
+      # ✅ 步骤 3: 获取 pnpm store 路径
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      # ✅ 步骤 4: 设置 pnpm 缓存
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      # ✅ 步骤 5: 安装依赖
+      - name: Install dependencies
+        run: pnpm install
+
+      # ✅ 步骤 6: 构建
+      - name: Build
+        run: pnpm build
+```
+
+**关键点**:
+1. **执行顺序**: Setup Node → Install pnpm → Get store path → Setup cache → Install deps → Build
+2. **版本要求**: 使用 `pnpm/action-setup@v4`（最新版本），不要使用 v2 或更早版本
+3. **手动缓存**: 必须手动配置 pnpm store 缓存，不能依赖 `setup-node` 的 `cache: 'pnpm'` 选项
+4. **run_install: false**: 防止 action-setup 自动运行安装，我们稍后手动执行
+
+**常见错误配置**:
+
+```yaml
+# ❌ 错误 1: 使用旧版本
+- name: Install pnpm
+  uses: pnpm/action-setup@v2  # 太旧了！
+
+# ❌ 错误 2: 依赖 setup-node 的缓存（不生效）
+- name: Setup Node
+  uses: actions/setup-node@v4
+  with:
+    node-version: '20'
+    cache: 'pnpm'  # 这个选项对 pnpm 不起作用！
+
+# ❌ 错误 3: 缺少手动缓存配置
+- name: Install pnpm
+  uses: pnpm/action-setup@v4
+  with:
+    version: 10.11.0
+# 缺少后续的 Get store path 和 Setup pnpm cache 步骤
+```
+
+---
 
 ### 2. Lint 检查失败
 

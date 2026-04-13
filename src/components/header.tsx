@@ -548,12 +548,6 @@ export const Header: React.FC = () => {
                     <a 
                         className="header-control-button player-btn"
                         href={prependHash(ROUTER.player)}
-                        onClick={() => {
-                            // 点击 Player 按钮时关闭播放列表
-                            window.dispatchEvent(new CustomEvent('file-list-panel-toggle', {
-                                detail: { show: false }
-                            }));
-                        }}
                         title={lang.header.player}
                     >
                         <PlaySVG />
