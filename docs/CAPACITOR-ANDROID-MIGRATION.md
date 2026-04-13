@@ -26,11 +26,13 @@ lrc-player/
 ├── Web 版本 (原有功能)
 │   ├── 文件选择: <input type="file" />
 │   ├── 播放列表: selected-files-panel (现有)
+│   ├── 状态管理: Zustand Stores (playerSettings, navigation, fileManager)
 │   └── 运行环境: 浏览器
 │
 └── Android 版本 (新增)
     ├── 文件选择: MediaStore API
     ├── 播放列表: MSselected-files-panel (新增)
+    ├── 状态管理: 共享 Zustand Stores (自动同步)
     └── 运行环境: Capacitor WebView
 ```
 

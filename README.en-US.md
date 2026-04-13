@@ -83,9 +83,22 @@ Thanks to Akari, the original project can be found at: https://github.com/magic-
 - 📥 Load lyrics from cloud
 - 🗂️ Gist management interface
 
+#### 8. Beta ST Player (player-soundtouch)
+- 🎵 Song transposition support
+- 🎤 Vocal removal (instrumental mode) - Uses phase cancellation to remove centered vocals
+- Technical limitations: Cannot adjust playback progress or seek to specific timestamps
+
+#### 9. File Manager ⭐New
+- 📂 Local audio file scanning and management
+- 🎶 Playlist management (add, remove, reorder)
+- 💾 IndexedDB persistent storage
+- 🔄 Cross-component state synchronization (Zustand Stores)
+- 📱 Web and Android dual-platform support
+
 ### 🛠️ Technical Features
 
 - **Frontend Architecture**: React 18 + TypeScript + Vite 6
+- **State Management**: Zustand - Lightweight global state management library ⭐New
 - **Audio Processing**: WaveSurfer.js waveform visualization
 - **Internationalization**: Three-language support (English, Simplified Chinese, Traditional Chinese)
 - **Data Processing**: @lrc-maker/lrc-parser lyrics parsing library
@@ -147,13 +160,13 @@ git clone https://github.com/GuestsZhen/lrc-player.git
 cd lrc-player
 
 # Install dependencies
-npm i
+pnpm install
 
 # Build
-npm run build
+pnpm build
 
 # Development mode
-npm start
+pnpm start
 ```
 
 ```

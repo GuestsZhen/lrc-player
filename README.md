@@ -76,9 +76,17 @@
 - 🎤 去人声（伴奏模式）- 使用相位抵消法去除居中人声，仅播放伴奏
 - 受技术限制，无法调整播放进度，指定时间点（seek）等
 
+#### 9. 文件管理 (File Manager) ⭐新增
+- 📂 本地音频文件扫描和管理
+- 🎶 播放列表管理（添加、删除、排序）
+- 💾 IndexedDB 持久化存储
+- 🔄 跨组件状态同步（Zustand Stores）
+- 📱 Web 和 Android 双端支持
+
 ### 🛠️ 技术特性
 
 - **前端架构**：React 18 + TypeScript + Vite 6
+- **状态管理**：Zustand - 轻量级全局状态管理库 ⭐新增
 - **音频处理**：WaveSurfer.js 波形可视化
 - **国际化**：三语言支持（英文、简体中文、繁体中文）
 - **数据处理**：@lrc-maker/lrc-parser 歌词解析库
@@ -140,13 +148,13 @@ git clone https://github.com/GuestsZhen/lrc-player.git
 cd lrc-player
 
 # 安装依赖
-npm i
+pnpm install
 
 # 构建
-npm run build
+pnpm build
 
 # 开发模式
-npm start
+pnpm start
 ```
 
 ## 📝 版本管理
@@ -155,13 +163,13 @@ npm start
 
 ```bash
 # 小修复（最常用）
-npm run version:patch      # 6.0.4 → 6.0.5
+pnpm version:patch      # 6.0.4 → 6.0.5
 
 # 新功能
-npm run version:minor      # 6.0.5 → 6.1.0
+pnpm version:minor      # 6.0.5 → 6.1.0
 
 # 重大变更
-npm run version:major      # 6.1.0 → 7.0.0
+pnpm version:major      # 6.1.0 → 7.0.0
 ```
 
 ### 更新 CHANGELOG

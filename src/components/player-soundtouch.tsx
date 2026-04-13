@@ -6,6 +6,7 @@ import { appContext } from "./app.context.js";
 import { Curser } from "./curser.js";
 import { PlaySVG, PauseSVG, SettingsSVG } from "./svg.js";
 import { simpleKeyDetector, type KeyDetectionResult } from "../utils/simple-key-detector.js";
+import { usePlayerSettings } from "../stores/playerSettings.js";
 
 // 存储当前加载的音频文件，用于调性检测
 let currentAudioFile: File | null = null;
@@ -19,31 +20,23 @@ export const PlayerSoundTouch: React.FC<IPlayerProps> = ({ state, dispatch }) =>
     const { currentIndex, lyric } = state;
     const { prefState } = useContext(appContext);
     
+    // 使用新的 Player Settings Store
+    const playerSettings = usePlayerSettings();
+    
     // UI 状态
     const [showTime, _setShowTime] = useState(false);
-    const [fontSize, setFontSize] = useState(() => {
-        return Number(sessionStorage.getItem("player-font-size")) || 1.3;
-    });
     const [textAlign, setTextAlign] = useState<'left' | 'center' | 'right'>('center');
-    const [backgroundColor, setBackgroundColor] = useState(() => {
-        const savedColor = sessionStorage.getItem('player-bg-color');
-        if (savedColor) return savedColor;
-        const themeMode = localStorage.getItem('preferences') 
-            ? JSON.parse(localStorage.getItem('preferences') || '{}').themeMode 
-            : 0;
-        return themeMode === 1 ? '#ededed' : '#2e2e2e';
-    });
-    const [lyricColor, setLyricColor] = useState(() => {
-        const savedColor = sessionStorage.getItem('player-lyric-color');
-        if (savedColor) return savedColor;
-        const themeMode = localStorage.getItem('preferences') 
-            ? JSON.parse(localStorage.getItem('preferences') || '{}').themeMode 
-            : 0;
-        return themeMode === 1 ? '#eeeeee' : '#ffffff';
-    });
-    const [subLyricOpacity, setSubLyricOpacity] = useState(() => {
-        return Number(sessionStorage.getItem('player-sub-opacity')) || 0.3;
-    });
+    
+    // === 从 Store 获取的值（兼容旧代码）===
+    const fontSize = playerSettings.fontSize;
+    const setFontSize = playerSettings.setFontSize;
+    const backgroundColor = playerSettings.bgColor;
+    const setBackgroundColor = playerSettings.setBgColor;
+    const lyricColor = playerSettings.lyricColor;
+    const setLyricColor = playerSettings.setLyricColor;
+    const subLyricOpacity = playerSettings.subOpacity;
+    const setSubLyricOpacity = playerSettings.setSubOpacity;
+    // ========================================
     
     // 播放控制状态
     const [isPlaying, setIsPlaying] = useState(false);
@@ -91,12 +84,6 @@ export const PlayerSoundTouch: React.FC<IPlayerProps> = ({ state, dispatch }) =>
         return null;
     };
 
-    // 持久化设置
-    useEffect(() => {
-        sessionStorage.setItem('player-bg-color', backgroundColor);
-        localStorage.setItem('player-bg-color', backgroundColor);
-    }, [backgroundColor]);
-    
     // 设置 html 元素背景色为用户选择的颜色（仅在 Player-SoundTouch 页面）
     useEffect(() => {
         const originalHtmlBgColor = document.documentElement.style.backgroundColor;
@@ -107,16 +94,6 @@ export const PlayerSoundTouch: React.FC<IPlayerProps> = ({ state, dispatch }) =>
             document.documentElement.style.backgroundColor = originalHtmlBgColor;
         };
     }, [backgroundColor]);
-    
-    useEffect(() => {
-        sessionStorage.setItem('player-lyric-color', lyricColor);
-        localStorage.setItem('player-lyric-color', lyricColor);
-    }, [lyricColor]);
-
-    useEffect(() => {
-        sessionStorage.setItem('player-sub-opacity', subLyricOpacity.toString());
-        localStorage.setItem('player-sub-opacity', subLyricOpacity.toString());
-    }, [subLyricOpacity]);
 
     useEffect(() => {
         sessionStorage.setItem("player-show-time", showTime.toString());
@@ -128,34 +105,15 @@ export const PlayerSoundTouch: React.FC<IPlayerProps> = ({ state, dispatch }) =>
 
     // 监听事件
     useEffect(() => {
-        const handleFontSizeChange = (event: CustomEvent<number>) => {
-            setFontSize(event.detail);
-        };
-        const handleColorChange = (event: CustomEvent<string>) => {
-            setLyricColor(event.detail);
-        };
-        const handleBgColorChange = (event: CustomEvent<string>) => {
-            setBackgroundColor(event.detail);
-        };
         const handleAlignChange = (event: CustomEvent<'left' | 'center' | 'right'>) => {
             setTextAlign(event.detail);
         };
-        const handleOpacityChange = (event: CustomEvent<number>) => {
-            setSubLyricOpacity(prev => Math.min(Math.max(prev + event.detail, 0.1), 1.0));
-        };
         
-        window.addEventListener('player-font-size-update' as any, handleFontSizeChange as any);
-        window.addEventListener('player-lyric-color-change' as any, handleColorChange as any);
-        window.addEventListener('player-bg-color-change' as any, handleBgColorChange as any);
+        // 注意：字体大小已由 usePlayerSettings Store 自动处理，无需手动监听
         window.addEventListener('player-text-align-change' as any, handleAlignChange as any);
-        window.addEventListener('player-sub-opacity-change' as any, handleOpacityChange as any);
         
         return () => {
-            window.removeEventListener('player-font-size-update' as any, handleFontSizeChange as any);
-            window.removeEventListener('player-lyric-color-change' as any, handleColorChange as any);
-            window.removeEventListener('player-bg-color-change' as any, handleBgColorChange as any);
             window.removeEventListener('player-text-align-change' as any, handleAlignChange as any);
-            window.removeEventListener('player-sub-opacity-change' as any, handleOpacityChange as any);
         };
     }, []);
 

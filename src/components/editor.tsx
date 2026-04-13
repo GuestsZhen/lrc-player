@@ -143,7 +143,6 @@ export const Eidtor: React.FC<{
         // Use textarea value directly to ensure we get the latest content
         const currentText = textarea.current?.value || '';
         localStorage.setItem(LSK.lyric, currentText);
-        console.log('[Editor] Saved lyric to localStorage:', currentText ? `${currentText.length} chars` : 'empty');
     }, []);
 
     return (

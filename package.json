@@ -48,7 +48,8 @@
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
         "soundtouchjs": "^0.3.0",
-        "wavesurfer.js": "^7.9.5"
+        "wavesurfer.js": "^7.9.5",
+        "zustand": "^5.0.12"
     },
     "devDependencies": {
         "@swc/core": "^1.11.29",

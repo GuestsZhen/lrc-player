@@ -2,10 +2,17 @@ import ROUTER from "#const/router.json" assert { type: "json" };
 import { useContext, useEffect, useState, useCallback } from "react";
 import { prependHash } from "../utils/router.js";
 import { appContext } from "./app.context.js";
+import { usePlayerSettings } from "../stores/playerSettings.js";
+import { useNavigation } from "../stores/navigation.js";
+import { PlayerSettingsPanel } from "./player-settings/PlayerSettingsPanel.js";
 import { PlaySVG, EditorSVG, FullscreenSVG, FullscreenExitSVG, TuneSVG, SynchronizerSVG, SettingsTSVG, PlaylistSVG, MusicKeySVG } from "./svg.js";
 
 export const Header: React.FC = () => {
     const { lang } = useContext(appContext);
+    
+    // 使用新的 Stores
+    const playerSettings = usePlayerSettings();
+    const navigation = useNavigation();
     
     // 判断当前是否在 Player 页面（不包括 player-soundtouch）
     const [isPlayerPage, setIsPlayerPage] = useState(() => {
@@ -61,45 +68,42 @@ export const Header: React.FC = () => {
     // 控制 Editor 菜单显示
     const [showEditorMenu, setShowEditorMenu] = useState(false);
     
-    // 全屏状态
-    const [isFullscreen, setIsFullscreen] = useState(false);
-    
-    // Player 设置菜单状态
-    const [showPlayerSettings, setShowPlayerSettings] = useState(false);
-    const [isHiding, setIsHiding] = useState(false);
-    
-    // 文件列表面板显示状态
+    // 文件列下面板显示状态
     const [_showFileListPanel, setShowFileListPanel] = useState(false);
-    
-    // Player 字体大小
-    const [playerFontSize, setPlayerFontSize] = useState(() => {
-        return Number(sessionStorage.getItem("player-font-size")) || 1.3;
-    });
-    
-    // Player 副行透明度
-    const [playerSubLyricOpacity, setPlayerSubLyricOpacity] = useState(() => {
-        return Number(sessionStorage.getItem('player-sub-opacity')) || 0.3;
-    });
-    
-    // Player 背景颜色
-    const [playerBgColor, setPlayerBgColor] = useState(() => {
-        const savedColor = sessionStorage.getItem('player-bg-color');
-        if (savedColor) return savedColor;
-        const themeMode = localStorage.getItem('preferences') 
-            ? JSON.parse(localStorage.getItem('preferences') || '{}').themeMode 
-            : 0;
-        return themeMode === 1 ? '#ededed' : '#2e2e2e';
-    });
-    
-    // Player 歌词颜色
-    const [playerLyricColor, setPlayerLyricColor] = useState(() => {
-        const savedColor = sessionStorage.getItem('player-lyric-color');
-        if (savedColor) return savedColor;
-        const themeMode = localStorage.getItem('preferences') 
-            ? JSON.parse(localStorage.getItem('preferences') || '{}').themeMode 
-            : 0;
-        return themeMode === 1 ? '#eeeeee' : '#ffffff';
-    });
+        
+    // === 从 Store 获取的值（兼容旧代码）===
+    const isFullscreen = navigation.isFullscreen;
+    const setIsFullscreen = navigation.setIsFullscreen;
+    const showPlayerSettings = navigation.showPlayerSettings;
+    const isHiding = navigation.isHiding;
+    const closePlayerSettingsMenu = navigation.closePlayerSettings;
+    const togglePlayerSettingsMenu = navigation.togglePlayerSettings;
+    const closeKeyDetectionMenu = navigation.closeKeyDetectionMenu;
+    const playerFontSize = playerSettings.fontSize;
+    const setPlayerFontSize = playerSettings.setFontSize;
+    const playerSubLyricOpacity = playerSettings.subOpacity;
+    const playerBgColor = playerSettings.bgColor;
+    const setPlayerBgColor = playerSettings.setBgColor;
+    const playerLyricColor = playerSettings.lyricColor;
+    const setPlayerLyricColor = playerSettings.setLyricColor;
+    // 兼容旧的事件系统
+    const setPlayerSubLyricOpacity = (updater: ((prev: number) => number) | number) => {
+        if (typeof updater === 'function') {
+            const newValue = updater(playerSettings.subOpacity);
+            playerSettings.setSubOpacity(newValue);
+        } else {
+            playerSettings.setSubOpacity(updater);
+        }
+    };
+    // ST 菜单相关（保留本地 state）
+    const [showStKeyMenu, setShowStKeyMenu] = useState(false);
+    const closeStKeyMenu = useCallback(() => {
+        // 使用 navigation 的 isHiding 状态
+        setTimeout(() => {
+            setShowStKeyMenu(false);
+        }, 300);
+    }, []);
+    // ========================================
     
     // 调性检测结果
     const [detectedKey, setDetectedKey] = useState<string>('');
@@ -109,7 +113,7 @@ export const Header: React.FC = () => {
     // ST (SoundTouch) 调性检测结果
     const [stDetectedKey, setStDetectedKey] = useState<string>('');
     const [isStDetectingKey, setIsStDetectingKey] = useState(false);
-    const [showStKeyMenu, setShowStKeyMenu] = useState(false);
+    // showStKeyMenu 已在兼容层中定义
     
     // ST 音高调节状态（半音数）
     const [stPitchSemitones, setStPitchSemitones] = useState(0);
@@ -225,33 +229,8 @@ export const Header: React.FC = () => {
         };
     }, []);
     
-    // 关闭 Player 设置菜单（带动画）
-    const closePlayerSettingsMenu = useCallback(() => {
-        setIsHiding(true);
-        setTimeout(() => {
-            setShowPlayerSettings(false);
-            setIsHiding(false);
-        }, 300);
-    }, []);
-    
-    // 关闭调性检测菜单（带动画）
-    const closeKeyDetectionMenu = useCallback(() => {
-        setIsHiding(true);
-        setTimeout(() => {
-            setShowKeyDetectionMenu(false);
-            setIsHiding(false);
-        }, 300);
-    }, []);
-    
-    // 切换 Player 设置菜单
-    const togglePlayerSettingsMenu = useCallback(() => {
-        if (showPlayerSettings && !isHiding) {
-            closePlayerSettingsMenu();
-        } else {
-            setShowPlayerSettings(true);
-            setIsHiding(false);
-        }
-    }, [showPlayerSettings, isHiding, closePlayerSettingsMenu]);
+    // 注意：closePlayerSettingsMenu, closeKeyDetectionMenu, togglePlayerSettingsMenu
+    // 已从 useNavigation Store 中获取
     
     // 监听打开设置菜单事件
     useEffect(() => {
@@ -263,53 +242,8 @@ export const Header: React.FC = () => {
         return () => window.removeEventListener('toggle-player-settings' as any, handleToggleSettings as any);
     }, [togglePlayerSettingsMenu]);
     
-    // 监听副行透明度变化事件（从 Player 组件）
-    useEffect(() => {
-        const handleOpacityChange = (event: CustomEvent<number>) => {
-            const delta = event.detail;
-            setPlayerSubLyricOpacity(prev => {
-                const newValue = Math.min(Math.max(prev + delta, 0.1), 1.0);
-                sessionStorage.setItem('player-sub-opacity', newValue.toString());
-                return newValue;
-            });
-        };
-        
-        window.addEventListener('player-sub-opacity-change' as any, handleOpacityChange as any);
-        return () => window.removeEventListener('player-sub-opacity-change' as any, handleOpacityChange as any);
-    }, []);
-    
-    // 监听字体大小变化事件（从 Player 组件）
-    useEffect(() => {
-        const handleFontSizeChange = (event: CustomEvent<number>) => {
-            const newSize = event.detail;
-            setPlayerFontSize(newSize);
-        };
-        
-        window.addEventListener('player-font-size-update' as any, handleFontSizeChange as any);
-        return () => window.removeEventListener('player-font-size-update' as any, handleFontSizeChange as any);
-    }, []);
-    
-    // 监听背景颜色变化事件
-    useEffect(() => {
-        const handleBgColorChange = (event: CustomEvent<string>) => {
-            const newColor = event.detail;
-            setPlayerBgColor(newColor);
-        };
-        
-        window.addEventListener('player-bg-color-change' as any, handleBgColorChange as any);
-        return () => window.removeEventListener('player-bg-color-change' as any, handleBgColorChange as any);
-    }, []);
-    
-    // 监听歌词颜色变化事件
-    useEffect(() => {
-        const handleLyricColorChange = (event: CustomEvent<string>) => {
-            const newColor = event.detail;
-            setPlayerLyricColor(newColor);
-        };
-        
-        window.addEventListener('player-lyric-color-change' as any, handleLyricColorChange as any);
-        return () => window.removeEventListener('player-lyric-color-change' as any, handleLyricColorChange as any);
-    }, []);
+    // 注意：字体大小、背景颜色、歌词颜色、副行透明度的变化
+    // 已由 usePlayerSettings Store 自动处理，无需手动监听事件
     
     // 监听调性检测完成事件
     useEffect(() => {
@@ -343,14 +277,7 @@ export const Header: React.FC = () => {
         };
     }, [showKeyDetectionMenu, isHiding]);
     
-    // 关闭 ST歌曲调整菜单（带动画）
-    const closeStKeyMenu = useCallback(() => {
-        setIsHiding(true);
-        setTimeout(() => {
-            setShowStKeyMenu(false);
-            setIsHiding(false);
-        }, 300);
-    }, []);
+    // 注意：closeStKeyMenu 已在兼容层中定义
     
     // 点击其他区域时关闭 ST歌曲调整菜单（带动画）
     useEffect(() => {
@@ -378,7 +305,6 @@ export const Header: React.FC = () => {
                 closeStKeyMenu();
             } else {
                 setShowStKeyMenu(true);
-                setIsHiding(false);
             }
         };
         
@@ -622,6 +548,12 @@ export const Header: React.FC = () => {
                     <a 
                         className="header-control-button player-btn"
                         href={prependHash(ROUTER.player)}
+                        onClick={() => {
+                            // 点击 Player 按钮时关闭播放列表
+                            window.dispatchEvent(new CustomEvent('file-list-panel-toggle', {
+                                detail: { show: false }
+                            }));
+                        }}
                         title={lang.header.player}
                     >
                         <PlaySVG />
@@ -653,127 +585,11 @@ export const Header: React.FC = () => {
                                 <SettingsTSVG />
                             </button>
                             {showPlayerSettings && (
-                                <div className={`player-settings-menu${isHiding ? ' menu-hiding' : ''}`}>
-                                    {/* 文字设定菜单 */}
-                                    <div className="player-settings-group">
-                                        <div className="player-settings-label">{lang.header.fontSize}</div>
-                                        <div className="player-settings-options">
-                                            <button 
-                                                className="player-setting-btn"
-                                                onClick={() => {
-                                                    const newSize = Math.min(playerFontSize + 0.1, 2.5);
-                                                    setPlayerFontSize(newSize);
-                                                    window.dispatchEvent(new CustomEvent('player-font-size-update', { detail: newSize }));
-                                                }}
-                                                title={lang.header.increaseFont}
-                                            >
-                                                A+
-                                            </button>
-                                            <button 
-                                                className="player-setting-btn"
-                                                disabled
-                                                title={lang.header.currentFontSize}
-                                                style={{ minWidth: '60px', cursor: 'default' }}
-                                            >
-                                                {(playerFontSize * 10).toFixed(0)}
-                                            </button>
-                                            <button 
-                                                className="player-setting-btn"
-                                                onClick={() => {
-                                                    const newSize = Math.max(playerFontSize - 0.1, 0.8);
-                                                    setPlayerFontSize(newSize);
-                                                    window.dispatchEvent(new CustomEvent('player-font-size-update', { detail: newSize }));
-                                                }}
-                                                title={lang.header.decreaseFont}
-                                            >
-                                                A-
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div className="player-settings-group">
-                                        <div className="player-settings-label">{lang.header.textAlign}</div>
-                                        <div className="player-settings-options">
-                                            <button 
-                                                className="player-setting-btn"
-                                                onClick={() => window.dispatchEvent(new CustomEvent('player-text-align-change', { detail: 'left' }))}
-                                                title={lang.header.alignLeft}
-                                            >
-                                                {lang.header.left}
-                                            </button>
-                                            <button 
-                                                className="player-setting-btn"
-                                                onClick={() => window.dispatchEvent(new CustomEvent('player-text-align-change', { detail: 'center' }))}
-                                                title={lang.header.alignCenter}
-                                            >
-                                                {lang.header.center}
-                                            </button>
-                                            <button 
-                                                className="player-setting-btn"
-                                                onClick={() => window.dispatchEvent(new CustomEvent('player-text-align-change', { detail: 'right' }))}
-                                                title={lang.header.alignRight}
-                                            >
-                                                {lang.header.right}
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div className="player-settings-group">
-                                        <div className="player-settings-label">{lang.header.bgColor}</div>
-                                        <div className="player-settings-color-picker">
-                                            <input
-                                                type="color"
-                                                value={playerBgColor}
-                                                onChange={(e) => window.dispatchEvent(new CustomEvent('player-bg-color-change', { detail: e.target.value }))}
-                                                className="player-color-input"
-                                                title={lang.header.selectBgColor}
-                                            />
-                                            <div className="player-color-preview" style={{ backgroundColor: playerBgColor }}>
-                                                {playerBgColor}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="player-settings-group">
-                                        <div className="player-settings-label">{lang.header.lyricColor}</div>
-                                        <div className="player-settings-color-picker">
-                                            <input
-                                                type="color"
-                                                value={playerLyricColor}
-                                                onChange={(e) => window.dispatchEvent(new CustomEvent('player-lyric-color-change', { detail: e.target.value }))}
-                                                className="player-color-input"
-                                                title={lang.header.selectLyricColor}
-                                            />
-                                            <div className="player-color-preview" style={{ backgroundColor: playerLyricColor, color: '#000000' }}>
-                                                {playerLyricColor}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="player-settings-group">
-                                        <div className="player-settings-label">{lang.header.subOpacity}</div>
-                                        <div className="player-settings-options">
-                                            <button 
-                                                className="player-setting-btn"
-                                                onClick={() => window.dispatchEvent(new CustomEvent('player-sub-opacity-change', { detail: -0.1 }))}
-                                                title={lang.header.decreaseOpacity}
-                                            >
-                                                -
-                                            </button>
-                                            <button 
-                                                className="player-setting-btn"
-                                                disabled
-                                                title={lang.header.currentOpacity}
-                                                style={{ minWidth: '60px', cursor: 'default' }}
-                                            >
-                                                {Math.round(playerSubLyricOpacity * 100)}%
-                                            </button>
-                                            <button 
-                                                className="player-setting-btn"
-                                                onClick={() => window.dispatchEvent(new CustomEvent('player-sub-opacity-change', { detail: 0.1 }))}
-                                                title={lang.header.increaseOpacity}
-                                            >
-                                                +
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
+                                <PlayerSettingsPanel 
+                                    onClose={closePlayerSettingsMenu}
+                                    isHiding={isHiding}
+                                    lang={lang}
+                                />
                             )}
                         </div>
                     )}

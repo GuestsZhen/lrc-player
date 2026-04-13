@@ -22,6 +22,7 @@
 │                  │                   │
 │ • 文件选择器     │ • MediaStore API  │
 │ • selected-files │ • MSselected-file │
+│ • Zustand Stores │ • Zustand Stores  │
 │ • 浏览器运行     │ • Capacitor WebView│
 └──────────────────┴──────────────────┘
          ↓                ↓
@@ -53,6 +54,7 @@
 - 去人声功能
 - 歌词编辑和同步
 - 偏好设置保存
+- **状态管理**：Zustand Stores 自动持久化
 
 ❌ **无需网络：**
 - 所有代码打包在 APK 中

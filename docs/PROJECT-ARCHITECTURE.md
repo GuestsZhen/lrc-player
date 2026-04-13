@@ -68,6 +68,13 @@
 - 🎵 实现歌曲转调
 - 受技术限制，无法调整播放进度，指定时间点（seek）等
 
+### 9. 文件管理 (File Manager) ⭐新增
+- 📂 本地音频文件扫描和管理
+- 🎶 播放列表管理（添加、删除、排序）
+- 💾 IndexedDB 持久化存储
+- 🔄 跨组件状态同步
+- 📱 Web 和 Android 双端支持
+
 ---
 
 ## 📁 项目结构详解
@@ -188,6 +195,14 @@
 | `gistapi.ts` | GitHub Gist API 封装，处理云端同步 |
 | `router.ts` | 前端路由管理，页面导航 |
 | `pubsub.ts` | 发布订阅模式实现，组件间通信 |
+
+**状态管理 (Zustand Stores)：** ⭐新增
+
+| Store 文件 | 功能说明 |
+|-----------|----------|
+| `stores/playerSettings.ts` | Player 设置管理（字体大小、背景色、歌词颜色、副行透明度） |
+| `stores/navigation.ts` | 导航状态管理（全屏、Player 设置菜单、调性检测菜单） |
+| `stores/fileManager.ts` | 文件管理（播放列表、当前播放文件、搜索过滤） |
 
 **其他工具：**
 
@@ -338,6 +353,9 @@ Web Worker 用于在后台线程执行耗时任务，避免阻塞主线程。
 - **TypeScript 5.8** - 类型安全的 JavaScript 超集
 - **Vite 6** - 现代化的前端构建工具
 
+### 状态管理 ⭐新增
+- **Zustand** - 轻量级、高性能的全局状态管理库
+
 ### 音频处理
 - **WaveSurfer.js 7.9** - 音频波形可视化和播放
 - **@wavesurfer/react** - WaveSurfer 的 React 封装
@@ -487,6 +505,11 @@ App (根组件)
 │   ├── useLang (语言)
 │   └── useKeyBindings (快捷键)
 │
+├── Zustand Stores ⭐新增
+│   ├── usePlayerSettings (Player 设置：字体、背景色、歌词颜色、透明度)
+│   ├── useNavigation (导航状态：全屏、菜单显示)
+│   └── useFileManager (文件管理：播放列表、当前文件)
+│
 ├── Header (导航栏)
 │   └── 路由切换按钮
 │
@@ -531,10 +554,12 @@ Worker 层：
 - 组件职责单一，易于维护和测试
 - 使用懒加载优化首屏性能
 
-### 2. 状态管理
-- 使用 React Context API 进行全局状态管理
-- 自定义 Hooks 封装业务逻辑
-- PubSub 模式实现组件间通信
+### 2. 状态管理 ⭐重构
+- **Zustand Store**：轻量级全局状态管理（playerSettings、navigation、fileManager）
+- **React Context API**：应用级状态共享（语言、偏好设置）
+- **自定义 Hooks**：封装业务逻辑（useLrc、usePref、useLang）
+- **PubSub 模式**：组件间通信和事件广播
+- **自动持久化**：Store 自动同步到 sessionStorage/localStorage
 
 ### 3. 模块化组织
 - 按功能划分目录（components、hooks、utils）
@@ -713,6 +738,6 @@ docker run -d -p 8080:80 lrc-player
 
 ---
 
-**文档生成时间**: 2026-04-08  
+**文档生成时间**: 2026-04-13  
 **项目版本**: 6.0.5  
-**文档版本**: 1.0.0
+**文档版本**: 2.0.0 (添加 Zustand Store 架构)

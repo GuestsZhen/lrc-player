@@ -293,8 +293,6 @@ export const Tune: React.FC<{
             tempTextarea.select();
             document.execCommand('copy');
             document.body.removeChild(tempTextarea);
-        } else {
-            console.warn('[DEBUG] transposedText 为空');
         }
     }, [transposedText]);
 
@@ -322,8 +320,6 @@ export const Tune: React.FC<{
             a.download = 'transposed.txt';
             a.click();
             URL.revokeObjectURL(url);
-        } else {
-            console.warn('[DEBUG] transposedText 为空');
         }
     }, [transposedText]);
 

@@ -13,6 +13,8 @@ import { AkariNotFound, AkariOdangoLoading } from "./svg.img.js";
 import { FolderSVG, DeleteSVG } from "./svg.js";
 import { playlistManager } from "../utils/playlist-manager.js";
 import { simpleKeyDetector } from "../utils/simple-key-detector.js";
+import { useFileManager } from "../stores/fileManager.js";
+import { FileListPanel } from "./file-manager/FileListPanel.js";
 
 const LazyEditor = lazy(async () =>
     import("./editor.js").then(({ Eidtor }) => {
@@ -79,22 +81,36 @@ export const Content: React.FC = () => {
     const self = useRef(Symbol(Content.name));
 
     const { prefState, trimOptions, lang } = useContext(appContext, ChangBits.prefState);
+    
+    // 使用新的 File Manager Store
+    const fileManager = useFileManager();
+    
+    // === 从 Store 获取的值（兼容旧代码）===
+    const selectedFiles = fileManager.selectedFiles;
+    const setSelectedFiles = fileManager.setSelectedFiles;
+    const searchQuery = fileManager.searchQuery;
+    const setSearchQuery = fileManager.setSearchQuery;
+    const showFileListPanel = fileManager.showFileListPanel;
+    const setShowFileListPanel = fileManager.setShowFileListPanel;
+    const currentPlayingFile = fileManager.currentPlayingFile;
+    const setCurrentPlayingFile = fileManager.setCurrentPlayingFile;
+    const fileObjects = fileManager.fileObjects;
+    const setFileObjects = fileManager.setFileObjects;
+    // ========================================
 
     const [path, setPath] = useState(location.hash);
     const [previousPath, setPreviousPath] = useState(location.hash);
     const [isTransitioning, setIsTransitioning] = useState(false);
-    const [selectedFiles, setSelectedFiles] = useState<string[]>([]); // 所有文件（后台保留）
-    const [searchQuery, setSearchQuery] = useState<string>(''); // 搜索关键词
-    const [showFileListPanel, setShowFileListPanel] = useState(false); // 文件列表面板显示状态
     const [_audioSrc, _setAudioSrc] = useState<string>(''); // 当前音频源
-    const [currentPlayingFile, setCurrentPlayingFile] = useState<string>(''); // 当前播放的文件名
-    const [fileObjects, setFileObjects] = useState<Map<string, File>>(new Map()); // 存储文件对象
     const [_currentTrackIndex, setCurrentTrackIndex] = useState<number>(-1); // 当前播放索引
     
     useEffect(() => {
         function onHashchange() {
-            // 如果有前一个页面，开始过渡动画
+            // 路由变化时关闭播放列表
             if (previousPath !== location.hash) {
+                // 直接通过 Store 关闭播放列表
+                fileManager.setShowFileListPanel(false);
+                
                 setIsTransitioning(true);
                 setPreviousPath(location.hash);
                 
@@ -332,12 +348,12 @@ export const Content: React.FC = () => {
 
     // 上一首歌 - 暂时禁用
     const _onPreviousTrack = useCallback(() => {
-        console.log('上一曲功能已禁用');
+        // TODO: 实现上一曲功能
     }, []);
 
     // 下一首歌 - 暂时禁用
     const _onNextTrack = useCallback((_mode?: number) => {
-        console.log('下一曲功能已禁用');
+        // TODO: 实现下一曲功能
     }, []);
 
     // 调性检测函数（使用轻量级实现）
@@ -601,110 +617,12 @@ export const Content: React.FC = () => {
 
     return (
         <main className={`app-main${isTransitioning ? ' page-transition-out' : ' page-transition-in'}`}>
-            {/* 文件列表面板 */}
+            {/* 文件列下面板 - 使用重构后的组件 */}
             {showFileListPanel && (
-                <div className="selected-files-panel">
-                    <div className="selected-files-header">
-                        <span>{lang.playlist?.title || '文件列表'}</span>
-                        <div className="header-actions">
-                            {selectedFiles.length > 0 && (
-                                <button 
-                                    className="clear-files-action-btn"
-                                    onClick={handleClearFiles}
-                                    title={lang.playlist?.clearPlaylist || '清除文件列表'}
-                                >
-                                    <DeleteSVG />
-                                </button>
-                            )}
-                            <button 
-                                className="close-files-btn"
-                                onClick={() => setShowFileListPanel(false)}
-                                title={lang.playlist?.close || '关闭'}
-                            >
-                                ✕
-                            </button>
-                        </div>
-                    </div>
-                    
-                    {/* 音频文件列表 */}
-                    {audioFiles.length > 0 ? (
-                        <>
-                            <ul className="selected-files-list">
-                                {filteredAudioFiles.map((fileName, index) => {
-                                    const displayName = removeExtension(fileName);
-                                    const isPlaying = fileName === currentPlayingFile;
-                                    
-                                    return (
-                                        <li 
-                                            key={index} 
-                                            className={`selected-file-item ${isPlaying ? 'playing' : ''}`}
-                                        >
-                                            <div 
-                                                className="file-name-wrapper"
-                                                onClick={() => handlePlayFile(fileName)}
-                                                style={{ flex: 1, cursor: 'pointer' }}
-                                            >
-                                                <span 
-                                                    className="file-name file-name-marquee" 
-                                                    title={displayName}
-                                                >
-                                                    {displayName}
-                                                </span>
-                                            </div>
-                                            <button
-                                                className="remove-file-btn"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleRemoveFile(fileName);
-                                                }}
-                                                title="删除此歌曲"
-                                            >
-                                                ✕
-                                            </button>
-                                        </li>
-                                    );
-                                })}
-                            </ul>
-                            
-                            {/* 底部搜索框 */}
-                            <div className="file-search-box">
-                                <button
-                                    className="file-search-open-btn"
-                                    onClick={handleOpenFileFromPanel}
-                                    title="打开文件"
-                                >
-                                    <FolderSVG />
-                                </button>
-                                <input
-                                    type="text"
-                                    className="file-search-input"
-                                    placeholder={lang.playlist?.searchPlaceholder || '搜索歌曲...'}
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                />
-                                {searchQuery && (
-                                    <button
-                                        className="file-search-clear"
-                                        onClick={() => setSearchQuery('')}
-                                        title={lang.playlist?.clearSearch || '清除搜索'}
-                                    >
-                                        ✕
-                                    </button>
-                                )}
-                            </div>
-                        </>
-                    ) : (
-                        <div className="no-audio-files">
-                            <p>{lang.playlist?.noTracks || '暂无音频文件'}</p>
-                            <button 
-                                className="open-file-from-panel-btn"
-                                onClick={handleOpenFileFromPanel}
-                            >
-                                {lang.playlist?.openFile || '打开文件'}
-                            </button>
-                        </div>
-                    )}
-                </div>
+                <FileListPanel 
+                    onClose={() => setShowFileListPanel(false)}
+                    lang={lang}
+                />
             )}
             
             <Suspense fallback={<AkariOdangoLoading />}>{content}</Suspense>

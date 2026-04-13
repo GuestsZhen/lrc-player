@@ -159,7 +159,7 @@ const RateSlider: React.FC<{ lang: Language }> = ({ lang }) => {
     const [isHiding, setIsHiding] = useState(false); // 淡出动画状态
     const menuRef = useRef<HTMLDivElement>(null);
 
-    const [playbackRate, setPlaybackRate] = useState(audioRef.playbackRate);
+    const [playbackRate, setPlaybackRate] = useState(audioRef.playbackRate || 1);
 
     // 点击其他区域时关闭菜单（带动画）
     useEffect(() => {
@@ -212,7 +212,9 @@ const RateSlider: React.FC<{ lang: Language }> = ({ lang }) => {
     }, [playbackRate]);
 
     const playbackRateSliderValue = useMemo(() => {
-        return Math.log(playbackRate);
+        // 防止 NaN 或无效值
+        const rate = playbackRate || 1;
+        return Math.log(rate);
     }, [playbackRate]);
 
     const onPlaybackRateChange = useCallback((ev: React.ChangeEvent<HTMLInputElement>) => {

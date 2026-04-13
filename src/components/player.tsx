@@ -5,6 +5,7 @@ import { audioRef, currentTimePubSub } from "../utils/audiomodule.js";
 import { appContext } from "./app.context.js";
 import { Curser } from "./curser.js";
 import { IOSHint } from "./ios-hint.js";
+import { usePlayerSettings } from "../stores/playerSettings.js";
 
 // 获取对比色（根据背景亮度决定返回黑色或白色）
 // const _getContrastColor = (hexColor: string): string => {
@@ -26,13 +27,11 @@ export const Player: React.FC<IPlayerProps> = ({ state, dispatch }) => {
     const { currentIndex, lyric } = state;
     const { prefState } = useContext(appContext);
     
+    // 使用新的 Player Settings Store
+    const playerSettings = usePlayerSettings();
+    
     // 控制是否显示时间轴（默认隐藏）
     const [showTime, _setShowTime] = useState(false);
-
-    // 控制字体大小
-    const [fontSize, setFontSize] = useState(() => {
-        return Number(sessionStorage.getItem("player-font-size")) || 1.3;
-    });
 
     // 控制对齐方式
     const [textAlign, setTextAlign] = useState<'left' | 'center' | 'right'>('center');
@@ -42,61 +41,17 @@ export const Player: React.FC<IPlayerProps> = ({ state, dispatch }) => {
     
     // 控制 iOS 提示显示
     const [showIOSHint, setShowIOSHint] = useState(false);
-
-    // 控制背景颜色
-    const [backgroundColor, setBackgroundColor] = useState(() => {
-        const savedColor = sessionStorage.getItem('player-bg-color');
-        if (savedColor) {
-            return savedColor;
-        }
-        // 根据主题模式设置默认颜色
-        const themeMode = localStorage.getItem('preferences') ? JSON.parse(localStorage.getItem('preferences') || '{}').themeMode : 0;
-        // ThemeMode: 0=auto, 1=light, 2=dark
-        if (themeMode === 1) { // 亮色模式
-            return '#ededed';
-        } else {
-            return '#2e2e2e'; // 暗色模式或自动模式默认深色
-        }
-    });
-
-    // 控制歌词颜色
-    const [lyricColor, setLyricColor] = useState(() => {
-        const savedColor = sessionStorage.getItem('player-lyric-color');
-        if (savedColor) {
-            return savedColor;
-        }
-        // 根据主题模式设置默认颜色
-        const themeMode = localStorage.getItem('preferences') ? JSON.parse(localStorage.getItem('preferences') || '{}').themeMode : 0;
-        // ThemeMode: 0=auto, 1=light, 2=dark
-        if (themeMode === 1) { // 亮色模式
-            return '#eeeeee';
-        } else {
-            return '#ffffff'; // 暗色模式或自动模式默认白色
-        }
-    });
     
-    // 持久化保存背景颜色
-    useEffect(() => {
-        sessionStorage.setItem('player-bg-color', backgroundColor);
-        localStorage.setItem('player-bg-color', backgroundColor); // 保存到 localStorage 持久化
-    }, [backgroundColor]);
-    
-    // 持久化保存歌词颜色
-    useEffect(() => {
-        sessionStorage.setItem('player-lyric-color', lyricColor);
-        localStorage.setItem('player-lyric-color', lyricColor); // 保存到 localStorage 持久化
-    }, [lyricColor]);
-
-    // 控制第二行歌词透明度
-    const [subLyricOpacity, setSubLyricOpacity] = useState(() => {
-        return Number(sessionStorage.getItem('player-sub-opacity')) || 0.3;
-    });
-    
-    // 持久化保存副文本透明度
-    useEffect(() => {
-        sessionStorage.setItem('player-sub-opacity', subLyricOpacity.toString());
-        localStorage.setItem('player-sub-opacity', subLyricOpacity.toString()); // 保存到 localStorage 持久化
-    }, [subLyricOpacity]);
+    // === 从 Store 获取的值（兼容旧代码）===
+    const fontSize = playerSettings.fontSize;
+    const setFontSize = playerSettings.setFontSize;
+    const backgroundColor = playerSettings.bgColor;
+    const setBackgroundColor = playerSettings.setBgColor;
+    const lyricColor = playerSettings.lyricColor;
+    const setLyricColor = playerSettings.setLyricColor;
+    const subLyricOpacity = playerSettings.subOpacity;
+    const setSubLyricOpacity = playerSettings.setSubOpacity;
+    // ========================================
 
     useEffect(() => {
         sessionStorage.setItem("player-show-time", showTime.toString());
@@ -148,38 +103,8 @@ export const Player: React.FC<IPlayerProps> = ({ state, dispatch }) => {
         };
     }, []);
 
-    // 监听字体大小变化事件（从 Header 组件）
-    useEffect(() => {
-        const handleFontSizeChange = (event: CustomEvent<number>) => {
-            const newSize = event.detail;
-            setFontSize(newSize);
-        };
-        
-        window.addEventListener('player-font-size-update' as any, handleFontSizeChange as any);
-        return () => window.removeEventListener('player-font-size-update' as any, handleFontSizeChange as any);
-    }, []);
-
-    // 监听歌词颜色变化事件（从 Header 组件）
-    useEffect(() => {
-        const handleColorChange = (event: CustomEvent<string>) => {
-            const color = event.detail;
-            setLyricColor(color);
-        };
-        
-        window.addEventListener('player-lyric-color-change' as any, handleColorChange as any);
-        return () => window.removeEventListener('player-lyric-color-change' as any, handleColorChange as any);
-    }, []);
-    
-    // 监听背景颜色变化事件（从 Header 组件）
-    useEffect(() => {
-        const handleBgColorChange = (event: CustomEvent<string>) => {
-            const color = event.detail;
-            setBackgroundColor(color);
-        };
-        
-        window.addEventListener('player-bg-color-change' as any, handleBgColorChange as any);
-        return () => window.removeEventListener('player-bg-color-change' as any, handleBgColorChange as any);
-    }, []);
+    // 注意：字体大小、背景颜色、歌词颜色、副行透明度的变化
+    // 已由 usePlayerSettings Store 自动处理，无需手动监听事件
     
     // 监听对齐方式变化事件（从 Header 组件）
     useEffect(() => {
@@ -196,12 +121,13 @@ export const Player: React.FC<IPlayerProps> = ({ state, dispatch }) => {
     useEffect(() => {
         const handleOpacityChange = (event: CustomEvent<number>) => {
             const delta = event.detail;
-            setSubLyricOpacity(prev => Math.min(Math.max(prev + delta, 0.1), 1.0));
+            const newValue = Math.min(Math.max(playerSettings.subOpacity + delta, 0.1), 1.0);
+            playerSettings.setSubOpacity(newValue);
         };
         
         window.addEventListener('player-sub-opacity-change' as any, handleOpacityChange as any);
         return () => window.removeEventListener('player-sub-opacity-change' as any, handleOpacityChange as any);
-    }, []);
+    }, [playerSettings]);
     
 
 
