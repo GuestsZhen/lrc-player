@@ -13,7 +13,7 @@ export const RouteTransition: React.FC<RouteTransitionProps> = ({
   children, 
   previousPath 
 }) => {
-  const [currentPath, setCurrentPath] = useState(location.hash);
+  const [_currentPath, setCurrentPath] = useState(location.hash);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
   useEffect(() => {

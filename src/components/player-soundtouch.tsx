@@ -440,7 +440,7 @@ export const PlayerSoundTouch: React.FC<IPlayerProps> = ({ state, dispatch }) =>
     };
 
     // 根据检测到的调和半音偏移计算当前调
-    const getCurrentKey = (): string => {
+    const _getCurrentKey = (): string => {
         if (!detectedKey) {
             // 如果没有检测到调，显示半音数
             return pitchSemitones > 0 ? `+${pitchSemitones}` : pitchSemitones.toString();

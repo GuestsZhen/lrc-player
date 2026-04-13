@@ -10,7 +10,6 @@ import { AudioActionType, audioRef, audioStatePubSub } from "../utils/audiomodul
 
 import { appContext, ChangBits } from "./app.context.js";
 import { AkariNotFound, AkariOdangoLoading } from "./svg.img.js";
-import { FolderSVG, DeleteSVG } from "./svg.js";
 import { playlistManager } from "../utils/playlist-manager.js";
 import { simpleKeyDetector } from "../utils/simple-key-detector.js";
 import { useFileManager } from "../stores/fileManager.js";
@@ -69,12 +68,6 @@ const isAudioFile = (fileName: string): boolean => {
     const audioExtensions = ['.mp3', '.wav', '.flac', '.aac', '.ogg', '.m4a', '.wma', '.ape', '.opus'];
     const lowerName = fileName.toLowerCase();
     return audioExtensions.some(ext => lowerName.endsWith(ext));
-};
-
-// 移除文件扩展名
-const removeExtension = (fileName: string): string => {
-    const lastDotIndex = fileName.lastIndexOf('.');
-    return lastDotIndex > 0 ? fileName.substring(0, lastDotIndex) : fileName;
 };
 
 export const Content: React.FC = () => {

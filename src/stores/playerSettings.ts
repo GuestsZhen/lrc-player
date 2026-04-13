@@ -64,7 +64,7 @@ export const usePlayerSettings = create<PlayerSettingsState>((set) => ({
   lyricColor: sessionStorage.getItem('player-lyric-color') || getDefaultLyricColor(),
   subOpacity: Number(sessionStorage.getItem('player-sub-opacity')) || 0.3,
   
-  setFontSize: (size) => set((state) => {
+  setFontSize: (size) => set(() => {
     const newSize = Math.min(Math.max(size, 0.8), 2.5);
     sessionStorage.setItem("player-font-size", String(newSize));
     // 通知其他组件
