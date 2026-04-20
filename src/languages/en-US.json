@@ -48,6 +48,7 @@
         "loadAudio": "load audio",
         "play": "play",
         "pause": "pause",
+        "loading": "Loading audio...",
         "replay5s": "replay 5s",
         "forward5s": "forward 5s",
         "resetRate": "reset playback rate",
@@ -57,7 +58,14 @@
             "audio network error",
             "audio decoding error",
             "audio not supported"
-        ]
+        ],
+        "backgroundEnabled": "Background playback enabled",
+        "backgroundDisabled": "Switched to normal mode",
+        "backgroundFailed": "Failed to enable background playback",
+        "enableBackground": "Enable background playback",
+        "disableBackground": "Disable background playback",
+        "backgroundOn": "Background",
+        "backgroundOff": "Normal"
     },
     "loadAudio": {
         "file": "File",
@@ -246,6 +254,31 @@
         "openFile": "Open File",
         "searchPlaceholder": "Search songs...",
         "clearSearch": "Clear Search"
+    },
+    "msPlaylist": {
+        "title": "Playlist",
+        "searchPlaceholder": "Search songs...",
+        "clearSearch": "Clear Search",
+        "authorize": "Authorize",
+        "addFolder": "Add Folder",
+        "rescan": "Rescan",
+        "scanning": "Scanning...",
+        "addFolderFirst": "Please add folder first",
+        "rescanSelectedFolders": "Rescan selected folders",
+        "noAudioFiles": "No audio files found",
+        "authThenAddFolder": "Please click \"Authorize\" button, then \"Add Folder\"",
+        "tracksCount": "tracks",
+        "totalTracks": "Total {count} tracks",
+        "unknownFolder": "Unknown Folder",
+        "unknownFile": "Unknown File",
+        "confirmRemoveFolder": "Are you sure to remove this folder?",
+        "confirmRemoveFolderWithName": "Are you sure to remove folder \"{name}\"?",
+        "confirmRemoveTrack": "Are you sure to remove song \"{name}\"?",
+        "authSuccess": "Authorization successful!",
+        "authFailed": "Authorization failed, please grant storage permission in system settings manually",
+        "scanCompleted": "Scan completed! Found {count} tracks",
+        "scanFailed": "Scan failed, please check permissions",
+        "noFilesFound": "No audio files found\n\nPlease check:\n1. Storage permission granted\n2. Audio files exist in Music folder"
     },
     "tune": {
         "title": "Movable-Do Transposition",

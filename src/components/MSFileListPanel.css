@@ -1,0 +1,318 @@
+.ms-selected-files-panel {
+  position: fixed;
+  top: 60px; /* ✅ 向下偏移，避免与顶部按钮重叠 */
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.95);
+  z-index: 10001; /* ✅ 提高到 10001，确保在所有元素之上（header-controls-wrapper 是 10000） */
+  display: flex;
+  flex-direction: column;
+  color: #eeeeee;
+  animation: settings-fade-in 0.3s ease-out;
+}
+
+/* 面板淡出动画 - 用于关闭时 */
+.ms-selected-files-panel.menu-hiding {
+  animation: settings-fade-out 0.3s ease-in forwards;
+}
+
+@keyframes settings-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes settings-fade-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: #2a2a2a;
+  border-bottom: 1px solid #404040;
+  gap: 8px;
+}
+
+.close-files-btn {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 5px 10px;
+  flex: 0 0 auto;
+}
+
+.close-files-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* 亮色模式 */
+[data-theme="light"] .close-files-btn {
+  color: #1c1c1c;
+}
+
+[data-theme="light"] .close-files-btn:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.folder-scanner-section {
+  margin-top: 10px;
+  padding: 10px;
+}
+
+.folder-scanner-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+
+.scanner-btn {
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1.35rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.scanner-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.scanner-btn:disabled {
+  background: rgba(255, 255, 255, 0.05);
+  color: #999;
+  cursor: not-allowed;
+}
+
+.folders-view {
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.selected-files-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.selected-file-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+  gap: 8px;
+}
+
+.selected-file-item:last-child {
+  border-bottom: none;
+}
+
+.selected-file-item:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* 亮色模式下列表项悬停颜色 */
+[data-theme="light"] .selected-file-item:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* 正在播放的文件 */
+.selected-file-item.playing {
+  background-color: transparent;
+  color: #ffffff;
+  font-weight: bold;
+  font-size: 1.5rem;
+  border-left: 3px solid rgba(255, 255, 255, 0.3);
+}
+
+/* 亮色模式下播放时样式 */
+[data-theme="light"] .selected-file-item.playing {
+  color: #1c1c1c;
+  font-weight: bold;
+  font-size: 1.5rem;
+}
+
+.file-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 1.2rem;
+  color: #eeeeee;
+  display: block;
+  min-width: 0;
+  transition: all 0.3s ease;
+}
+
+/* 文件名列滚动动画容器 */
+.file-name-wrapper {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+/* 滚动动画 */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.file-name-marquee {
+  display: inline-block;
+  animation: marquee 15s linear infinite;
+  animation-play-state: paused;
+}
+
+.selected-file-item:hover .file-name-marquee {
+  animation-play-state: running;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #999;
+}
+
+.empty-state p {
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+}
+
+.empty-state .hint {
+  font-size: 0.9rem;
+}
+
+.panel-footer {
+  padding: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+  color: #999;
+  font-size: 0.85rem;
+}
+
+/* ✅ 头部搜索框样式 */
+.ms-search-box-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.ms-search-input-header {
+  padding: 4px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #eeeeee;
+  font-size: 1.35rem;
+  outline: none;
+  width: 100%;
+  max-width: 200px;
+  transition: all 0.2s ease;
+}
+
+.ms-search-input-header::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.ms-search-input-header:focus {
+  border-color: var(--theme-color);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* 亮色模式下搜索框样式 */
+[data-theme="light"] .ms-search-input-header {
+  border-color: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.05);
+  color: #1c1c1c;
+}
+
+[data-theme="light"] .ms-search-input-header::placeholder {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .ms-search-input-header:focus {
+  border-color: var(--theme-color);
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.ms-search-clear-header {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 3px;
+  opacity: 0.7;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.ms-search-clear-header:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  opacity: 1;
+}
+
+/* 亮色模式下清除按钮 */
+[data-theme="light"] .ms-search-clear-header {
+  color: #1c1c1c;
+}
+
+[data-theme="light"] .ms-search-clear-header:hover {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+/* 滚动条样式 */
+.folders-view::-webkit-scrollbar,
+.selected-files-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.folders-view::-webkit-scrollbar-track,
+.selected-files-list::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+.folders-view::-webkit-scrollbar-thumb,
+.selected-files-list::-webkit-scrollbar-thumb {
+  background: #404040;
+  border-radius: 4px;
+}
+
+.folders-view::-webkit-scrollbar-thumb:hover,
+.selected-files-list::-webkit-scrollbar-thumb:hover {
+  background: #505050;
+}

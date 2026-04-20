@@ -49,7 +49,6 @@ class SimpleKeyDetector {
             
             return result;
         } catch (error) {
-            console.error('[SimpleKeyDetector] Detection failed:', error);
             throw error;
         }
     }
@@ -203,7 +202,19 @@ class SimpleKeyDetector {
         
         const keyName = NOTE_NAMES[bestKey];
         const scaleName = bestScale === 'major' ? '大调' : '小调';
-        const fullKey = `${keyName} ${scaleName}`;
+        
+        // ✅ 如果检测到小调，转换为关系大调显示
+        let displayKeyName = keyName;
+        let displayScaleName = scaleName;
+        
+        if (bestScale === 'minor') {
+            // 小调的关系大调 = 小调主音 + 3 个半音
+            const relativeMajorIndex = (bestKey + 3) % 12;
+            displayKeyName = NOTE_NAMES[relativeMajorIndex];
+            displayScaleName = '大调';
+        }
+        
+        const fullKey = `${displayKeyName} ${displayScaleName}`;
         
         // 计算置信度（简化）
         const confidence = Math.min(1, Math.max(0, (bestScore + 1) / 2));

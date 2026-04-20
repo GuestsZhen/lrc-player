@@ -1,6 +1,7 @@
-import React from 'react';
-import { useFileManager } from '../../stores/fileManager.js';
-import { FolderSVG, DeleteSVG } from '../svg.js';
+import React, { useRef, useEffect, useCallback } from 'react';
+import { useFileManager } from '../stores/fileManager.js';
+import { FolderSVG, DeleteSVG } from './svg.js';
+import './FileListPanel.css';
 
 interface FileListPanelProps {
   onClose: () => void;
@@ -12,6 +13,9 @@ interface FileListPanelProps {
  * 显示所有音频文件，支持搜索、播放、删除等操作
  */
 export const FileListPanel: React.FC<FileListPanelProps> = ({ onClose, lang }) => {
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [isHiding, setIsHiding] = React.useState(false);
+  
   const {
     selectedFiles,
     currentPlayingFile,
@@ -21,6 +25,37 @@ export const FileListPanel: React.FC<FileListPanelProps> = ({ onClose, lang }) =
     removeFile,
     clearAllFiles,
   } = useFileManager();
+  
+  // ✅ 点击面板外部区域时关闭面板（带动画）
+  useEffect(() => {
+    if (isHiding) {
+      return;
+    }
+    
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      
+      // 如果点击的不是面板区域，关闭面板
+      if (panelRef.current && !panelRef.current.contains(target)) {
+        closePanel();
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isHiding]);
+  
+  // 关闭面板（带动画）
+  const closePanel = useCallback(() => {
+    setIsHiding(true);
+    // 等待淡出动画完成后关闭
+    setTimeout(() => {
+      onClose();
+    }, 300); // 与 CSS 动画时间一致
+  }, [onClose, isHiding]);
 
   // 判断是否为音频文件
   const isAudioFile = (fileName: string): boolean => {
@@ -61,7 +96,7 @@ export const FileListPanel: React.FC<FileListPanelProps> = ({ onClose, lang }) =
         const lrcFiles = Array.from(files).filter(file => file.name.toLowerCase().endsWith('.lrc'));
         
         // 通过 store 添加文件
-        import('../../stores/fileManager.js').then(({ useFileManager }) => {
+        import('../stores/fileManager.js').then(({ useFileManager }) => {
           const store = useFileManager.getState();
           store.addFiles(audioFiles, lrcFiles);
         });
@@ -71,7 +106,7 @@ export const FileListPanel: React.FC<FileListPanelProps> = ({ onClose, lang }) =
   };
 
   return (
-    <div className="selected-files-panel">
+    <div className={`selected-files-panel${isHiding ? ' menu-hiding' : ''}`} ref={panelRef}>
       <div className="selected-files-header">
         <span>{lang.playlist?.title || '文件列表'}</span>
         <div className="header-actions">

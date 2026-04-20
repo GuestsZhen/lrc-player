@@ -135,7 +135,7 @@ export const Preferences: React.FC = () => {
             deleteRequest.onsuccess = () => {
             };
             deleteRequest.onerror = () => {
-                console.error('清除 IndexedDB 失败');
+                // 清除 IndexedDB 失败处理
             };
         }
         

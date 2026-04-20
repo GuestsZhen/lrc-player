@@ -6,6 +6,8 @@ import { appContext } from "./app.context.js";
 import { Curser } from "./curser.js";
 import { IOSHint } from "./ios-hint.js";
 import { usePlayerSettings } from "../stores/playerSettings.js";
+import { useAudioControl } from "../hooks/useAudioControl.js";
+import { isAndroidNative } from "../utils/platform-detector.js";
 
 // 获取对比色（根据背景亮度决定返回黑色或白色）
 // const _getContrastColor = (hexColor: string): string => {
@@ -27,14 +29,14 @@ export const Player: React.FC<IPlayerProps> = ({ state, dispatch }) => {
     const { currentIndex, lyric } = state;
     const { prefState } = useContext(appContext);
     
+    // ✅ Android 模式下获取 ExoPlayer 控制
+    const { currentTime: audioCurrentTime, seekTo: audioSeekTo } = isAndroidNative() ? useAudioControl() : { currentTime: 0, seekTo: () => {} };
+    
     // 使用新的 Player Settings Store
     const playerSettings = usePlayerSettings();
     
     // 控制是否显示时间轴（默认隐藏）
     const [showTime, _setShowTime] = useState(false);
-
-    // 控制对齐方式
-    const [textAlign, setTextAlign] = useState<'left' | 'center' | 'right'>('center');
 
     // 控制全屏状态
     const [_isFullscreen, setIsFullscreen] = useState(false);
@@ -51,6 +53,8 @@ export const Player: React.FC<IPlayerProps> = ({ state, dispatch }) => {
     const setLyricColor = playerSettings.setLyricColor;
     const subLyricOpacity = playerSettings.subOpacity;
     const setSubLyricOpacity = playerSettings.setSubOpacity;
+    const textAlign = playerSettings.textAlign; // ✅ 从 store 读取对齐方式
+    
     // ========================================
 
     useEffect(() => {
@@ -103,19 +107,8 @@ export const Player: React.FC<IPlayerProps> = ({ state, dispatch }) => {
         };
     }, []);
 
-    // 注意：字体大小、背景颜色、歌词颜色、副行透明度的变化
+    // 注意：字体大小、背景颜色、歌词颜色、副行透明度、对齐方式的变化
     // 已由 usePlayerSettings Store 自动处理，无需手动监听事件
-    
-    // 监听对齐方式变化事件（从 Header 组件）
-    useEffect(() => {
-        const handleAlignChange = (event: CustomEvent<'left' | 'center' | 'right'>) => {
-            const align = event.detail;
-            setTextAlign(align);
-        };
-        
-        window.addEventListener('player-text-align-change' as any, handleAlignChange as any);
-        return () => window.removeEventListener('player-text-align-change' as any, handleAlignChange as any);
-    }, [setTextAlign]);
     
     // 监听副行透明度变化事件（从 Header 组件）
     useEffect(() => {
@@ -203,10 +196,17 @@ export const Player: React.FC<IPlayerProps> = ({ state, dispatch }) => {
 
     // 监听音频时间更新
     useEffect(() => {
+        // ✅ Android 模式下使用 useAudioControl 监听 ExoPlayer
+        if (isAndroidNative()) {
+            dispatch({ type: ActionType.refresh, payload: audioCurrentTime });
+            return;
+        }
+        
+        // Web 模式使用 HTML5 Audio
         return currentTimePubSub.sub(self.current, (time) => {
             dispatch({ type: ActionType.refresh, payload: time });
         });
-    }, [dispatch]);
+    }, [dispatch, audioCurrentTime]);
 
     // 切换时间轴显示
     // const _toggleTimeDisplay = useCallback(() => {
@@ -255,64 +255,13 @@ export const Player: React.FC<IPlayerProps> = ({ state, dispatch }) => {
     // }, []);
 
 
-    // 初始化对齐方式
+    // 初始化：无需手动读取，已由 initializePlayerSettings 处理
     useEffect(() => {
-        const savedAlign = sessionStorage.getItem('player-text-align') as 'left' | 'center' | 'right' | null;
-        if (savedAlign) {
-            setTextAlign(savedAlign);
-        }
-        
-        // 优先从 localStorage 读取持久化的颜色设置
-        const savedBgColor = localStorage.getItem('player-bg-color');
-        if (savedBgColor) {
-            setBackgroundColor(savedBgColor);
-        }
-        
-        const savedLyricColor = localStorage.getItem('player-lyric-color');
-        if (savedLyricColor) {
-            setLyricColor(savedLyricColor);
-        }
-        
-        const savedSubOpacity = sessionStorage.getItem('player-sub-opacity');
-        if (savedSubOpacity) {
-            setSubLyricOpacity(Number(savedSubOpacity));
-        }
+        // 组件挂载时的初始化逻辑
     }, []);
     
-    // 监听主题模式变化，更新默认颜色（仅当用户未自定义时）
-    useEffect(() => {
-        const checkThemeAndSetDefaults = () => {
-            // 只有当用户没有自定义背景/歌词颜色时才应用主题默认值
-            if (!localStorage.getItem('player-bg-color')) {
-                const preferences = localStorage.getItem('preferences');
-                const themeMode = preferences ? JSON.parse(preferences).themeMode : 0;
-                
-                if (themeMode === 1) { // 亮色模式
-                    setBackgroundColor('#ededed');
-                } else {
-                    setBackgroundColor('#2e2e2e');
-                }
-            }
-            
-            if (!localStorage.getItem('player-lyric-color')) {
-                const preferences = localStorage.getItem('preferences');
-                const themeMode = preferences ? JSON.parse(preferences).themeMode : 0;
-                
-                if (themeMode === 1) { // 亮色模式
-                    setLyricColor('#eeeeee');
-                } else {
-                    setLyricColor('#ffffff');
-                }
-            }
-        };
-        
-        // 初始检查
-        checkThemeAndSetDefaults();
-        
-        // 监听 storage 变化（其他标签页修改主题）
-        window.addEventListener('storage', checkThemeAndSetDefaults);
-        return () => window.removeEventListener('storage', checkThemeAndSetDefaults);
-    }, []);
+    // ✅ 已移除主题模式自动重置逻辑
+    // 现在完全由用户自定义颜色控制，通过 Capacitor Preferences 持久化
     
     // 设置 html 元素背景色为用户选择的颜色（仅在 Player 页面）
     useEffect(() => {
@@ -324,6 +273,19 @@ export const Player: React.FC<IPlayerProps> = ({ state, dispatch }) => {
             document.documentElement.style.backgroundColor = originalHtmlBgColor;
         };
     }, [backgroundColor]);
+    
+    // ✅ 监听背景色变化事件（确俚 Android 上也能正常工作）
+    useEffect(() => {
+        const handleBgColorChange = (event: Event) => {
+            const customEvent = event as CustomEvent<string>;
+            const newColor = customEvent.detail;
+            // 强制更新 documentElement 背景色
+            document.documentElement.style.setProperty('background-color', newColor, 'important');
+        };
+        
+        window.addEventListener('player-bg-color-change', handleBgColorChange);
+        return () => window.removeEventListener('player-bg-color-change', handleBgColorChange);
+    }, []);
 
     // 点击歌词跳转到指定时间
     const onLineClick = useCallback(
@@ -333,11 +295,19 @@ export const Player: React.FC<IPlayerProps> = ({ state, dispatch }) => {
             const key = Number.parseInt(target.dataset.key!, 10);
             const lineTime = lyric[key]?.time;
             
-            if (lineTime !== undefined && audioRef.current) {
-                audioRef.current.currentTime = lineTime;
+            if (lineTime !== undefined) {
+                // ✅ Android 模式下使用 ExoPlayer seekTo
+                if (isAndroidNative()) {
+                    audioSeekTo(lineTime);
+                } else {
+                    // Web 模式使用 HTML5 Audio
+                    if (audioRef.current) {
+                        audioRef.current.currentTime = lineTime;
+                    }
+                }
             }
         },
-        [lyric]
+        [lyric, audioSeekTo]
     );
 
     const LyricLineIter = useCallback(

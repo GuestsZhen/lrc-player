@@ -6,17 +6,28 @@ import { InputAction } from "../utils/input-action.js";
 import { isKeyboardElement } from "../utils/is-keyboard-element.js";
 import { getMatchedAction } from "../utils/keybindings.js";
 import { appContext, ChangBits } from "./app.context.js";
-import { LrcAudio } from "./audio.js";
+import { LrcAudio } from "./audio/LrcAudio.js";
 import { LoadAudio, nec } from "./loadaudio.js";
 import { CloseSVG, FolderSVG, SearchSVG, DeleteSVG } from "./svg.js";
 import { toastPubSub } from "./toast.js";
 import { playlistManager, type ITrackInfo } from "../utils/playlist-manager.js";
+import { MediaStore } from '../utils/mediastore-plugin.js';
+// ✅ 引入新创建的 Hooks 和组件
+import { useMediaStore, useAudioEvents, usePlaylistEvents } from '../hooks/index.js';
+import { PlaylistPanel } from './PlaylistPanel.js';  // ✅ 从根目录导入
+// ✅ 引入工具函数
+import { getBaseName, findMatchingLrcFile } from '../utils/file-utils.js';
+import { receiveFile } from '../utils/audio-decoder.js';
+import { calculateNextIndex, loadMSTrack, PlayMode } from '../utils/playback-control.js';
+import { isAndroidNative } from '../utils/platform-detector.js';
+import { setExoPlayerSpeed } from '../utils/playback-control.js';
+import { addTrackEndedListener } from '../utils/exoplayer-plugin.js';
 
 // 播放列表曲目信息
 // 已从 ../utils/playlist-manager.js 导入
 
 // 跨平台兼容的文件类型定义
-// 仅使用扩展名，避免 iOS/Android 对 MIME 类型的不同处理
+// 仅使用扩展名,避免 iOS/Android 对 MIME 类型的不同处理
 const accept = [
     // 歌词文件
     ".lrc", ".txt",
@@ -26,31 +37,23 @@ const accept = [
     ".ncm", ".qmcflac", ".qmc0", ".qmc1", ".qmc2", ".qmc3", ".qmcogg"
 ].join(", ");
 
-// 从文件名获取基础名称（不含扩展名）
-const getBaseName = (fileName: string): string => {
-    return fileName.replace(/\.[^.]+$/, '');
-};
-
-// 查找同名的 LRC 文件
-const findMatchingLrcFile = (audioFileName: string, files: FileList | File[]): File | null => {
-    const audioBaseName = getBaseName(audioFileName).toLowerCase();
-    
-    for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        if (file.name.toLowerCase().endsWith('.lrc')) {
-            const lrcBaseName = getBaseName(file.name).toLowerCase();
-            if (lrcBaseName === audioBaseName) {
-                return file;
-            }
-        }
-    }
-    
-    return null;
-};
-
 export const Footer: React.FC = () => {
     const { prefState, lang } = useContext(appContext, ChangBits.lang | ChangBits.builtInAudio);
     const keyBindings = useKeyBindings();
+    
+    // ✅ 使用 useMediaStore Hook
+    const { readAudioFile, readLrcFile } = useMediaStore();
+    
+    // ✅ 使用 useAudioEvents Hook
+    const {
+        onAudioLoadedMetadata,
+        onAudioPlay,
+        onAudioPause,
+        onAudioEnded,
+        onAudioTimeUpdate,
+        onAudioRateChange,
+        onAudioError,
+    } = useAudioEvents();
     
     // 检查当前路由，如果是 player-soundtouch 页面则不显示 Footer
     const [shouldShow, setShouldShow] = useState(() => {
@@ -77,14 +80,52 @@ export const Footer: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [playMode, setPlayMode] = useState<number>(0);  // 播放模式：0=顺序播放，1=随机播放，2=单曲循环
     
+    // ✅ 获取当前曲目的文件路径（用于波形显示）
+    // Android 模式下从全局 __msTracks 和 msCurrentIndex 获取
+    const currentTrackFilePath = isAndroidNative()
+        ? ((window as any).__msTracks?.[(window as any).__msCurrentIndex]?.filePath)
+        : undefined;  // Web 模式不需要波形
+    
+    // ✅ 调试日志
+    if (isAndroidNative()) {
+    }
+    
     
     // 初始化播放列表管理器
     useEffect(() => {
         playlistManager.init().catch(err => {
-            console.error('播放列表管理器初始化失败:', err);
+            // 初始化失败处理
         });
         
+        // ✅ 监听 audio-file-update 事件，更新显示的歌名
+        const handleAudioFileUpdate = (event: Event) => {
+            const customEvent = event as CustomEvent<{ fileName?: string; trackName?: string }>;
+            if (customEvent.detail?.trackName) {
+                setDisplayTrackName(customEvent.detail.trackName);
+            }
+        };
+        
+        window.addEventListener('audio-file-update', handleAudioFileUpdate as EventListener);
+        
+        // ✅ 监听播放模式变化事件（来自 usePlaybackMode Hook）
+        const handlePlayModeChange = (event: Event) => {
+            const customEvent = event as CustomEvent<{ playMode: number }>;
+            setPlayMode(customEvent.detail.playMode);
+        };
+        
+        window.addEventListener('play-mode-change', handlePlayModeChange as EventListener);
+        
+        // ✅ Android 模式下监听 ExoPlayer 播放完成事件
+        if (isAndroidNative()) {
+            addTrackEndedListener(() => {
+                // 自动播放下一首
+                onNextTrack();
+            });
+        }
+        
         return () => {
+            window.removeEventListener('audio-file-update', handleAudioFileUpdate as EventListener);
+            window.removeEventListener('play-mode-change', handlePlayModeChange as EventListener);
             // 组件卸载时不需要关闭数据库，因为可能在其他地方还在使用
         };
     }, []);
@@ -92,7 +133,7 @@ export const Footer: React.FC = () => {
     // 保存文件到 IndexedDB
     const saveTrackToDB = useCallback((track: ITrackInfo) => {
         playlistManager.saveTrack(track).catch(err => {
-            console.error('保存音轨失败:', err);
+            // 保存失败处理
         });
     }, []);
     
@@ -131,7 +172,7 @@ export const Footer: React.FC = () => {
             window.dispatchEvent(loadLrcEvent);
         };
         reader.onerror = () => {
-            console.error('读取歌词文件失败');
+            // 读取歌词文件失败处理
         };
         reader.readAsText(lrcFile);
     }, []);
@@ -173,95 +214,166 @@ export const Footer: React.FC = () => {
     }, []);
 
     // 上一首歌
-    const onPreviousTrack = useCallback(() => {
-        if (playlist.length === 0) return;
+    const onPreviousTrack = useCallback(async () => {
+        console.log('⏮️ ========== onPreviousTrack() START ==========');
+        console.log('🔍 Current track index:', currentTrackIndex);
+        console.log('🔍 Playlist length:', playlist.length);
+        console.log('🔍 Play mode:', playMode);
         
-        // 如果当前没有播放任何歌曲，从最后一首开始
-        let startIndex = currentTrackIndex;
-        if (startIndex < 0 || startIndex >= playlist.length) {
-            startIndex = 0; // 从第一首开始
+        // ✅ 检查是否是 MS 播放列表
+        const msTracks = (window as any).__msTracks;
+        const msCurrentIndex = (window as any).__msCurrentIndex;
+        
+        console.log('🔍 MS Tracks:', msTracks ? `Array(${msTracks.length})` : 'null');
+        console.log('🔍 MS Current Index:', msCurrentIndex);
+        
+        if (msTracks && msTracks.length > 1) {
+            console.log('📋 Using MS playlist for previous track');
+            // MS 播放列表：使用统一的索引计算
+            const prevIndex = calculateNextIndex(msCurrentIndex, msTracks.length, playMode, 'prev');
+            console.log('🔍 Calculated previous index:', prevIndex);
+            
+            try {
+                await loadMSTrack(
+                    msTracks,
+                    prevIndex,
+                    readAudioFile,
+                    readLrcFile,
+                    loadLrcFile,
+                    setDisplayTrackName
+                );
+                console.log('✅ MS track loaded successfully');
+            } catch (error) {
+                console.error('❌ Failed to load MS track:', error);
+            }
+            console.log('⏮️ ========== onPreviousTrack() END (MS) ==========');
+            return;
         }
         
-        const newIndex = startIndex <= 0 ? playlist.length - 1 : startIndex - 1;
+        console.log('📋 Using regular playlist for previous track');
+        // 普通播放列表逻辑
+        if (playlist.length === 0) {
+            console.warn('⚠️ Playlist is empty, cannot go to previous track');
+            console.log('⏮️ ========== onPreviousTrack() END (empty) ==========');
+            return;
+        }
+        
+        let startIndex = currentTrackIndex;
+        if (startIndex < 0 || startIndex >= playlist.length) {
+            console.warn('⚠️ Invalid start index, resetting to 0');
+            startIndex = 0;
+        }
+        
+        const newIndex = calculateNextIndex(startIndex, playlist.length, playMode, 'prev');
+        console.log('🔍 Calculated new index:', newIndex);
         setCurrentTrackIndex(newIndex);
         
         const track = playlist[newIndex];
         if (track.file) {
+            console.log('🎵 Loading track:', track.fileName);
             receiveFile(track.file, setAudioSrc);
-            // 延迟一点等待音频加载后自动播放
             setTimeout(() => {
                 audioRef.current?.play();
+                console.log('▶️ Track playback started');
             }, 200);
             
-            // 如果有 LRC 文件，自动加载歌词
             if (track.lrcFile) {
+                console.log('📝 Loading LRC file');
                 loadLrcFile(track.lrcFile);
             }
             
-            // 通知 content.tsx 更新当前播放文件
             window.dispatchEvent(new CustomEvent('current-playing-file-change', {
                 detail: { fileName: track.fileName }
             }));
             
-            // 更新 Header 显示的歌名
             updateCurrentTrackName(newIndex, playlist);
+            console.log('✅ Previous track loaded and playing');
+        } else {
+            console.error('❌ Track file is null or undefined');
         }
-    }, [playlist, currentTrackIndex, updateCurrentTrackName]);
+        console.log('⏮️ ========== onPreviousTrack() END ==========');
+    }, [playlist, currentTrackIndex, playMode, updateCurrentTrackName, readAudioFile, readLrcFile, loadLrcFile]);
 
     // 下一首歌（支持多种播放模式）
-    const onNextTrack = useCallback((_mode?: number) => {
-        if (playlist.length === 0) return;
+    const onNextTrack = useCallback(async (_mode?: number) => {
+        console.log('⏭️ ========== onNextTrack() START ==========');
+        console.log('🔍 Current track index:', currentTrackIndex);
+        console.log('🔍 Playlist length:', playlist.length);
+        console.log('🔍 Play mode:', playMode);
         
-        // 如果当前没有播放任何歌曲，从第一首开始
+        // ✅ 检查是否是 MS 播放列表
+        const msTracks = (window as any).__msTracks;
+        const msCurrentIndex = (window as any).__msCurrentIndex;
+        
+        console.log('🔍 MS Tracks:', msTracks ? `Array(${msTracks.length})` : 'null');
+        console.log('🔍 MS Current Index:', msCurrentIndex);
+        
+        if (msTracks && msTracks.length > 1) {
+            console.log('📋 Using MS playlist for next track');
+            // MS 播放列表：使用统一的索引计算
+            const nextIndex = calculateNextIndex(msCurrentIndex, msTracks.length, playMode, 'next');
+            console.log('🔍 Calculated next index:', nextIndex);
+            
+            try {
+                await loadMSTrack(
+                    msTracks,
+                    nextIndex,
+                    readAudioFile,
+                    readLrcFile,
+                    loadLrcFile,
+                    setDisplayTrackName
+                );
+                console.log('✅ MS track loaded successfully');
+            } catch (error) {
+                console.error('❌ Failed to load MS track:', error);
+            }
+            console.log('⏭️ ========== onNextTrack() END (MS) ==========');
+            return;
+        }
+        
+        console.log('📋 Using regular playlist for next track');
+        // 普通播放列表逻辑
+        if (playlist.length === 0) {
+            console.warn('⚠️ Playlist is empty, cannot go to next track');
+            console.log('⏭️ ========== onNextTrack() END (empty) ==========');
+            return;
+        }
+        
         let startIndex = currentTrackIndex;
         if (startIndex < 0 || startIndex >= playlist.length) {
-            startIndex = 0; // 从第一首开始
+            console.warn('⚠️ Invalid start index, resetting to 0');
+            startIndex = 0;
         }
         
-        let newIndex: number;
-        
-        // 根据播放模式计算下一个索引
-        if (playMode === 2) {
-            // 单曲循环：保持当前索引
-            newIndex = startIndex;
-        } else if (playMode === 1) {
-            // 随机播放：随机选择一个索引（排除当前歌曲）
-            if (playlist.length === 1) {
-                newIndex = 0;
-            } else {
-                do {
-                    newIndex = Math.floor(Math.random() * playlist.length);
-                } while (newIndex === startIndex);
-            }
-        } else {
-            // 顺序播放：下一首，到最后一首后回到第一首
-            newIndex = startIndex >= playlist.length - 1 ? 0 : startIndex + 1;
-        }
-        
+        const newIndex = calculateNextIndex(startIndex, playlist.length, playMode, 'next');
+        console.log('🔍 Calculated new index:', newIndex);
         setCurrentTrackIndex(newIndex);
         
         const track = playlist[newIndex];
         if (track.file) {
+            console.log('🎵 Loading track:', track.fileName);
             receiveFile(track.file, setAudioSrc);
-            // 延迟一点等待音频加载后自动播放
             setTimeout(() => {
                 audioRef.current?.play();
+                console.log('▶️ Track playback started');
             }, 200);
             
-            // 如果有 LRC 文件，自动加载歌词
             if (track.lrcFile) {
+                console.log('📝 Loading LRC file');
                 loadLrcFile(track.lrcFile);
             }
             
-            // 通知 content.tsx 更新当前播放文件
             window.dispatchEvent(new CustomEvent('current-playing-file-change', {
                 detail: { fileName: track.fileName }
             }));
             
-            // 更新 Header 显示的歌名
             updateCurrentTrackName(newIndex, playlist);
+            console.log('✅ Next track loaded and playing');
+        } else {
+            console.error('❌ Track file is null or undefined');
         }
-    }, [playlist, currentTrackIndex, playMode, updateCurrentTrackName]);
+        console.log('⏭️ ========== onNextTrack() END ==========');
+    }, [playlist, currentTrackIndex, playMode, updateCurrentTrackName, readAudioFile, readLrcFile, loadLrcFile]);
 
     // 处理播放列表关闭（带动画）
     const handleClosePlaylist = useCallback(() => {
@@ -313,232 +425,15 @@ export const Footer: React.FC = () => {
         }
     }, [isDragging, dragOffset, handleClosePlaylist]);
 
-    // 监听来自 audio 组件的播放列表切换事件
-    useEffect(() => {
-        const handleTogglePlaylist = () => {
-            // 如果是打开状态，直接使用渐出动画关闭
-            if (showPlaylist) {
-                handleClosePlaylist();
-            } else {
-                setShowPlaylist(prev => !prev);
-            }
-        };
-
-        const handlePreviousTrack = () => {
-            // 调用上一首功能
-            onPreviousTrack();
-        };
-
-        const handleNextTrack = (_event: Event) => {
-            // 调用下一首功能
-            onNextTrack();
-        };
-        
-        // 监听来自 Header 的打开文件事件
-        const handleHeaderFileOpen = (event: Event) => {
-            const customEvent = event as CustomEvent<{ file: File }>;
-            if (customEvent.detail?.file) {
-                const file = customEvent.detail.file;
-                // 处理文件
-                receiveFile(file, setAudioSrc);
-                
-                // 添加到播放列表
-                const id = `${file.name}-${file.size}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-                const name = getBaseName(file.name);
-                const track: ITrackInfo = { id, name, fileName: file.name, file };
-                setPlaylist(prev => [...prev, track]);
-                setCurrentTrackIndex(playlist.length);
-            }
-        };
-        
-        // 监听来自文件列表的播放事件
-        const handlePlayFileFromList = (event: Event) => {
-            const customEvent = event as CustomEvent<{ file: File; lrcFile?: File }>;
-            if (customEvent.detail?.file) {
-                const file = customEvent.detail.file;
-                const lrcFile = customEvent.detail.lrcFile;
-                
-                setPlaylist(prevPlaylist => {
-                    // 检查文件是否已在播放列表中
-                    const trackIndex = prevPlaylist.findIndex(track => track.fileName === file.name);
-                    
-                    if (trackIndex !== -1) {
-                        // 文件已存在，直接切换到该歌曲
-                        setCurrentTrackIndex(trackIndex);
-                        receiveFile(prevPlaylist[trackIndex].file!, setAudioSrc);
-                        
-                        // 自动播放
-                        setTimeout(() => {
-                            audioRef.current?.play();
-                        }, 200);
-                        
-                        // 优先使用传入的 LRC 文件，其次使用播放列表中已有的 LRC 文件
-                        const lrcToLoad = lrcFile || prevPlaylist[trackIndex].lrcFile;
-                        if (lrcToLoad) {
-                            loadLrcFile(lrcToLoad);
-                        }
-                        
-                        // 更新 Header 显示的歌名
-                        updateCurrentTrackName(trackIndex, prevPlaylist);
-                    } else {
-                        // 文件不存在，添加到播放列表并播放
-                        const id = `${file.name}-${file.size}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-                        const name = getBaseName(file.name);
-                        const track: ITrackInfo = { id, name, fileName: file.name, file, lrcFile };
-                        const newIndex = prevPlaylist.length;
-                        
-                        saveTrackToDB(track);
-                        setCurrentTrackIndex(newIndex);
-                        
-                        // 加载音频并播放
-                        receiveFile(file, setAudioSrc);
-                        setTimeout(() => {
-                            audioRef.current?.play();
-                        }, 200);
-                        
-                        // 如果有 LRC 文件，加载歌词
-                        if (lrcFile) {
-                            loadLrcFile(lrcFile);
-                        }
-                        
-                        // 更新 Header 显示的歌名
-                        updateCurrentTrackName(newIndex, [...prevPlaylist, track]);
-                        
-                        return [...prevPlaylist, track];
-                    }
-                    
-                    return prevPlaylist;
-                });
-            }
-        };
-        
-        // 监听来自 content 的索引更新事件
-        const handleTrackIndexChange = (event: Event) => {
-            const customEvent = event as CustomEvent<{ index: number }>;
-            if (customEvent.detail?.index !== undefined) {
-                setCurrentTrackIndex(customEvent.detail.index);
-            }
-        };
-        
-        // 监听播放模式变化事件
-        const handlePlayModeChange = (event: Event) => {
-            const customEvent = event as CustomEvent<{ playMode: number }>;
-            if (customEvent.detail?.playMode !== undefined) {
-                setPlayMode(customEvent.detail.playMode);
-            }
-        };
-        
-        // 监听来自 content 的添加文件到播放列表事件
-        const handleAddFilesToPlaylist = (event: Event) => {
-            const customEvent = event as CustomEvent<{ tracks: Array<{ file: File; lrcFile?: File }> }>;
-            if (!customEvent.detail?.tracks || customEvent.detail.tracks.length === 0) {
-                return;
-            }
-            
-            const { tracks } = customEvent.detail;
-            
-            // 将文件添加到播放列表
-            setPlaylist(prev => {
-                const newTracks: ITrackInfo[] = tracks.map(({ file, lrcFile }) => {
-                    const id = `${file.name}-${file.size}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-                    const name = getBaseName(file.name);
-                    
-                    // 保存到 IndexedDB
-                    saveTrackToDB({ id, name, fileName: file.name, file, lrcFile });
-                    
-                    return { id, name, fileName: file.name, file, lrcFile };
-                });
-                
-                const updated = [...prev, ...newTracks];
-                
-                // 如果当前没有播放，自动播放第一首新添加的歌曲
-                if (currentTrackIndex === -1 && newTracks.length > 0) {
-                    const firstTrack = newTracks[0];
-                    const file = firstTrack.file;
-                    if (file) {
-                        // 使用 setTimeout 确保在状态更新后执行
-                        setTimeout(() => {
-                            setCurrentTrackIndex(prev.length); // 设置为新添加的第一首的索引
-                            receiveFile(file, setAudioSrc);
-                            
-                            // 延迟一点等待音频加载后自动播放
-                            setTimeout(() => {
-                                audioRef.current?.play();
-                            }, 200);
-                            
-                            // 如果有 LRC 文件，自动加载歌词
-                            if (firstTrack.lrcFile) {
-                                window.dispatchEvent(new CustomEvent('load-lrc-file', {
-                                    detail: { lrcFile: firstTrack.lrcFile }
-                                }));
-                            }
-                        }, 0);
-                    }
-                }
-                
-                return updated;
-            });
-        };
-        
-        // 监听从播放列表删除文件的事件
-        const handleRemoveFileFromPlaylist = (event: Event) => {
-            const customEvent = event as CustomEvent<{ fileName: string }>;
-            if (!customEvent.detail?.fileName) {
-                return;
-            }
-            
-            const { fileName } = customEvent.detail;
-            
-            setPlaylist(prev => {
-                // 找到要删除的文件索引
-                const index = prev.findIndex(track => track.fileName === fileName);
-                if (index === -1) {
-                    return prev; // 文件不在播放列表中
-                }
-                
-                // 创建新的播放列表
-                const newPlaylist = prev.filter(track => track.fileName !== fileName);
-                
-                // 如果删除的是当前播放的文件，停止播放
-                if (index === currentTrackIndex) {
-                    setCurrentTrackIndex(-1);
-                    // 清空音频源
-                    setAudioSrc('');
-                } else if (index < currentTrackIndex) {
-                    // 如果删除的文件在当前播放文件之前，调整索引
-                    setCurrentTrackIndex(currentTrackIndex - 1);
-                }
-                
-                return newPlaylist;
-            });
-        };
-
-        window.addEventListener('toggle-playlist', handleTogglePlaylist);
-        window.addEventListener('previous-track', handlePreviousTrack);
-        window.addEventListener('next-track', handleNextTrack);
-        window.addEventListener('header-file-open' as any, handleHeaderFileOpen as any);
-        window.addEventListener('play-file-from-list' as any, handlePlayFileFromList as any);
-        window.addEventListener('track-index-change' as any, handleTrackIndexChange as any);
-        window.addEventListener('play-mode-change' as any, handlePlayModeChange as any);
-        window.addEventListener('add-files-to-playlist' as any, handleAddFilesToPlaylist as any);
-        window.addEventListener('remove-file-from-playlist' as any, handleRemoveFileFromPlaylist as any);
-
-        return () => {
-            window.removeEventListener('toggle-playlist', handleTogglePlaylist);
-            window.removeEventListener('previous-track', handlePreviousTrack);
-            window.removeEventListener('next-track', handleNextTrack);
-            window.removeEventListener('header-file-open' as any, handleHeaderFileOpen as any);
-            window.removeEventListener('play-file-from-list' as any, handlePlayFileFromList as any);
-            window.removeEventListener('track-index-change' as any, handleTrackIndexChange as any);
-            window.removeEventListener('play-mode-change' as any, handlePlayModeChange as any);
-            window.removeEventListener('add-files-to-playlist' as any, handleAddFilesToPlaylist as any);
-            window.removeEventListener('remove-file-from-playlist' as any, handleRemoveFileFromPlaylist as any);
-        };
-    }, [onPreviousTrack, onNextTrack, showPlaylist, playlist, currentTrackIndex]);
-
     const [audioSrc, setAudioSrc] = useReducer(
-        (oldSrc: string, newSrc: string) => {
-            URL.revokeObjectURL(oldSrc);
+        (oldSrc: string | undefined, newSrc: string) => {
+            if (oldSrc) {
+                try {
+                    URL.revokeObjectURL(oldSrc);
+                } catch (err) {
+                    // 撤销旧 URL 失败处理
+                }
+            }
             return newSrc;
         },
         undefined,
@@ -557,6 +452,26 @@ export const Footer: React.FC = () => {
             return src!;
         },
     );
+
+    // ✅ 使用 usePlaylistEvents Hook 管理所有播放列表事件
+    usePlaylistEvents({
+        playlist,
+        currentTrackIndex,
+        showPlaylist,
+        onPreviousTrack,
+        onNextTrack,
+        handleClosePlaylist,
+        setShowPlaylist,
+        setAudioSrc,
+        saveTrackToDB,
+        loadLrcFile,
+        updateCurrentTrackName,
+        setPlaylist,
+        setCurrentTrackIndex,
+        setSearchQuery,
+        readAudioFile,
+        readLrcFile,
+    });
 
     useEffect(() => {
         function onKeydown(ev: KeyboardEvent) {
@@ -581,18 +496,36 @@ export const Footer: React.FC = () => {
                     break;
                 case InputAction.ResetRate:
                     ev.preventDefault();
-                    audioRef.playbackRate = 1;
+                    if (isAndroidNative()) {
+                        setExoPlayerSpeed(1).catch(console.error);
+                    } else {
+                        audioRef.playbackRate = 1;
+                    }
                     break;
                 case InputAction.IncreaseRate: {
                     ev.preventDefault();
-                    const rate = audioRef.playbackRate;
-                    audioRef.playbackRate = Math.exp(Math.min(Math.log(rate) + 0.2, 1));
+                    const currentRate = isAndroidNative() 
+                        ? ((window as any).__exoPlayerStatus?.speed || 1)
+                        : audioRef.playbackRate;
+                    const newRate = Math.exp(Math.min(Math.log(currentRate) + 0.2, 1));
+                    if (isAndroidNative()) {
+                        setExoPlayerSpeed(newRate).catch(console.error);
+                    } else {
+                        audioRef.playbackRate = newRate;
+                    }
                     break;
                 }
                 case InputAction.DecreaseRate: {
                     ev.preventDefault();
-                    const rate = audioRef.playbackRate;
-                    audioRef.playbackRate = Math.exp(Math.max(Math.log(rate) - 0.2, -1));
+                    const currentRate = isAndroidNative() 
+                        ? ((window as any).__exoPlayerStatus?.speed || 1)
+                        : audioRef.playbackRate;
+                    const newRate = Math.exp(Math.max(Math.log(currentRate) - 0.2, -1));
+                    if (isAndroidNative()) {
+                        setExoPlayerSpeed(newRate).catch(console.error);
+                    } else {
+                        audioRef.playbackRate = newRate;
+                    }
                     break;
                 }
                 case InputAction.TogglePlay:
@@ -696,77 +629,29 @@ export const Footer: React.FC = () => {
         ev.target.value = '';
     }, [currentTrackIndex, playlist.length, saveTrackToDB]);
 
-    const rafId = useRef(0);
+    // ✅ 音频事件处理已提取到 useAudioEvents Hook
 
-    const onAudioLoadedMetadata = useCallback(() => {
-        cancelAnimationFrame(rafId.current);
-        audioStatePubSub.pub({
-            type: AudioActionType.getDuration,
-            payload: audioRef.duration,
-        });
-        toastPubSub.pub({
-            type: "success",
-            text: lang.notify.audioLoaded,
-        });
-    }, [lang]);
-
-    const syncCurrentTime = useCallback(() => {
-        currentTimePubSub.pub(audioRef.currentTime);
-        rafId.current = requestAnimationFrame(syncCurrentTime);
-    }, []);
-
-    const onAudioPlay = useCallback(() => {
-        rafId.current = requestAnimationFrame(syncCurrentTime);
-        audioStatePubSub.pub({
-            type: AudioActionType.pause,
-            payload: false,
-        });
-    }, [syncCurrentTime]);
-
-    const onAudioPause = useCallback(() => {
-        cancelAnimationFrame(rafId.current);
-        audioStatePubSub.pub({
-            type: AudioActionType.pause,
-            payload: true,
-        });
-    }, []);
-
-    const onAudioEnded = useCallback(() => {
-        cancelAnimationFrame(rafId.current);
-        audioStatePubSub.pub({
-            type: AudioActionType.pause,
-            payload: true,
-        });
-        
-        // 播放结束时自动播放下一首
-        onNextTrack();
-    }, [onNextTrack]);
-
-    const onAudioTimeUpdate = useCallback(() => {
-        if (audioRef.paused) {
-            currentTimePubSub.pub(audioRef.currentTime);
+    // ✅ 播放列表中的歌曲点击处理
+    const handlePlayTrackFromPanel = useCallback((track: ITrackInfo, index: number) => {
+        if (track.file) {
+            // 1. 加载音频文件
+            receiveFile(track.file, setAudioSrc);
+            setCurrentTrackIndex(index);
+            
+            // 2. 自动播放（延迟一点等待音频加载）
+            setTimeout(() => {
+                audioRef.current?.play();
+            }, 200);
+            
+            // 3. 如果有 LRC 文件，自动加载歌词
+            if (track.lrcFile) {
+                loadLrcFile(track.lrcFile);
+            }
+            
+            // 4. 更新 Header 显示的歌名
+            updateCurrentTrackName(index, playlist);
         }
-    }, []);
-
-    const onAudioRateChange = useCallback(() => {
-        audioStatePubSub.pub({
-            type: AudioActionType.rateChange,
-            payload: audioRef.playbackRate,
-        });
-    }, []);
-
-    const onAudioError = useCallback(
-        (ev: React.SyntheticEvent<HTMLAudioElement>) => {
-            const audio = ev.target as HTMLAudioElement;
-            const error = audio.error!;
-            const message = lang.audio.error[error.code] || error.message || lang.audio.error[0];
-            toastPubSub.pub({
-                type: "warning",
-                text: message,
-            });
-        },
-        [lang],
-    );
+    }, [playlist, updateCurrentTrackName]);
 
     return (
         <footer className="app-footer" style={{ display: shouldShow ? undefined : 'none' }}>
@@ -781,142 +666,50 @@ export const Footer: React.FC = () => {
                 />
             )}
             
-            {/* 播放列表面板 */}
+            {/* ✅ 播放列表面板 - 已提取为组件 */}
             {(showPlaylist || isHiding) && (
-                <div 
-                    className={`playlist-panel${showPlaylist ? ' show' : ''}${isHiding ? ' hiding' : ''}${isDragging ? ' dragging' : ''}`}
-                    style={isDragging ? { transform: `translateY(${dragOffset}px)` } : undefined}
+                <PlaylistPanel
+                    playlist={playlist}
+                    currentTrackIndex={currentTrackIndex}
+                    showPlaylist={showPlaylist}
+                    isHiding={isHiding}
+                    isDragging={isDragging}
+                    dragOffset={dragOffset}
+                    searchQuery={searchQuery}
+                    lang={lang}
+                    onClose={handleClosePlaylist}
+                    onClear={clearPlaylist}
+                    onSearchChange={setSearchQuery}
+                    onPlayTrack={handlePlayTrackFromPanel}
+                    onOpenFile={() => document.getElementById('audio-input')?.click()}
                     onTouchStart={handleTouchStart}
                     onTouchMove={handleTouchMove}
                     onTouchEnd={handleTouchEnd}
-                >
-                    {/* iOS 风格的拖拽手柄 */}
-                    <div className="playlist-drag-handle" onTouchStart={handleTouchStart}>
-                        <div className="drag-handle-bar" />
-                    </div>
-                    
-                    <div className="playlist-header">
-                        <span>{lang.playlist.title} ({playlist.length}{lang.playlist.tracks})</span>
-                        <div className="playlist-header-actions">
-                            <button 
-                                className="clear-playlist-btn-icon"
-                                onClick={clearPlaylist}
-                                title={lang.playlist.clearPlaylist}
-                                disabled={playlist.length === 0}
-                            >
-                                <DeleteSVG />
-                            </button>
-                            <button 
-                                className="close-playlist-btn" 
-                                title={lang.playlist.close}
-                                onClick={handleClosePlaylist}
-                            >
-                                <CloseSVG />
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div className="playlist-content">
-                        {playlist.length === 0 ? (
-                            <div className="empty-playlist">
-                                <p>{lang.playlist.noTracks}</p>
-                                <button 
-                                    className="open-file-btn"
-                                    onClick={() => document.getElementById('audio-input')?.click()}
-                                >
-                                    <FolderSVG />
-                                    <span>{lang.playlist.openFile}</span>
-                                </button>
-                            </div>
-                        ) : (
-                            <ul className="playlist-items">
-                                {filteredPlaylist.map((track) => {
-                                    // 找到原 playlist 中的索引
-                                    const originalIndex = playlist.findIndex(t => t.id === track.id);
-                                    return (
-                                        <li 
-                                            key={track.id}
-                                            className={`playlist-item ${originalIndex === currentTrackIndex ? 'playing' : ''}`}
-                                            onClick={() => {
-                                                if (track.file) {
-                                                    // 1. 加载音频文件
-                                                    receiveFile(track.file, setAudioSrc);
-                                                    setCurrentTrackIndex(originalIndex);
-                                                    
-                                                    // 2. 自动播放（延迟一点等待音频加载）
-                                                    setTimeout(() => {
-                                                        audioRef.current?.play();
-                                                    }, 200);
-                                                    
-                                                    // 3. 如果有 LRC 文件，自动加载歌词
-                                                    if (track.lrcFile) {
-                                                        loadLrcFile(track.lrcFile);
-                                                    }
-                                                    
-                                                    // 4. 更新 Header 显示的歌名
-                                                    updateCurrentTrackName(originalIndex, playlist);
-                                                }
-                                            }}
-                                        >
-                                            <span className="track-name">{track.name}</span>
-                                        </li>
-                                    );
-                                })}
-                            </ul>
-                        )}
-                    </div>
-                    
-                    {/* 搜索和工具栏 - 移到底部 */}
-                    <div className="playlist-toolbar">
-                        <button 
-                            className="toolbar-open-file-btn"
-                            onClick={() => document.getElementById('audio-input')?.click()}
-                            title={lang.playlist.openFile}
-                        >
-                            <FolderSVG />
-                        </button>
-                        <div className="playlist-search">
-                            <SearchSVG />
-                            <input
-                                type="text"
-                                placeholder={lang.playlist.searchPlaceholder}
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                onClick={(e) => e.stopPropagation()}
-                                className="playlist-search-input"
-                            />
-                            {searchQuery && (
-                                <button 
-                                    className="clear-search-btn"
-                                    onClick={() => setSearchQuery('')}
-                                    title={lang.playlist.clearSearch}
-                                >
-                                    <CloseSVG />
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                </div>
+                />
             )}
             
             <LoadAudio setAudioSrc={setAudioSrc} lang={lang} />
-            <audio
-                ref={audioRef}
-                src={audioSrc}
-                controls={prefState.builtInAudio}
-                hidden={!prefState.builtInAudio}
-                onLoadedMetadata={onAudioLoadedMetadata}
-                onPlay={onAudioPlay}
-                onPause={onAudioPause}
-                onEnded={onAudioEnded}
-                onTimeUpdate={onAudioTimeUpdate}
-                onRateChange={onAudioRateChange}
-                onError={onAudioError}
-            />
+            {/* ✅ Android 原生环境禁用 HTML5 Audio，只使用 ExoPlayer */}
+            {!isAndroidNative() && (
+                <audio
+                    ref={audioRef}
+                    src={audioSrc}
+                    controls={prefState.builtInAudio}
+                    hidden={!prefState.builtInAudio}
+                    onLoadedMetadata={onAudioLoadedMetadata}
+                    onPlay={onAudioPlay}
+                    onPause={onAudioPause}
+                    onEnded={onAudioEnded}
+                    onTimeUpdate={onAudioTimeUpdate}
+                    onRateChange={onAudioRateChange}
+                    onError={onAudioError}
+                />
+            )}
             {prefState.builtInAudio || (
                 <LrcAudio 
                     lang={lang} 
                     currentTrackName={displayTrackName || undefined}
+                    currentTrackFilePath={currentTrackFilePath}
                 />
             )}
         </footer>
@@ -924,101 +717,6 @@ export const Footer: React.FC = () => {
 };
 
 type TsetAudioSrc = (src: string) => void;
-
-const receiveFile = (file: File, setAudioSrc: TsetAudioSrc): void => {
-    sessionStorage.removeItem(SSK.audioSrc);
-
-    if (file) {
-        if (file.type.startsWith("audio/")) {
-            setAudioSrc(URL.createObjectURL(file));
-            return;
-        }
-        if (file.name.endsWith(".ncm")) {
-            const worker = new Worker(new URL("/worker/ncmc-worker.js", import.meta.url));
-            worker.addEventListener(
-                "message",
-                (ev: IMessageEvent<IMessage>) => {
-                    if (ev.data.type === "success") {
-                        const dataArray = ev.data.payload;
-                        const musicFile = new Blob([dataArray], {
-                            type: detectMimeType(dataArray),
-                        });
-
-                        setAudioSrc(URL.createObjectURL(musicFile));
-                    }
-                    if (ev.data.type === "error") {
-                        toastPubSub.pub({
-                            type: "warning",
-                            text: ev.data.payload,
-                        });
-                    }
-                },
-                { once: true },
-            );
-
-            worker.addEventListener(
-                "error",
-                (ev) => {
-                    toastPubSub.pub({
-                        type: "warning",
-                        text: ev.message,
-                    });
-                    worker.terminate();
-                },
-                { once: true },
-            );
-
-            worker.postMessage(file);
-
-            return;
-        }
-        if (/\.qmc(?:flac|0|1|2|3)$/.test(file.name)) {
-            const worker = new Worker(new URL("/worker/qmc-worker.js", import.meta.url));
-            worker.addEventListener(
-                "message",
-                (ev: IMessageEvent<IMessage>) => {
-                    if (ev.data.type === "success") {
-                        const dataArray = ev.data.payload;
-                        const musicFile = new Blob([dataArray], {
-                            type: detectMimeType(dataArray),
-                        });
-
-                        setAudioSrc(URL.createObjectURL(musicFile));
-                    }
-                },
-                { once: true },
-            );
-
-            worker.postMessage(file);
-        }
-    }
-};
-
-const MimeType = {
-    fLaC: 0x664c6143,
-    OggS: 0x4f676753,
-    RIFF: 0x52494646,
-    WAVE: 0x57415645,
-};
-
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-const detectMimeType = (dataArray: Uint8Array) => {
-    const magicNumber = new DataView(dataArray.buffer).getUint32(0, false);
-    switch (magicNumber) {
-        case MimeType.fLaC:
-            return "audio/flac";
-
-        case MimeType.OggS:
-            return "audio/ogg";
-
-        case MimeType.RIFF:
-        case MimeType.WAVE:
-            return "audio/wav";
-
-        default:
-            return "audio/mpeg";
-    }
-};
 
 // side effect
 document.addEventListener("visibilitychange", () => {

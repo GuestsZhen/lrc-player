@@ -7,6 +7,7 @@ import { Curser } from "./curser.js";
 import { PlaySVG, PauseSVG, SettingsSVG } from "./svg.js";
 import { simpleKeyDetector, type KeyDetectionResult } from "../utils/simple-key-detector.js";
 import { usePlayerSettings } from "../stores/playerSettings.js";
+import { isAndroidNative } from "../utils/platform-detector.js";
 
 // 存储当前加载的音频文件，用于调性检测
 let currentAudioFile: File | null = null;
@@ -253,7 +254,6 @@ export const PlayerSoundTouch: React.FC<IPlayerProps> = ({ state, dispatch }) =>
             
             // 不自动播放，等待用户点击播放按钮
         } catch (error) {
-            console.error('[PlayerSoundTouch] Failed to load file:', error);
             alert('音频文件加载失败');
             setIsAudioInitialized(false);  // 初始化失败，重置状态
         }
@@ -318,7 +318,6 @@ export const PlayerSoundTouch: React.FC<IPlayerProps> = ({ state, dispatch }) =>
             if (lineTime !== undefined && !isNaN(lineTime)) {
                 seekTo(lineTime);
             } else {
-                console.warn('[PlayerSoundTouch] 无效的时间值');
             }
         },
         [seekTo, lyric]
@@ -369,7 +368,6 @@ export const PlayerSoundTouch: React.FC<IPlayerProps> = ({ state, dispatch }) =>
             // 同步到 Header
             window.dispatchEvent(new CustomEvent('st-key-detection-result', { detail: result.fullKey }));
         } catch (error) {
-            console.error('[PlayerSoundTouch] Key detection failed:', error);
             alert('调性检测失败：' + (error instanceof Error ? error.message : '未知错误'));
         } finally {
             setIsDetectingKey(false);
@@ -403,6 +401,12 @@ export const PlayerSoundTouch: React.FC<IPlayerProps> = ({ state, dispatch }) =>
         };
         
         const handleStToggleVocalRemoval = () => {
+            // ✅ 在 Android 原生环境下，由 header.tsx 通过 ExoPlayer 处理
+            // Web Audio 只在浏览器环境中使用
+            if (isAndroidNative()) {
+                return;
+            }
+            
             toggleVocalRemoval();
         };
         

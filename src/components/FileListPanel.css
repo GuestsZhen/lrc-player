@@ -84,6 +84,11 @@ body, .app-container {
     -webkit-backdrop-filter: blur(8px);
 }
 
+/* 面板淡出动画 - 用于关闭时 */
+.selected-files-panel.menu-hiding {
+    animation: settings-fade-out 0.3s ease-in forwards;
+}
+
 /* 亮色模式下文件面板颜色调整 */
 [data-theme="light"] .selected-files-panel {
     background-color: rgba(240, 240, 240, 0.95);
@@ -499,6 +504,18 @@ body, .app-container {
 .open-file-from-panel-btn:hover {
     transform: scale(1.05);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* 面板淡出动画 */
+@keyframes settings-fade-out {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
 }
 
 .open-file-from-panel-btn:active {

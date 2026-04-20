@@ -18,13 +18,9 @@ try {
     hash = execSync("git rev-parse --short HEAD").toString().trim();
     // Also try to get git commit time, but prefer current time for tracking updates
     const gitCommitTime = execSync("git log -1 --format=%cI").toString().trim();
-    console.log(`Git commit: ${hash}, Commit time: ${gitCommitTime}`);
 } catch (error) {
-    console.warn('Git is not available, using default values for hash');
+    // Git is not available, using default values for hash
 }
-
-console.log(`Build/Update time: ${updateTime}`);
-console.log(`Version: ${pkg.version}`);
 
 const json_suffix = ".json";
 const lang_dir = "src/languages";
@@ -121,20 +117,22 @@ export default defineConfig({
     plugins: [
         lrcUtilsPlugin(),
         swc(),
-        externals({
-            react: "React",
-            "react-dom": "ReactDOM",
-        }),
-        {
-            name: "html-cdn-codegen",
-            apply: "build",
-            transformIndexHtml(html) {
-                return {
-                    html,
-                    tags: [presets.react, presets["react-dom"]].map(tag).map(htmlTag),
-                };
-            },
-        },
+        // ✅ Android 离线构建：不使用 externals，将 React 打包进 bundle
+        // externals({
+        //     react: "React",
+        //     "react-dom": "ReactDOM",
+        // }),
+        // ✅ Android 离线构建：禁用 CDN 注入插件
+        // {
+        //     name: "html-cdn-codegen",
+        //     apply: "build",
+        //     transformIndexHtml(html) {
+        //         return {
+        //             html,
+        //             tags: [presets.react, presets["react-dom"]].map(tag).map(htmlTag),
+        //         };
+        //     },
+        // },
         sw_plugin(),
     ],
     base: "./",

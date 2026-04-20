@@ -234,7 +234,7 @@ export const LrcUtils: React.FC<{
                     .join("\r\n".repeat(3));
             }
         } catch (error) {
-            console.error('正则表达式错误:', error);
+            // 正则表达式错误处理
         }
     }, [trimOptions, prefState]);
 

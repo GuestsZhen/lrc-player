@@ -11,6 +11,11 @@
 
 # 简谱 lrc 播放器
 
+## 📱 双端支持
+
+- **Web 版本**：浏览器在线使用，支持 PWA 离线访问
+- **Android 版本**：原生 App，完全离线可用，支持 MediaStore API 扫描本地音乐库
+
 ## 这个项目是什么
 
 这是一个基于 Akari 的 lrc-maker 制作的简谱播放工具，原程序为滚动歌词制作工具，在此基础上增加了首调唱名法转调、独立播放界面、播放列表等功能。
@@ -83,6 +88,13 @@
 - 🔄 跨组件状态同步（Zustand Stores）
 - 📱 Web 和 Android 双端支持
 
+#### 10. Android 专属功能 ⭐新增
+- 🎵 **MediaStore API 集成** - 直接扫描系统媒体库
+- 📁 **文件夹选择器** - Capacitor FilePicker 原生文件选择
+- 💾 **Preferences 存储** - Capacitor Preferences 持久化配置
+- 🔌 **完全离线** - 所有依赖打包到 APK，无需网络
+- 🎨 **平台适配** - 自动检测平台，无缝切换 Web/Android
+
 ### 🛠️ 技术特性
 
 - **前端架构**：React 18 + TypeScript + Vite 6
@@ -92,13 +104,39 @@
 - **数据处理**：@lrc-maker/lrc-parser 歌词解析库
 - **PWA 支持**：Service Worker 离线缓存，可安装为桌面应用
 - **响应式设计**：支持桌面端和移动端
+- **📱 Android 支持**：Capacitor 8 + MediaStore API + 完全离线
 
 ## 如何使用
 
-### 基本操作
+### 🌐 Web 版本
+
 将文件拖放到页面中加载，使用箭头键和空格键插入时间戳。你可以把这个链接收藏到浏览器书签。
 
-在线体验：https://guestszhen.github.io/lrc-player
+**在线体验**：https://guestszhen.github.io/lrc-player
+
+### 📱 Android 版本
+
+**快速开始**：
+```bash
+# 克隆项目
+git clone https://github.com/GuestsZhen/lrc-player.git
+cd lrc-player
+
+# 安装依赖
+npm install
+
+# 一键部署到 Android 设备
+npm run cap:android:deploy
+```
+
+**Android 特性**：
+- ✅ 完全离线可用（无需网络）
+- ✅ MediaStore API 扫描本地音乐库
+- ✅ 支持文件夹选择和批量导入
+- ✅ 自动匹配 LRC 歌词文件
+- ✅ 所有 Web 功能完整保留
+
+详见：[ANDROID-CROSS-PLATFORM-GUIDE.md](docs/ANDROID-CROSS-PLATFORM-GUIDE.md)
 
 ### 💡 应用场景
 
@@ -141,6 +179,8 @@
 
 如果你想在本地计算机上运行这个项目，可以遵循下面操作。
 
+### Web 版本开发
+
 ```bash
 # 克隆这个仓库
 git clone https://github.com/GuestsZhen/lrc-player.git
@@ -156,6 +196,32 @@ pnpm build
 # 开发模式
 pnpm start
 ```
+
+### Android 版本开发
+
+```bash
+# 前置要求
+# - Java JDK 21
+# - Android SDK
+# - Node.js
+
+# 安装依赖
+npm install
+
+# 添加 Android 平台（首次需要）
+npx cap add android
+
+# 标准部署命令（推荐）
+npm run cap:android:deploy
+
+# 或在 Android Studio 中打开
+npx cap open android
+```
+
+详见：
+- [ANDROID-CROSS-PLATFORM-GUIDE.md](docs/ANDROID-CROSS-PLATFORM-GUIDE.md) - 跨平台开发指南
+- [ANDROID-MEDIASTORE-DEBUG-GUIDE.md](docs/ANDROID-MEDIASTORE-DEBUG-GUIDE.md) - MediaStore 调试指南
+- [ANDROID-CAPACITOR-STATUS.md](docs/ANDROID-CAPACITOR-STATUS.md) - Capacitor 迁移状态
 
 ## 📝 版本管理
 
@@ -189,7 +255,22 @@ pnpm version:major      # 6.1.0 → 7.0.0
 
 ---
 
+## 📚 文档
+
+### 核心文档
+- [PROJECT-ARCHITECTURE.md](docs/PROJECT-ARCHITECTURE.md) - 项目架构详解
+- [DEPLOYMENT.md](docs/DEPLOYMENT.md) - Web 版本部署指南
+
+### Android 开发
+- [ANDROID-CROSS-PLATFORM-GUIDE.md](docs/ANDROID-CROSS-PLATFORM-GUIDE.md) - 跨平台开发完整指南
+- [ANDROID-MEDIASTORE-DEBUG-GUIDE.md](docs/ANDROID-MEDIASTORE-DEBUG-GUIDE.md) - MediaStore 调试指南
+- [ANDROID-CAPACITOR-STATUS.md](docs/ANDROID-CAPACITOR-STATUS.md) - Capacitor 迁移状态
+
+---
+
 ## 生产部署
+
+### Web 版本
 
 构建（`npm run build`）后，`build` 文件夹是静态网站文件。
 您可以将其部署到任何 CDN 或静态文件服务器。
@@ -203,6 +284,19 @@ docker build -t lrc-player .
 # 创建一个容器并在 8080 端口提供服务
 docker run -d -p 8080:80 lrc-player
 ```
+
+### Android 版本
+
+```bash
+# 构建 Release 版 APK
+cd android
+./gradlew assembleRelease
+
+# 或构建 AAB（Google Play 发布）
+./gradlew bundleRelease
+```
+
+详见：[ANDROID-CROSS-PLATFORM-GUIDE.md](docs/ANDROID-CROSS-PLATFORM-GUIDE.md)
 
 ## 给这个项目点一个星星 :star:
 

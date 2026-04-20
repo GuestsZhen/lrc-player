@@ -92,7 +92,6 @@ export class WebAudioPlayer {
             this.gainNode = this.audioContext.createGain();
             this.gainNode.connect(this.audioContext.destination);
         } catch (error) {
-            console.error('[WebAudioPlayer] Initialization failed:', error);
             throw error;
         }
     }
@@ -666,7 +665,6 @@ export class WebAudioPlayer {
             this.vocalRemovalCopyR.connect(inverterL, 0);                 // R -> inverterL（用于左声道）
             inverterL.connect(merger, 0, 0);             // -R -> merger左输入
         } catch (error) {
-            console.error('[WebAudioPlayer] Failed to create Vocal Removal chain:', error);
             throw error;
         }
         

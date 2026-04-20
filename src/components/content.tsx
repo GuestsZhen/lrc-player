@@ -12,8 +12,16 @@ import { appContext, ChangBits } from "./app.context.js";
 import { AkariNotFound, AkariOdangoLoading } from "./svg.img.js";
 import { playlistManager } from "../utils/playlist-manager.js";
 import { simpleKeyDetector } from "../utils/simple-key-detector.js";
+import { detectCurrentTrackKey } from "../utils/exoplayer-key-detector.js";
+import { isAndroidNative } from "../utils/platform-detector.js";
 import { useFileManager } from "../stores/fileManager.js";
-import { FileListPanel } from "./file-manager/FileListPanel.js";
+import { FileListPanel } from "./FileListPanel.js";  // ✅ 从根目录导入
+import { Player } from "./player.js";  // ✅ 直接导入，不使用懒加载
+import { PlayerSoundTouch } from "./player-soundtouch.js";  // ✅ 直接导入
+import { Tune } from "./tune.js";  // ✅ 直接导入
+import { LrcUtils } from "./lrc-utils.js";  // ✅ 直接导入
+import { Gist } from "./gist.js";  // ✅ 直接导入
+import { Preferences } from "./preferences.js";  // ✅ 直接导入
 
 const LazyEditor = lazy(async () =>
     import("./editor.js").then(({ Eidtor }) => {
@@ -24,42 +32,6 @@ const LazyEditor = lazy(async () =>
 const LazySynchronizer = lazy(async () =>
     import("./synchronizer.js").then(({ Synchronizer }) => {
         return { default: Synchronizer };
-    })
-);
-
-const LazyPlayer = lazy(async () =>
-    import("./player.js").then(({ Player }) => {
-        return { default: Player };
-    })
-);
-
-const LazyTune = lazy(async () =>
-    import("./tune.js").then(({ Tune }) => {
-        return { default: Tune };
-    })
-);
-
-const LazyLrcUtils = lazy(async () =>
-    import("./lrc-utils.js").then(({ LrcUtils }) => {
-        return { default: LrcUtils };
-    })
-);
-
-const LazyGist = lazy(async () =>
-    import("./gist.js").then(({ Gist }) => {
-        return { default: Gist };
-    })
-);
-
-const LazyPreferences = lazy(async () =>
-    import("./preferences.js").then(({ Preferences }) => {
-        return { default: Preferences };
-    })
-);
-
-const LazyPlayerSoundTouch = lazy(async () =>
-    import("./player-soundtouch.js").then(({ PlayerSoundTouch }) => {
-        return { default: PlayerSoundTouch };
     })
 );
 
@@ -96,6 +68,35 @@ export const Content: React.FC = () => {
     const [isTransitioning, setIsTransitioning] = useState(false);
     const [_audioSrc, _setAudioSrc] = useState<string>(''); // 当前音频源
     const [_currentTrackIndex, setCurrentTrackIndex] = useState<number>(-1); // 当前播放索引
+    
+    // ✅ 监听 MediaStore 曲目索引变化
+    useEffect(() => {
+        if (!isAndroidNative()) return;
+        
+        const checkTrackIndex = () => {
+            const newIndex = (window as any).__msCurrentIndex;
+            if (newIndex !== undefined && newIndex >= 0) {
+                setCurrentTrackIndex(newIndex);
+            }
+        };
+        
+        // 初始检查
+        checkTrackIndex();
+        
+        // 定期检查（每 500ms）
+        const interval = setInterval(checkTrackIndex, 500);
+        
+        return () => clearInterval(interval);
+    }, [isAndroidNative()]);
+    
+    // ✅ 修复：应用启动时如果没有路由，设置默认路由为 /player/
+    useEffect(() => {
+        if (!location.hash || location.hash === '#' || location.hash === '') {
+            location.hash = ROUTER.player;
+            setPath(ROUTER.player);
+            setPreviousPath(ROUTER.player);
+        }
+    }, []);
     
     useEffect(() => {
         function onHashchange() {
@@ -153,7 +154,10 @@ export const Content: React.FC = () => {
         const handleCurrentPlayingFileChange = (event: Event) => {
             const customEvent = event as CustomEvent<{ fileName: string }>;
             if (customEvent.detail?.fileName) {
-                setCurrentPlayingFile(customEvent.detail.fileName);
+                // ✅ 使用 setTimeout 避免在渲染期间更新其他组件的状态
+                setTimeout(() => {
+                    setCurrentPlayingFile(customEvent.detail.fileName);
+                }, 0);
             }
         };
         
@@ -179,7 +183,7 @@ export const Content: React.FC = () => {
         
         // 清理 IndexedDB 中的所有 tracks
         playlistManager.clearAllTracks().catch(err => {
-            console.error('清理播放列表失败:', err);
+            // 清理播放列表失败处理
         });
     };
 
@@ -202,7 +206,7 @@ export const Content: React.FC = () => {
         
         // 从 IndexedDB 中移除该 track（使用 deleteTrack 方法）
         playlistManager.deleteTrack(fileName).catch((err: unknown) => {
-            console.error('从播放列表移除文件失败:', err);
+            // 从播放列表移除文件失败处理
         });
         
         // 通知 Footer 组件更新播放列表
@@ -275,7 +279,7 @@ export const Content: React.FC = () => {
     // 初始化播放列表管理器
     useEffect(() => {
         playlistManager.init().catch(err => {
-            console.error('播放列表管理器初始化失败:', err);
+            // 播放列表管理器初始化失败处理
         });
         
         return () => {
@@ -286,7 +290,7 @@ export const Content: React.FC = () => {
     // 保存文件到 IndexedDB
     const saveTrackToDB = useCallback((track: { id: string; name: string; fileName: string; file?: File; lrcFile?: File }) => {
         playlistManager.saveTrack(track).catch(err => {
-            console.error('保存音轨失败:', err);
+            // 保存音轨失败处理
         });
     }, []);
 
@@ -295,7 +299,6 @@ export const Content: React.FC = () => {
         // 查找对应的文件对象
         const file = fileObjects.get(fileName);
         if (!file) {
-            console.warn(`文件 ${fileName} 不存在`);
             return;
         }
         
@@ -367,7 +370,7 @@ export const Content: React.FC = () => {
         } catch (error: any) {
             // 忽略 AbortError，这通常是由于快速切换歌曲导致的
             if (error.name !== 'AbortError') {
-                console.error('[Content] 调性检测失败:', error);
+                // 调性检测失败处理
             }
             
             // 通知 Header 检测失败
@@ -382,17 +385,77 @@ export const Content: React.FC = () => {
         const handleTriggerDetection = async () => {
             let fileToDetect: File | undefined;
             
-            // 优先使用当前播放的文件
-            if (currentPlayingFile && fileObjects.has(currentPlayingFile)) {
-                fileToDetect = fileObjects.get(currentPlayingFile);
+            // ✅ 检查是否是 MS 播放列表（Android 模式）
+            const msTracks = (window as any).__msTracks;
+            const msCurrentIndex = (window as any).__msCurrentIndex;
+            
+            if (isAndroidNative() && msTracks && msCurrentIndex !== undefined) {
+                // ✅ Android 模式：使用 ExoPlayer 适配器
+                try {
+                    // 通知 Header 开始检测
+                    window.dispatchEvent(new CustomEvent('key-detection-update', {
+                        detail: { fullKey: '', isDetecting: true }
+                    }));
+                    
+                    // 执行调性检测
+                    const result = await detectCurrentTrackKey();
+                    
+                    if (result) {
+                        // 通知 Header 检测结果
+                        window.dispatchEvent(new CustomEvent('key-detection-update', {
+                            detail: { fullKey: result.fullKey, isDetecting: false }
+                        }));
+                    } else {
+                        // 检测失败
+                        window.dispatchEvent(new CustomEvent('key-detection-update', {
+                            detail: { fullKey: '', isDetecting: false }
+                        }));
+                    }
+                    return; // Android 模式处理完成，直接返回
+                } catch (error: any) {
+                    if (error.name !== 'AbortError') {
+                    }
+                    // 通知 Header 检测失败
+                    window.dispatchEvent(new CustomEvent('key-detection-update', {
+                        detail: { fullKey: '', isDetecting: false }
+                    }));
+                    return;
+                }
+            }
+            
+            // Web 模式：从 fileObjects 中获取
+            if (msTracks && msCurrentIndex !== undefined) {
+                // MS 播放列表：动态加载当前歌曲
+                try {
+                    const currentTrack = msTracks[msCurrentIndex];
+                    const { MediaStore } = await import('../utils/mediastore-plugin.js');
+                    
+                    // 读取音频文件
+                    const audioResult = await MediaStore.readFileAsBase64({ uri: currentTrack.filePath });
+                    const binaryString = atob(audioResult.base64);
+                    const bytes = new Uint8Array(binaryString.length);
+                    for (let i = 0; i < binaryString.length; i++) {
+                        bytes[i] = binaryString.charCodeAt(i);
+                    }
+                    const blob = new Blob([bytes], { type: 'audio/mpeg' });
+                    fileToDetect = new File([blob], currentTrack.fileName, { type: 'audio/mpeg' });
+                } catch (error) {
+                    // 加载 MS 音轨失败处理
+                }
             } else {
-                // 如果没有当前播放文件，尝试从 fileObjects 中找到第一个 MP3 文件
-                const audioFileName = Array.from(fileObjects.keys()).find(name => 
-                    name.endsWith('.mp3') || name.endsWith('.wav') || name.endsWith('.flac')
-                );
-                
-                if (audioFileName) {
-                    fileToDetect = fileObjects.get(audioFileName);
+                // 普通播放列表：从 fileObjects 中获取
+                // 优先使用当前播放的文件
+                if (currentPlayingFile && fileObjects.has(currentPlayingFile)) {
+                    fileToDetect = fileObjects.get(currentPlayingFile);
+                } else {
+                    // 如果没有当前播放文件，尝试从 fileObjects 中找到第一个 MP3 文件
+                    const audioFileName = Array.from(fileObjects.keys()).find(name => 
+                        name.endsWith('.mp3') || name.endsWith('.wav') || name.endsWith('.flac')
+                    );
+                    
+                    if (audioFileName) {
+                        fileToDetect = fileObjects.get(audioFileName);
+                    }
                 }
             }
             
@@ -407,6 +470,43 @@ export const Content: React.FC = () => {
         window.addEventListener('trigger-key-detection' as any, handleTriggerDetection as any);
         return () => window.removeEventListener('trigger-key-detection' as any, handleTriggerDetection as any);
     }, [currentPlayingFile, fileObjects, detectAudioKey]);
+    
+    // ✅ Android 模式下，切换歌曲时重置音高、速度和调性检测结果
+    useEffect(() => {
+        
+        if (!isAndroidNative()) {
+            return;
+        }
+        
+        if (_currentTrackIndex < 0) {
+            return;
+        }
+        
+        
+        // 导入 ExoPlayer 控制函数
+        import('../utils/playback-control.js').then(({ setExoPlayerPitch, setExoPlayerSpeed }) => {
+            // 重置音高为原调
+            setExoPlayerPitch(1.0).catch(err => {
+            });
+            
+            // 重置速度为 1.0x
+            setExoPlayerSpeed(1.0).catch(err => {
+            });
+            
+            // ✅ 通知 Header 组件重置 UI 音高状态
+            window.dispatchEvent(new CustomEvent('st-pitch-change', { detail: 0 }));
+            
+            // ✅ 通知 Header 组件重置 UI 速度状态
+            window.dispatchEvent(new CustomEvent('st-speed-change', { detail: 1.0 }));
+            
+            // ✅ 清空调性检测结果（新歌需要重新检测）
+            window.dispatchEvent(new CustomEvent('key-detection-update', {
+                detail: { fullKey: '', isDetecting: false }
+            }));
+            
+        }).catch(err => {
+        });
+    }, [_currentTrackIndex]);
 
     const [lrcState, lrcDispatch] = useLrc(() => {
         return {
@@ -423,6 +523,9 @@ export const Content: React.FC = () => {
                 type: LrcActionType.parse,
                 payload: { text: event.detail.text, options: trimOptions },
             });
+            
+            // ✅ 关键修复：歌词加载后，强制更新 path 以触发重新渲染
+            setPath(location.hash);
         };
         
         window.addEventListener('load-lrc', onLoadLrc as EventListener);
@@ -439,7 +542,7 @@ export const Content: React.FC = () => {
                     const text = await customEvent.detail.lrcFile.text();
                     lrcDispatch({ type: LrcActionType.parse, payload: { text, options: {} } });
                 } catch (error) {
-                    console.error('[Content] Failed to load LRC file:', error);
+                    // 加载 LRC 文件失败处理
                 }
             }
         };
@@ -563,7 +666,7 @@ export const Content: React.FC = () => {
                     // 没有歌词时显示帮助界面，但路由仍然在 player
                     return <AkariNotFound />;
                 }
-                return <LazyPlayer state={lrcState} dispatch={lrcDispatch} />;
+                return <Player state={lrcState} dispatch={lrcDispatch} />;
             }
 
             case ROUTER.editor: {
@@ -578,26 +681,26 @@ export const Content: React.FC = () => {
             }
 
             case ROUTER.tune: {
-                return <LazyTune lrcState={lrcState} lrcDispatch={lrcDispatch} />;
+                return <Tune lrcState={lrcState} lrcDispatch={lrcDispatch} />;
             }
 
             case ROUTER.lrcutils: {
-                return <LazyLrcUtils lrcState={lrcState} lrcDispatch={lrcDispatch} />;
+                return <LrcUtils lrcState={lrcState} lrcDispatch={lrcDispatch} />;
             }
 
             case ROUTER.gist: {
-                return <LazyGist lrcDispatch={lrcDispatch} langName={prefState.lang} />;
+                return <Gist lrcDispatch={lrcDispatch} langName={prefState.lang} />;
             }
 
             case ROUTER.preferences: {
-                return <LazyPreferences />;
+                return <Preferences />;
             }
             
             case ROUTER.playerSoundTouchJS: {
                 if (lrcState.lyric.length === 0) {
                     return <AkariNotFound />;
                 }
-                return <LazyPlayerSoundTouch state={lrcState} dispatch={lrcDispatch} />;
+                return <PlayerSoundTouch state={lrcState} dispatch={lrcDispatch} />;
             }
             
             default: {
@@ -618,7 +721,7 @@ export const Content: React.FC = () => {
                 />
             )}
             
-            <Suspense fallback={<AkariOdangoLoading />}>{content}</Suspense>
+            {content}
         </main>
     );
 };

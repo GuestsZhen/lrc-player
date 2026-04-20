@@ -220,7 +220,10 @@ audio::-webkit-media-controls-enclosure {
         align-items: center;
         justify-content: center;
         gap: 8px;
-        flex: 1;
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 5;
     }
     
     /* 右侧速度按钮 - 绝对定位，不影响中间居中 */

@@ -4,13 +4,16 @@
 
 **简谱 LRC 播放器**是一个基于 React 18 + TypeScript + Vite 6 构建的现代化歌词制作和播放工具。这是一个功能丰富的 Web 应用，主要用于创建、编辑、同步和播放 LRC 格式歌词文件，特别支持简谱转调功能。
 
+**Android 版本**通过 Capacitor 框架将 Web 应用转换为原生 Android App，使用 MediaStore API 直接访问系统媒体库。
+
 - **项目名称**: lrc-player
-- **当前版本**: 6.0.5
+- **当前版本**: 6.0.5 (重构优化版)
 - **作者**: magic-akari (forked and enhanced by GuestsZhen)
 - **许可证**: MIT
 - **在线地址**: https://guestszhen.github.io/lrc-player
+- **Android 包名**: com.lrcplayer.app
 
----
+
 
 ## 🎯 核心功能模块
 
@@ -75,6 +78,12 @@
 - 🔄 跨组件状态同步
 - 📱 Web 和 Android 双端支持
 
+### 10. Footer 组件重构 ⭐最新
+- 📦 **模块化架构**: 从单体 683 行优化为模块化结构
+- 🔧 **工具函数提取**: file-utils.ts, audio-decoder.ts, playback-control.ts
+- 🎣 **Hook 封装**: usePlaylistEvents.ts 管理 10 个事件监听器
+- ✨ **代码质量**: 提取 PlaylistPanel 组件，提升可维护性
+
 ---
 
 ## 📁 项目结构详解
@@ -119,12 +128,39 @@
 **核心布局组件：**
 
 | 组件文件 | 功能说明 |
-|---------|---------|
+|---------|---------||
 | `app.tsx` | 根组件，组织整体布局结构（Header + Content + Footer + Toast） |
 | `app.context.tsx` | 全局状态管理（Context API），提供应用级状态共享 |
 | `header.tsx` | 顶部导航栏，包含菜单、功能按钮、路由切换 |
 | `content.tsx` | 主要内容区域，根据路由动态加载不同页面组件 |
-| `footer.tsx` | 底部控制栏，播放控制、进度条、信息显示 |
+| `footer.tsx` | 底部控制栏，播放控制、进度条、信息显示 ⭐已重构 |
+
+**音频子组件 (audio/)：** ⭐新增
+
+| 组件文件 | 功能说明 |
+|---------|---------||
+| `LrcAudio.tsx` | LRC 音频控制组件，显示当前歌曲信息 |
+| `PlaybackControls.tsx` | 播放控制按钮组件 (播放/暂停/上一首/下一首) |
+| `TimeLine.tsx` | 时间轴组件，显示播放进度和总时长 |
+| `RateSlider.tsx` | 播放速率滑块，支持 0.5x - 2.0x 调节 |
+| `Slider.tsx` | 通用滑块组件 |
+| `index.ts` | Audio 组件统一导出 |
+
+**播放列表相关组件：** ⭐新增
+
+| 组件文件 | 功能说明 |
+|---------|---------||
+| `PlaylistPanel.tsx` | 播放列表面板组件 (从 footer 提取) |
+| `FileListPanel.tsx` | 文件列表面板组件，显示所有音频文件 |
+| `MSFileListPanel.tsx` | Android MediaStore 播放列表面板 |
+
+**导航和设置组件：** ⭐新增
+
+| 组件文件 | 功能说明 |
+|---------|---------||
+| `NavigationButtons.tsx` | 导航按钮组件，根据当前页面显示不同按钮 |
+| `PlayerSettingsPanel.tsx` | Player 设置面板 (字体、背景色、歌词颜色等) |
+| `RouteTransition.tsx` | 路由过渡动画组件，提供页面切换淡入淡出效果 |
 
 **功能页面组件：**
 
@@ -145,6 +181,7 @@
 | 组件文件 | 功能说明 |
 |---------|---------|
 | `audio.tsx` | 音频处理和控制组件，封装音频播放逻辑 |
+| `LrcAudio.tsx` | LRC 音频控制组件 (从 audio 提取) |
 | `waveform.tsx` | 音频波形可视化组件，基于 WaveSurfer.js |
 | `loadaudio.tsx` | 音频文件加载组件，处理文件上传和解析 |
 | `asidepanel.tsx` | 侧边面板组件，显示额外信息和工具 |
@@ -160,11 +197,20 @@
 #### src/hooks/ - 自定义 React Hooks
 
 | Hook 文件 | 功能说明 |
-|----------|---------|
+|----------|---------||
 | `useLrc.ts` | 歌词状态管理和操作，处理歌词解析、编辑、同步 |
 | `usePref.ts` | 偏好设置管理，持久化用户配置 |
 | `useLang.ts` | 国际化语言切换，多语言支持 |
 | `useKeyBindings.ts` | 键盘快捷键绑定，处理用户输入 |
+| `useMediaStore.ts` | MediaStore 媒体库访问 Hook (Android) |
+| `useAudioEvents.ts` | 音频事件处理 Hook (play/pause/ended/timeupdate) |
+| `usePlaylistEvents.ts` | 播放列表事件监听 Hook ⭐新增 (管理 10 个事件) |
+| `useAudioControl.ts` | 音频控制 Hook (音量、静音等) |
+| `useMenu.ts` | 菜单状态管理 Hook |
+| `usePageDetection.ts` | 页面检测 Hook |
+| `usePlatform.ts` | 平台检测 Hook |
+| `usePlaybackMode.ts` | 播放模式管理 Hook |
+| `index.ts` | Hooks 统一导出 |
 
 #### src/utils/ - 工具函数库
 
@@ -176,6 +222,13 @@
 | `audiomodule.ts` | 音频模块管理，统一音频状态和操作 |
 | `playlist-manager.ts` | 播放列表管理，支持多音频文件 |
 | `pitch-shifter.ts` | 音调转换工具，实现变调功能 |
+| `file-utils.ts` | 文件处理工具 (getBaseName, findMatchingLrcFile) ⭐新增 |
+| `audio-decoder.ts` | 音频解码工具 (NCM/QMC 解密) ⭐新增 |
+| `playback-control.ts` | 播放控制工具 (索引计算、歌曲加载) ⭐新增 |
+| `exoplayer-plugin.ts` | ExoPlayer 插件接口 (Android) ⭐新增 |
+| `exoplayer-key-detector.ts` | ExoPlayer 按键检测器 ⭐新增 |
+| `platform-detector.ts` | 平台检测工具 ⭐新增 |
+| `mediastore-plugin.ts` | MediaStore 插件接口 (Android) ⭐新增 |
 
 **输入处理：**
 
@@ -203,6 +256,9 @@
 | `stores/playerSettings.ts` | Player 设置管理（字体大小、背景色、歌词颜色、副行透明度） |
 | `stores/navigation.ts` | 导航状态管理（全屏、Player 设置菜单、调性检测菜单） |
 | `stores/fileManager.ts` | 文件管理（播放列表、当前播放文件、搜索过滤） |
+| `stores/audioStore.ts` | 音频状态管理（播放状态、音量、进度等） |
+| `stores/playlistStore.ts` | 播放列表状态管理 |
+| `stores/index.ts` | Stores 统一导出 |
 
 **其他工具：**
 
@@ -354,7 +410,7 @@ Web Worker 用于在后台线程执行耗时任务，避免阻塞主线程。
 - **Vite 6** - 现代化的前端构建工具
 
 ### 状态管理 ⭐新增
-- **Zustand** - 轻量级、高性能的全局状态管理库
+- **Zustand ^5.0.12** - 轻量级、高性能的全局状态管理库
 
 ### 音频处理
 - **WaveSurfer.js 7.9** - 音频波形可视化和播放
@@ -427,9 +483,10 @@ loadaudio.tsx 处理文件读取
     ↓
 audiomodule.ts 创建音频上下文
     ↓
-web-audio-player.ts 初始化播放器
+web-audio-player.ts 初始化播放器 (Web 模式)
+或 ExoPlayer (Android 模式)
     ↓
-waveform.tsx 渲染波形图
+waveform.tsx 渲染波形图 (可选)
     ↓
 用户控制播放/暂停/seek
     ↓
@@ -508,15 +565,20 @@ App (根组件)
 ├── Zustand Stores ⭐新增
 │   ├── usePlayerSettings (Player 设置：字体、背景色、歌词颜色、透明度)
 │   ├── useNavigation (导航状态：全屏、菜单显示)
-│   └── useFileManager (文件管理：播放列表、当前文件)
+│   ├── useFileManager (文件管理：播放列表、当前文件)
+│   ├── useAudioStore (音频状态：播放状态、音量、进度)
+│   └── usePlaylistStore (播放列表状态管理)
 │
 ├── Header (导航栏)
+│   ├── NavigationButtons (导航按钮)
 │   └── 路由切换按钮
 │
 ├── Content (内容区)
+│   ├── RouteTransition (路由过渡动画)
 │   ├── Editor (编辑器)
 │   ├── Synchronizer (同步器)
 │   ├── Player (播放器)
+│   │   └── PlayerSettingsPanel (Player 设置面板)
 │   ├── PlayerSoundTouch (变调播放器)
 │   ├── Tune (转调工具)
 │   ├── LrcUtils (工具箱)
@@ -524,20 +586,37 @@ App (根组件)
 │   ├── Preferences (设置)
 │   └── Home (首页)
 │
-├── Footer (控制栏)
-│   ├── Audio (音频控制)
-│   ├── Waveform (波形图)
-│   └── 播放控制按钮
+├── Footer (控制栏) ⭐已重构
+│   ├── Audio 子组件
+│   │   ├── LrcAudio (歌曲信息显示)
+│   │   ├── PlaybackControls (播放控制按钮)
+│   │   ├── TimeLine (时间轴)
+│   │   └── RateSlider (播放速率滑块)
+│   ├── PlaylistPanel (播放列表面板)
+│   └── LoadAudio (音频加载)
 │
+├── FileListPanel (文件列表面板) ⭐新增
+├── MSFileListPanel (Android 播放列表) ⭐新增
 └── Toast (消息提示)
 
 工具层：
 ├── web-audio-player.ts (音频播放)
 ├── audiomodule.ts (音频管理)
 ├── playlist-manager.ts (播放列表)
+├── file-utils.ts (文件处理工具) ⭐新增
+├── audio-decoder.ts (音频解码) ⭐新增
+├── playback-control.ts (播放控制) ⭐新增
+├── exoplayer-plugin.ts (ExoPlayer 插件) ⭐新增
+├── platform-detector.ts (平台检测) ⭐新增
+├── mediastore-plugin.ts (MediaStore 插件) ⭐新增
 ├── key-detector.ts (按键检测)
 ├── gistapi.ts (Gist API)
 └── router.ts (路由)
+
+Hooks 层：
+├── useMediaStore.ts (MediaStore 访问)
+├── useAudioEvents.ts (音频事件)
+└── usePlaylistEvents.ts (播放列表事件) ⭐新增
 
 Worker 层：
 ├── sw.ts (Service Worker)
@@ -557,18 +636,18 @@ Worker 层：
 ### 2. 状态管理 ⭐重构
 - **Zustand Store**：轻量级全局状态管理（playerSettings、navigation、fileManager）
 - **React Context API**：应用级状态共享（语言、偏好设置）
-- **自定义 Hooks**：封装业务逻辑（useLrc、usePref、useLang）
+- **自定义 Hooks**：封装业务逻辑（useLrc、usePref、useLang、usePlaylistEvents）
 - **PubSub 模式**：组件间通信和事件广播
-- **自动持久化**：Store 自动同步到 sessionStorage/localStorage
+- **自动持久化**：Store 自动同步到 Capacitor Preferences / sessionStorage/localStorage
 
 ### 3. 模块化组织
-- 按功能划分目录（components、hooks、utils）
+- 按功能划分目录（components、hooks、utils、stores）
 - 常量集中管理（const 目录）
 - 类型定义统一管理（types 目录）
 
 ### 4. 性能优化
 - 代码分割和懒加载
-- Web Worker 处理耗时任务
+- Web Worker 处理耗时任务（NCM/QMC 解密）
 - Service Worker 离线缓存
 - LightningCSS 快速 CSS 处理
 
@@ -582,6 +661,12 @@ Worker 层：
 - 离线可用
 - 后台同步
 - 推送通知（可扩展）
+
+### 7. 跨平台适配 ⭐新增
+- **Web 版本**：标准 HTML5 Audio API
+- **Android 版本**：ExoPlayer + MediaStore API
+- **平台检测**：自动识别运行环境
+- **统一接口**：抽象层屏蔽平台差异
 
 ---
 
@@ -733,11 +818,153 @@ docker run -d -p 8080:80 lrc-player
 - ✅ 完善的工程化（PWA、Docker、CI/CD）
 - ✅ 国际化支持（三语言）
 - ✅ 特色功能（简谱转调）
+- ✅ **Android 原生支持**（Capacitor + MediaStore API）
 
 这个项目不仅是一个实用的工具，也是学习现代前端开发的优秀案例。
 
 ---
 
-**文档生成时间**: 2026-04-13  
-**项目版本**: 6.0.5  
-**文档版本**: 2.0.0 (添加 Zustand Store 架构)
+## 📱 Android 版本架构
+
+### 双端架构设计
+
+```
+lrc-player/
+├── Web 版本 (浏览器)
+│   ├── 文件选择: <input type="file" />
+│   ├── 播放列表: selected-files-panel
+│   └── 存储: localStorage/sessionStorage
+│
+└── Android 版本 (Capacitor)
+    ├── 文件选择: MediaStore API + FilePicker
+    ├── 播放列表: MSFileListPanel
+    ├── 存储: Capacitor Preferences
+    └── 完全离线运行
+```
+
+### 关键文件
+
+```
+src/
+├── utils/
+│   ├── platform-detector.ts       # 平台检测
+│   ├── audio-file-adapter.ts      # 音频文件适配
+│   ├── mediastore-plugin.ts       # MediaStore 接口
+│   └── storage.ts                 # 统一存储适配器
+├── components/
+│   ├── MSFileListPanel.tsx # Android 播放列表
+│   ├── header.tsx                 # 平台适配头部
+│   └── footer.tsx                 # 平台适配底部
+└── stores/
+    ├── playerSettings.ts          # 播放器设置 (Preferences)
+    └── fileManager.ts             # 文件管理
+
+android/
+└── app/src/main/java/com/lrcplayer/app/
+    ├── MainActivity.java          # 主活动
+    └── plugins/
+        └── MediaStorePlugin.java  # MediaStore 原生插件 ⭐
+```
+
+### MediaStore 集成
+
+这是 Android 版本的**核心创新点**，通过 Android MediaStore API 直接访问系统媒体库。
+
+#### 工作流程
+
+```
+用户点击授权按钮
+  ↓
+调用 MediaStore.scanAudioFiles()
+  ↓
+检查权限 (READ_MEDIA_AUDIO, MANAGE_EXTERNAL_STORAGE)
+  ↓
+查询 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+  ↓
+返回音频文件列表 (content:// URIs)
+  ↓
+转换为实际文件路径
+  ↓
+查找对应的 LRC 歌词文件
+  ↓
+显示在播放列表中
+```
+
+#### MediaStorePlugin.java 主要方法
+
+| 方法名 | 功能说明 |
+|--------|----------|
+| `scanAudioFiles()` | 扫描所有音频文件 |
+| `getTracksInFolder()` | 获取指定文件夹下的歌曲 |
+| `getAudioFilePath()` | 获取音频文件的实际路径 |
+| `findLrcFile()` | 查找同名 LRC 歌词文件 |
+| `refreshLibrary()` | 刷新媒体库（触发媒体扫描） |
+| `readFileAsBase64()` | 读取文件为 Base64 字符串 |
+
+### 构建和部署
+
+详见：
+- [ANDROID-CROSS-PLATFORM-GUIDE.md](./ANDROID-CROSS-PLATFORM-GUIDE.md) - 跨平台开发指南
+- [ANDROID-MEDIASTORE-DEBUG-GUIDE.md](./ANDROID-MEDIASTORE-DEBUG-GUIDE.md) - MediaStore 调试指南
+- [ANDROID-CAPACITOR-STATUS.md](./ANDROID-CAPACITOR-STATUS.md) - Capacitor 迁移状态
+
+### ExoPlayer 集成 ⭐新增
+
+Android 版本使用 **ExoPlayer** 替代 HTML5 Audio，提供更好的性能和功能。
+
+#### ExoPlayerPlugin.java 主要功能
+
+- 🎵 高性能音频播放
+- 🎚️ 播放速度控制 (0.5x - 2.0x)
+- ⏯️ 播放/暂停/跳转控制
+- 🔊 音量控制
+- 📢 播放完成事件通知
+- 🔄 与 Web 层的双向通信
+
+#### 关键特性
+
+1. **后台播放支持**：即使应用切换到后台也能继续播放
+2. **锁屏控制**：支持锁屏界面播放控制
+3. **音频焦点管理**：自动处理与其他应用的音频冲突
+4. **格式支持广泛**：支持更多音频格式（MP3, FLAC, AAC, OGG 等）
+
+
+### 关键技术点
+
+#### 1. 类型兼容性处理
+
+在 TypeScript 中,`File | null` 和 `File | undefined` 是不同的类型。我们使用联合类型提高兼容性:
+
+```typescript
+readLrcFile: (track: any) => Promise<File | undefined | null>
+```
+
+#### 2. React 渲染期间状态更新修复
+
+**问题**: Header 渲染时触发 Content 的状态更新,导致警告。
+
+**解决**: 在 Content 中使用 `setTimeout` 异步更新状态:
+
+```typescript
+setTimeout(() => {
+    setCurrentPlayingFile(customEvent.detail.fileName);
+}, 0);
+```
+
+#### 3. Hook 参数传递
+
+确保 `setAudioSrc` 等回调函数正确传递给 Hook:
+
+```typescript
+usePlaylistEvents({
+    // ...
+    setAudioSrc,  // ✅ 直接传递,不使用 CustomEvent
+    // ...
+});
+```
+
+---
+
+**文档生成时间**: 2026-04-19  
+**项目版本**: 6.0.5 (重构优化版)  
+**文档版本**: 2.3.0 

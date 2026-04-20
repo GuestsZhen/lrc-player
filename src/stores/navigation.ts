@@ -13,6 +13,12 @@ interface NavigationState {
   showStKeyMenu: boolean;
   // 动画隐藏状态
   isHiding: boolean;
+  // 关闭超时ID（用于清除pending的timeout）
+  closeTimeouts: {
+    keyDetection?: number;
+    playerSettings?: number;
+    stKey?: number;
+  };
   
   // Actions
   setIsFullscreen: (isFullscreen: boolean) => void;
@@ -30,13 +36,14 @@ interface NavigationState {
 /**
  * 导航状态管理
  */
-export const useNavigation = create<NavigationState>((set, get) => ({
+export const useNavigation = create<NavigationState>((set) => ({
   isFullscreen: false,
   showEditorMenu: false,
   showPlayerSettings: false,
   showKeyDetectionMenu: false,
   showStKeyMenu: false,
   isHiding: false,
+  closeTimeouts: {},
   
   setIsFullscreen: (isFullscreen) => set({ isFullscreen }),
   
@@ -47,61 +54,25 @@ export const useNavigation = create<NavigationState>((set, get) => ({
   closeEditorMenu: () => set({ showEditorMenu: false }),
   
   togglePlayerSettings: () => set((state) => {
-    if (state.showPlayerSettings && !state.isHiding) {
-      get().closePlayerSettings();
-      return {};
-    }
-    return { showPlayerSettings: true, isHiding: false };
+    // ✅ 简化逻辑：直接切换状态，不使用动画
+    return { showPlayerSettings: !state.showPlayerSettings, isHiding: false };
   }),
   
-  closePlayerSettings: () => set((state) => {
-    if (state.isHiding) return {};
-    
-    set({ isHiding: true });
-    setTimeout(() => {
-      set({ showPlayerSettings: false, isHiding: false });
-    }, 300);
-    
-    return {};
-  }),
+  closePlayerSettings: () => set({ showPlayerSettings: false, isHiding: false }),
   
   toggleKeyDetectionMenu: () => set((state) => {
-    if (state.showKeyDetectionMenu && !state.isHiding) {
-      get().closeKeyDetectionMenu();
-      return {};
-    }
-    return { showKeyDetectionMenu: true, isHiding: false };
+    // ✅ 简化逻辑：直接切换状态，不使用动画
+    return { showKeyDetectionMenu: !state.showKeyDetectionMenu, isHiding: false };
   }),
   
-  closeKeyDetectionMenu: () => set((state) => {
-    if (state.isHiding) return {};
-    
-    set({ isHiding: true });
-    setTimeout(() => {
-      set({ showKeyDetectionMenu: false, isHiding: false });
-    }, 300);
-    
-    return {};
-  }),
+  closeKeyDetectionMenu: () => set({ showKeyDetectionMenu: false, isHiding: false }),
   
   toggleStKeyMenu: () => set((state) => {
-    if (state.showStKeyMenu && !state.isHiding) {
-      get().closeStKeyMenu();
-      return {};
-    }
-    return { showStKeyMenu: true, isHiding: false };
+    // ✅ 简化逻辑：直接切换状态，不使用动画
+    return { showStKeyMenu: !state.showStKeyMenu, isHiding: false };
   }),
   
-  closeStKeyMenu: () => set((state) => {
-    if (state.isHiding) return {};
-    
-    set({ isHiding: true });
-    setTimeout(() => {
-      set({ showStKeyMenu: false, isHiding: false });
-    }, 300);
-    
-    return {};
-  }),
+  closeStKeyMenu: () => set({ showStKeyMenu: false, isHiding: false }),
   
   closeAllMenus: () => set({
     showEditorMenu: false,

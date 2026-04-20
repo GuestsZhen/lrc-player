@@ -1,7 +1,7 @@
 import React from 'react';
 import ROUTER from '#const/router.json';
-import { prependHash } from '../../utils/router.js';
-import { EditorSVG, TuneSVG, SynchronizerSVG } from '../svg.js';
+import { prependHash } from '../utils/router.js';
+import { EditorSVG, TuneSVG, SynchronizerSVG } from './svg.js';
 
 interface NavigationButtonsProps {
   isPlayerPage: boolean;

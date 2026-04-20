@@ -18,7 +18,6 @@ async function loadEssentia() {
             EssentiaWASM = module.EssentiaWASM;
             EssentiaExtractor = module.EssentiaExtractor;
         } catch (error) {
-            console.error('[KeyDetector] Failed to load Essentia module:', error);
             throw error;
         }
     }
@@ -51,43 +50,29 @@ class KeyDetector {
         }
 
         try {
-            console.log('[KeyDetector] Loading Essentia...');
             const { EssentiaModule, EssentiaWASM, EssentiaExtractor } = await loadEssentia();
-            
-            console.log('[KeyDetector] EssentiaWASM type:', typeof EssentiaWASM);
-            console.log('[KeyDetector] EssentiaWASM keys:', Object.keys(EssentiaWASM || {}));
             
             // EssentiaWASM.EssentiaWASM 已经是初始化好的 WASM 实例
             const wasmInstance = EssentiaWASM?.EssentiaWASM;
             
             if (!wasmInstance || typeof wasmInstance !== 'object') {
-                console.error('[KeyDetector] Invalid WASM instance:', wasmInstance);
                 throw new Error('Cannot find valid WASM instance');
             }
             
-            console.log('[KeyDetector] WASM instance found, has _malloc:', typeof wasmInstance._malloc === 'function');
-            console.log('[KeyDetector] Creating Essentia instance...');
-            
             // 直接使用 WASM 实例创建 Essentia
             this.essentia = new EssentiaModule(wasmInstance);
-            console.log('[KeyDetector] Essentia instance created');
-            console.log('[KeyDetector] Essentia methods:', Object.keys(this.essentia || {}).slice(0, 20));
             
             // 如果有 EssentiaExtractor，也初始化它
             if (EssentiaExtractor) {
-                console.log('[KeyDetector] Initializing EssentiaExtractor...');
                 try {
                     this.extractor = new EssentiaExtractor(wasmInstance);
-                    console.log('[KeyDetector] EssentiaExtractor initialized');
                 } catch (e) {
-                    console.warn('[KeyDetector] Failed to initialize EssentiaExtractor:', e);
+                    // Extractor 初始化失败不影响主功能
                 }
             }
             
             this.isInitialized = true;
-            console.log('[KeyDetector] Essentia initialized successfully');
         } catch (error) {
-            console.error('[KeyDetector] Failed to initialize Essentia:', error);
             throw error;
         }
     }
@@ -116,53 +101,31 @@ class KeyDetector {
                 sampleRate * analysisDuration
             );
             
-            console.log('[KeyDetector] Total samples:', channelData.length);
-            console.log('[KeyDetector] Analyzing samples:', maxSamples, `(${(maxSamples / sampleRate).toFixed(1)}s)`);
-            
             // 限制最大采样数，避免内存溢出（最多分析60秒）
             const safeMaxSamples = Math.min(maxSamples, sampleRate * 60);
             const samples = channelData.slice(0, safeMaxSamples);
 
             // 使用 Essentia 的 Key 提取器
-            console.log('[KeyDetector] Calling KeyExtractor...');
-            console.log('[KeyDetector] this.essentia type:', typeof this.essentia);
-            console.log('[KeyDetector] KeyExtractor exists:', typeof this.essentia?.KeyExtractor);
             
             // Essentia.js 的正确用法：直接调用算法，传入参数
             // 需要将 Float32Array 转换为 Essentia 能识别的格式
-            console.log('[KeyDetector] Samples length:', samples.length);
-            console.log('[KeyDetector] Sample rate:', sampleRate);
             
             // 尝试使用 EssentiaExtractor 或直接调用 Key 算法
             let result;
             
             // 优先使用 EssentiaExtractor（如果已初始化）
             if (this.extractor && typeof this.extractor.key === 'function') {
-                console.log('[KeyDetector] Using EssentiaExtractor.key');
                 try {
                     result = await this.extractor.key(samples, sampleRate);
-                    console.log('[KeyDetector] Extractor result:', result);
                 } catch (e) {
-                    console.error('[KeyDetector] Extractor failed:', e);
                     throw e;
                 }
             } else {
                 // 回退到直接调用 Key 算法
                 if (typeof this.essentia.Key === 'function') {
-                    console.log('[KeyDetector] Using Key algorithm');
-                    
                     // 使用 arrayToVector 转换数据
-                    console.log('[KeyDetector] Converting samples to VectorFloat...');
-                    console.time('[KeyDetector] arrayToVector');
                     const vectorSamples = this.essentia.arrayToVector(samples);
-                    console.timeEnd('[KeyDetector] arrayToVector');
-                    console.log('[KeyDetector] VectorFloat size:', vectorSamples?.size ? vectorSamples.size() : 'unknown');
-                    
-                    console.log('[KeyDetector] Calling Key algorithm...');
-                    console.time('[KeyDetector] Key algorithm');
                     result = this.essentia.Key(vectorSamples, sampleRate);
-                    console.timeEnd('[KeyDetector] Key algorithm');
-                    console.log('[KeyDetector] Key algorithm completed');
                     
                     // 释放 VectorFloat 内存
                     if (vectorSamples && typeof vectorSamples.delete === 'function') {
@@ -170,31 +133,34 @@ class KeyDetector {
                     }
                 } else if (typeof this.essentia.KeyExtractor === 'function') {
                     // 方法2: 使用 KeyExtractor
-                    console.log('[KeyDetector] Using KeyExtractor algorithm');
                     result = this.essentia.KeyExtractor(samples, sampleRate);
                 } else {
                     throw new Error('No key detection algorithm available in Essentia');
                 }
             }
-            
-            console.log('[KeyDetector] Key detection result:', result);
-            console.log('[KeyDetector] Result type:', typeof result);
-            console.log('[KeyDetector] Result keys:', result ? Object.keys(result) : 'null');
 
             // 解析结果
             const key = result.key;
             const scale = result.scale;
             const strength = result.strength;
 
-            // 格式化输出
-            const fullKey = `${key} ${scale === 'major' ? '大调' : '小调'}`;
+            // ✅ 如果检测到小调，转换为关系大调显示
+            let displayKey = key;
+            let displayScale = scale;
+            
+            if (scale === 'minor') {
+                // 小调的关系大调 = 小调主音 + 3 个半音
+                const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+                const minorIndex = NOTE_NAMES.indexOf(key);
+                if (minorIndex !== -1) {
+                    const relativeMajorIndex = (minorIndex + 3) % 12;
+                    displayKey = NOTE_NAMES[relativeMajorIndex];
+                    displayScale = 'major';
+                }
+            }
 
-            console.log('[KeyDetector] Detection result:', {
-                key,
-                scale,
-                strength,
-                fullKey
-            });
+            // 格式化输出
+            const fullKey = `${displayKey} ${displayScale === 'major' ? '大调' : '小调'}`;
 
             return {
                 key,
@@ -203,7 +169,6 @@ class KeyDetector {
                 fullKey
             };
         } catch (error) {
-            console.error('[KeyDetector] Key detection failed:', error);
             throw error;
         }
     }
@@ -224,7 +189,6 @@ class KeyDetector {
             const audioBuffer = await this.fileToAudioBuffer(file);
             return await this.detectKeyFromBuffer(audioBuffer, options);
         } catch (error) {
-            console.error('[KeyDetector] Failed to process file:', error);
             throw error;
         }
     }
@@ -244,7 +208,6 @@ class KeyDetector {
             const audioBuffer = await this.urlToAudioBuffer(url);
             return await this.detectKeyFromBuffer(audioBuffer, options);
         } catch (error) {
-            console.error('[KeyDetector] Failed to process URL:', error);
             throw error;
         }
     }
@@ -326,7 +289,6 @@ class KeyDetector {
             this.essentia.delete();
             this.essentia = null;
             this.isInitialized = false;
-            console.log('[KeyDetector] Destroyed');
         }
     }
 

@@ -1,13 +1,20 @@
 import ROUTER from "#const/router.json" assert { type: "json" };
-import { useContext, useEffect, useState, useCallback } from "react";
+import { useContext, useEffect, useState, useCallback, useRef } from "react";
 import { prependHash } from "../utils/router.js";
 import { appContext } from "./app.context.js";
 import { usePlayerSettings } from "../stores/playerSettings.js";
 import { useNavigation } from "../stores/navigation.js";
-import { PlayerSettingsPanel } from "./player-settings/PlayerSettingsPanel.js";
+import { PlayerSettingsPanel } from "./PlayerSettingsPanel.js";  // ✅ 从根目录导入
 import { PlaySVG, EditorSVG, FullscreenSVG, FullscreenExitSVG, TuneSVG, SynchronizerSVG, SettingsTSVG, PlaylistSVG, MusicKeySVG } from "./svg.js";
+// Capacitor Android 迁移相关
+import { isAndroidNative } from '../utils/platform-detector.js';
+import { MSFileListPanel } from './MSFileListPanel.js';
+import { AudioFileAdapter } from '../utils/audio-file-adapter.js';
+import type { AudioTrack } from '../utils/mediastore-plugin.js';
 
 export const Header: React.FC = () => {
+    // ✅ 调试日志：确认组件加载
+    
     const { lang } = useContext(appContext);
     
     // 使用新的 Stores
@@ -70,15 +77,13 @@ export const Header: React.FC = () => {
     
     // 文件列下面板显示状态
     const [_showFileListPanel, setShowFileListPanel] = useState(false);
+    
+    // Android 音乐库面板显示状态
+    const [showMSPanel, setShowMSPanel] = useState(false);
         
     // === 从 Store 获取的值（兼容旧代码）===
     const isFullscreen = navigation.isFullscreen;
     const setIsFullscreen = navigation.setIsFullscreen;
-    const showPlayerSettings = navigation.showPlayerSettings;
-    const isHiding = navigation.isHiding;
-    const closePlayerSettingsMenu = navigation.closePlayerSettings;
-    const togglePlayerSettingsMenu = navigation.togglePlayerSettings;
-    const closeKeyDetectionMenu = navigation.closeKeyDetectionMenu;
     const playerFontSize = playerSettings.fontSize;
     const setPlayerFontSize = playerSettings.setFontSize;
     const playerSubLyricOpacity = playerSettings.subOpacity;
@@ -86,6 +91,27 @@ export const Header: React.FC = () => {
     const setPlayerBgColor = playerSettings.setBgColor;
     const playerLyricColor = playerSettings.lyricColor;
     const setPlayerLyricColor = playerSettings.setLyricColor;
+    
+    // 文字设置面板本地状态
+    const [showPlayerSettings, setShowPlayerSettings] = useState(false);
+    const [isPlayerSettingsHiding, setIsPlayerSettingsHiding] = useState(false);
+    const playerSettingsMenuRef = useRef<HTMLDivElement>(null);
+    const closePlayerSettingsMenu = useCallback(() => {
+        setIsPlayerSettingsHiding(true);
+        setTimeout(() => {
+            setShowPlayerSettings(false);
+            setIsPlayerSettingsHiding(false);
+        }, 300);
+    }, []);
+    const togglePlayerSettingsMenu = useCallback(() => {
+        if (showPlayerSettings && !isPlayerSettingsHiding) {
+            closePlayerSettingsMenu();
+        } else {
+            setShowPlayerSettings(true);
+            setIsPlayerSettingsHiding(false);
+        }
+    }, [showPlayerSettings, isPlayerSettingsHiding, closePlayerSettingsMenu]);
+    
     // 兼容旧的事件系统
     const setPlayerSubLyricOpacity = (updater: ((prev: number) => number) | number) => {
         if (typeof updater === 'function') {
@@ -97,10 +123,13 @@ export const Header: React.FC = () => {
     };
     // ST 菜单相关（保留本地 state）
     const [showStKeyMenu, setShowStKeyMenu] = useState(false);
+    const [isStKeyHiding, setIsStKeyHiding] = useState(false);
+    const stKeyMenuRef = useRef<HTMLDivElement>(null);
     const closeStKeyMenu = useCallback(() => {
-        // 使用 navigation 的 isHiding 状态
+        setIsStKeyHiding(true);
         setTimeout(() => {
             setShowStKeyMenu(false);
+            setIsStKeyHiding(false);
         }, 300);
     }, []);
     // ========================================
@@ -109,6 +138,15 @@ export const Header: React.FC = () => {
     const [detectedKey, setDetectedKey] = useState<string>('');
     const [isDetectingKey, setIsDetectingKey] = useState(false);
     const [showKeyDetectionMenu, setShowKeyDetectionMenu] = useState(false);
+    const [isKeyDetectionHiding, setIsKeyDetectionHiding] = useState(false);
+    const keyDetectionMenuRef = useRef<HTMLDivElement>(null);
+    const closeKeyDetectionMenuLocal = useCallback(() => {
+        setIsKeyDetectionHiding(true);
+        setTimeout(() => {
+            setShowKeyDetectionMenu(false);
+            setIsKeyDetectionHiding(false);
+        }, 300);
+    }, []);
     
     // ST (SoundTouch) 调性检测结果
     const [stDetectedKey, setStDetectedKey] = useState<string>('');
@@ -121,14 +159,13 @@ export const Header: React.FC = () => {
     // ST 速度调节状态
     const [stPlaybackSpeed, setStPlaybackSpeed] = useState(1.0);
     
-    // ST 去人声状态
-    const [stVocalRemoval, setStVocalRemoval] = useState(false);
-    
     // 根据检测到的调和半音偏移计算当前调
     const getStCurrentKey = (): string => {
+        
         if (!stDetectedKey) {
             // 如果没有检测到调，显示半音数
-            return stPitchSemitones === 0 ? '原调' : (stPitchSemitones > 0 ? `+${stPitchSemitones}` : stPitchSemitones.toString());
+            const result = stPitchSemitones === 0 ? '原调' : (stPitchSemitones > 0 ? `+${stPitchSemitones}` : stPitchSemitones.toString());
+            return result;
         }
         
         // 提取基础调（如 "C" from "C Major"）
@@ -141,13 +178,15 @@ export const Header: React.FC = () => {
         const baseIndex = keys.indexOf(baseKey);
         if (baseIndex === -1) {
             // 如果找不到，返回原始格式
-            return `${baseKey}${stPitchSemitones > 0 ? '+' : ''}${stPitchSemitones}`;
+            const result = `${baseKey}${stPitchSemitones > 0 ? '+' : ''}${stPitchSemitones}`;
+            return result;
         }
         
         // 计算新的调索引（处理循环）
         const newIndex = (baseIndex + stPitchSemitones + 12) % 12;
+        const result = keys[newIndex];
         
-        return keys[newIndex];
+        return result;
     };
     
     // 音高调节状态（半音数）
@@ -205,7 +244,7 @@ export const Header: React.FC = () => {
                 }
             }
         } catch (error) {
-            console.error('Fullscreen error:', error);
+            // 全屏切换失败处理
         }
     };
 
@@ -258,15 +297,19 @@ export const Header: React.FC = () => {
         return () => window.removeEventListener('key-detection-update' as any, handleKeyDetected as any);
     }, []);
     
-    // 点击其他区域时关闭调性检测菜单（带动画）
+    // ✅ 已移除点击外部关闭功能
+    
+    // ✅ 点击外部区域关闭调性检测菜单（带动画）
     useEffect(() => {
-        if (!showKeyDetectionMenu || isHiding) return;
+        if (!showKeyDetectionMenu || isKeyDetectionHiding) {
+            return;
+        }
         
         const handleClickOutside = (event: MouseEvent) => {
-            const target = event.target as Element;
-            // 如果点击的不是菜单区域，关闭菜单
-            if (!target.closest('.key-detection-menu') && !target.closest('.key-detection-btn')) {
-                closeKeyDetectionMenu();
+            const target = event.target as Node;
+            
+            if (keyDetectionMenuRef.current && !keyDetectionMenuRef.current.contains(target)) {
+                closeKeyDetectionMenuLocal();
             }
         };
         
@@ -275,18 +318,19 @@ export const Header: React.FC = () => {
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [showKeyDetectionMenu, isHiding]);
+    }, [showKeyDetectionMenu, isKeyDetectionHiding, closeKeyDetectionMenuLocal]);
     
     // 注意：closeStKeyMenu 已在兼容层中定义
     
-    // 点击其他区域时关闭 ST歌曲调整菜单（带动画）
+    // ✅ 已移除点击外部关闭功能
+    
+    // ✅ 点击外部区域关闭 ST 歌曲调整菜单（带动画）
     useEffect(() => {
-        if (!showStKeyMenu || isHiding) return;
+        if (!showStKeyMenu || isStKeyHiding) return;
         
         const handleClickOutside = (event: MouseEvent) => {
-            const target = event.target as Element;
-            // 如果点击的不是菜单区域，关闭菜单
-            if (!target.closest('.key-detection-menu') && !target.closest('.key-detection-btn')) {
+            const target = event.target as Node;
+            if (stKeyMenuRef.current && !stKeyMenuRef.current.contains(target)) {
                 closeStKeyMenu();
             }
         };
@@ -296,21 +340,17 @@ export const Header: React.FC = () => {
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [showStKeyMenu, isHiding, closeStKeyMenu]);
+    }, [showStKeyMenu, isStKeyHiding, closeStKeyMenu]);
     
     // 监听 ST歌曲调整菜单切换事件（从 player-soundtouch.tsx）
     useEffect(() => {
         const handleToggleStKeyMenu = () => {
-            if (showStKeyMenu && !isHiding) {
-                closeStKeyMenu();
-            } else {
-                setShowStKeyMenu(true);
-            }
+            setShowStKeyMenu(prev => !prev);
         };
         
         window.addEventListener('toggle-st-key-menu' as any, handleToggleStKeyMenu as any);
         return () => window.removeEventListener('toggle-st-key-menu' as any, handleToggleStKeyMenu as any);
-    }, [showStKeyMenu, isHiding, closeStKeyMenu]);
+    }, []);
     
     // 监听 ST调性检测状态更新
     useEffect(() => {
@@ -329,6 +369,24 @@ export const Header: React.FC = () => {
             window.removeEventListener('st-key-detection-start' as any, handleStKeyDetectionStart as any);
             window.removeEventListener('st-key-detection-result' as any, handleStKeyDetectionResult as any);
         };
+    }, []);
+    
+    // ✅ 监听普通调性检测事件（player 页面）并同步到 ST 状态
+    useEffect(() => {
+        const handleKeyDetectionUpdate = (event: CustomEvent<{ fullKey: string; isDetecting: boolean }>) => {
+            const { fullKey, isDetecting } = event.detail;
+            
+            if (isDetecting) {
+                setIsStDetectingKey(true);
+            } else {
+                setIsStDetectingKey(false);
+                // ✅ 无论是否有值，都更新（包括清空）
+                setStDetectedKey(fullKey || '');
+            }
+        };
+        
+        window.addEventListener('key-detection-update' as any, handleKeyDetectionUpdate as any);
+        return () => window.removeEventListener('key-detection-update' as any, handleKeyDetectionUpdate as any);
     }, []);
     
     // 监听 ST音高调节状态更新
@@ -351,24 +409,113 @@ export const Header: React.FC = () => {
         return () => window.removeEventListener('st-speed-change' as any, handleStSpeedChange as any);
     }, []);
     
-    // 监听 ST去人声状态更新
+    // ✅ Android 模式下处理音高调节、速度调节、去人声事件
     useEffect(() => {
-        const handleStVocalRemovalChange = (event: CustomEvent<boolean>) => {
-            setStVocalRemoval(event.detail);
-        };
+        const isAndroid = isAndroidNative();
         
-        window.addEventListener('st-vocal-removal-change' as any, handleStVocalRemovalChange as any);
-        return () => window.removeEventListener('st-vocal-removal-change' as any, handleStVocalRemovalChange as any);
-    }, []);
+        if (!isAndroid) {
+            return; // Web 模式不需要
+        }
+        
+        
+        // 导入 ExoPlayer 控制函数
+        import('../utils/playback-control.js').then(({ setExoPlayerPitch, setExoPlayerSpeed }) => {
+            // 音高调节（半音）
+            const handleAdjustPitch = async (event: CustomEvent<number>) => {
+                const semitones = event.detail;
+                
+                // ✅ 使用函数式更新，避免闭包问题
+                setStPitchSemitones(prevSemitones => {
+                    const newSemitones = prevSemitones + semitones;
+                    
+                    // 限制范围 -12 到 +12
+                    const clampedSemitones = Math.max(-12, Math.min(12, newSemitones));
+                    
+                    // 计算 pitch 值（每个半音约 1.05946 倍）
+                    const pitch = Math.pow(1.05946, clampedSemitones);
+                    
+                    // 异步调用 ExoPlayer
+                    setExoPlayerPitch(pitch).catch(console.error);
+                    
+                    // 通知 UI 更新
+                    window.dispatchEvent(new CustomEvent('st-pitch-change', { detail: clampedSemitones }));
+                    
+                    return clampedSemitones;
+                });
+            };
+            
+            // 重置音高
+            const handleResetPitch = async () => {
+                setStPitchSemitones(0);
+                await setExoPlayerPitch(1.0);
+                window.dispatchEvent(new CustomEvent('st-pitch-change', { detail: 0 }));
+            };
+            
+            // 速度调节
+            const handleAdjustSpeed = async (event: CustomEvent<number>) => {
+                const delta = event.detail;
+                
+                // ✅ 使用函数式更新，避免闭包问题，直接基于当前 state 计算
+                setStPlaybackSpeed(prevSpeed => {
+                    
+                    const newSpeed = Math.max(0.5, Math.min(2.0, prevSpeed + delta));
+                    
+                    // 异步调用 ExoPlayer
+                    setExoPlayerSpeed(newSpeed).then(() => {
+                    }).catch(err => {
+                    });
+                    
+                    // 通知 UI 更新
+                    window.dispatchEvent(new CustomEvent('st-speed-change', { detail: newSpeed }));
+                    
+                    return newSpeed;
+                });
+            };
+            
+            // 重置速度
+            const handleResetSpeed = async () => {
+                setStPlaybackSpeed(1.0);
+                await setExoPlayerSpeed(1.0);
+                window.dispatchEvent(new CustomEvent('st-speed-change', { detail: 1.0 }));
+            };
+            
+            // ✅ 直接设置速度（用于滑动条）
+            const handleSetSpeed = async (event: CustomEvent<number>) => {
+                const newSpeed = event.detail;
+                setStPlaybackSpeed(newSpeed);
+                await setExoPlayerSpeed(newSpeed);
+                window.dispatchEvent(new CustomEvent('st-speed-change', { detail: newSpeed }));
+            };
+            
+            // 注册事件监听器
+            window.addEventListener('st-adjust-pitch' as any, handleAdjustPitch as any);
+            window.addEventListener('st-reset-pitch' as any, handleResetPitch as any);
+            window.addEventListener('st-adjust-speed' as any, handleAdjustSpeed as any);
+            window.addEventListener('st-reset-speed' as any, handleResetSpeed as any);
+            window.addEventListener('st-adjust-speed-to' as any, handleSetSpeed as any);
+            
+            return () => {
+                window.removeEventListener('st-adjust-pitch' as any, handleAdjustPitch as any);
+                window.removeEventListener('st-reset-pitch' as any, handleResetPitch as any);
+                window.removeEventListener('st-adjust-speed' as any, handleAdjustSpeed as any);
+                window.removeEventListener('st-reset-speed' as any, handleResetSpeed as any);
+                window.removeEventListener('st-adjust-speed-to' as any, handleSetSpeed as any);
+            };
+        });
+    }, []);  // ✅ 空依赖数组，只注册一次
     
-    // 点击其他区域时关闭文字设定菜单（带动画）
+    // ✅ 已移除点击外部关闭功能
+    
+    // ✅ 点击外部区域关闭文字设定菜单（带动画）
     useEffect(() => {
-        if (!showPlayerSettings || isHiding) return;
+        if (!showPlayerSettings || isPlayerSettingsHiding) {
+            return;
+        }
         
         const handleClickOutside = (event: MouseEvent) => {
-            const target = event.target as Element;
-            // 如果点击的不是菜单区域，关闭菜单
-            if (!target.closest('.player-settings-menu')) {
+            const target = event.target as Node;
+            
+            if (playerSettingsMenuRef.current && !playerSettingsMenuRef.current.contains(target)) {
                 closePlayerSettingsMenu();
             }
         };
@@ -378,7 +525,7 @@ export const Header: React.FC = () => {
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [showPlayerSettings, isHiding]);
+    }, [showPlayerSettings, isPlayerSettingsHiding, closePlayerSettingsMenu]);
 
     // 点击其他区域时关闭 Editor 菜单
     useEffect(() => {
@@ -395,7 +542,7 @@ export const Header: React.FC = () => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [showEditorMenu]);
     
-    // 切换文件列表面板
+    // 切换文件列下面板
     const toggleFileListPanel = useCallback(() => {
         setShowFileListPanel(prev => {
             const newState = !prev;
@@ -405,6 +552,13 @@ export const Header: React.FC = () => {
             }));
             return newState;
         });
+    }, []);
+        
+    // 处理 Android 音乐库选中曲目的播放
+    // ✅ Android 音乐库播放处理（不再使用，MSFileListPanel 直接发送事件）
+    const handlePlayMSTrack = useCallback((_trackIndex: number) => {
+        // MSFileListPanel 现在直接发送 'play-ms-playlist' 事件
+        // 这个函数保留仅为接口兼容
     }, []);
     
     // 处理打开文件
@@ -477,15 +631,29 @@ export const Header: React.FC = () => {
                     </button>
                 </div>
             ) : (
-                // 其他页面：显示文件列表按钮
+                // 其他页面：根据平台显示不同按钮
                 <div className="header-left-controls">
-                    <button 
-                        className="header-control-button file-list-btn"
-                        onClick={toggleFileListPanel}
-                        title="文件列表"
-                    >
-                        <PlaylistSVG />
-                    </button>
+                    {isAndroidNative() ? (
+                        // Android: 打开音乐库
+                        <button 
+                            className="header-control-button file-list-btn"
+                            onClick={() => {
+                                setShowMSPanel(true);
+                            }}
+                            title="打开音乐库"
+                        >
+                            <PlaylistSVG />
+                        </button>
+                    ) : (
+                        // Web: 打开文件列表
+                        <button 
+                            className="header-control-button file-list-btn"
+                            onClick={toggleFileListPanel}
+                            title="文件列表"
+                        >
+                            <PlaylistSVG />
+                        </button>
+                    )}
                 </div>
             )}
             
@@ -579,11 +747,13 @@ export const Header: React.FC = () => {
                                 <SettingsTSVG />
                             </button>
                             {showPlayerSettings && (
-                                <PlayerSettingsPanel 
-                                    onClose={closePlayerSettingsMenu}
-                                    isHiding={isHiding}
-                                    lang={lang}
-                                />
+                                <div ref={playerSettingsMenuRef}>
+                                    <PlayerSettingsPanel 
+                                        onClose={closePlayerSettingsMenu}
+                                        isHiding={isPlayerSettingsHiding}
+                                        lang={lang}
+                                    />
+                                </div>
                             )}
                         </div>
                     )}
@@ -604,7 +774,7 @@ export const Header: React.FC = () => {
                             
                             {/* ST歌曲调整菜单 - 渲染在 Header 中，相对于按钮定位 */}
                             {showStKeyMenu && (
-                                <div className={`key-detection-menu${isHiding ? ' menu-hiding' : ''}`}>
+                                <div className={`key-detection-menu${isStKeyHiding ? ' menu-hiding' : ''}`} ref={stKeyMenuRef}>
                                     {/* 调性检测 */}
                                     <div className="player-settings-group">
                                         <div className="player-settings-label">ST歌曲调整</div>
@@ -677,8 +847,8 @@ export const Header: React.FC = () => {
                                         <div className="player-settings-options">
                                             <button 
                                                 className="player-setting-btn"
-                                                onClick={() => window.dispatchEvent(new CustomEvent('st-adjust-speed', { detail: -0.1 }))}
-                                                title="减慢速度"
+                                                onClick={() => window.dispatchEvent(new CustomEvent('st-adjust-speed', { detail: -0.05 }))}
+                                                title="减慢速度 0.05x"
                                             >
                                                 -
                                             </button>
@@ -688,20 +858,20 @@ export const Header: React.FC = () => {
                                                 title="重置为正常速度"
                                                 style={{ minWidth: '60px' }}
                                             >
-                                                {stPlaybackSpeed.toFixed(1)}x
+                                                {stPlaybackSpeed.toFixed(2)}x
                                             </button>
                                             <button 
                                                 className="player-setting-btn"
-                                                onClick={() => window.dispatchEvent(new CustomEvent('st-adjust-speed', { detail: 0.1 }))}
-                                                title="加快速度"
+                                                onClick={() => window.dispatchEvent(new CustomEvent('st-adjust-speed', { detail: 0.05 }))}
+                                                title="加快速度 0.05x"
                                             >
                                                 +
                                             </button>
                                         </div>
                                     </div>
                                     
-                                    {/* 去人声（伴奏模式） */}
-                                    <div className="player-settings-group">
+                                    {/* ✅ 去人声（伴奏模式）- 已禁用 */}
+                                    {/* <div className="player-settings-group">
                                         <div className="player-settings-label">去人声（伴奏模式）</div>
                                         <div className="player-settings-options">
                                             <label className="toggle-switch" title="使用相位抵消法去除居中人声，仅播放伴奏">
@@ -713,7 +883,7 @@ export const Header: React.FC = () => {
                                                 <span className="toggle-switch-label"></span>
                                             </label>
                                         </div>
-                                    </div>
+                                    </div> */}
                                 </div>
                             )}
                         </div>
@@ -735,7 +905,7 @@ export const Header: React.FC = () => {
                             
                             {/* 歌曲调整菜单 */}
                             {showKeyDetectionMenu && (
-                                <div className={`key-detection-menu${isHiding ? ' menu-hiding' : ''}`}>
+                                <div className={`key-detection-menu${isKeyDetectionHiding ? ' menu-hiding' : ''}`} ref={keyDetectionMenuRef}>
                                     {/* 调性检测 */}
                                     <div className="player-settings-group">
                                         <div className="player-settings-label">{lang.header.keyDetection || '调性识别'}</div>
@@ -773,14 +943,116 @@ export const Header: React.FC = () => {
                                         )}
                                     </div>
                                     
+                                    {/* ✅ Android 模式下显示音高调节、速度调节、去人声 */}
+                                    {isAndroidNative() && (
+                                        <>
+                                            {/* 音高调节 */}
+                                            <div className="player-settings-group">
+                                                <div className="player-settings-label">音高调节</div>
+                                                <div className="player-settings-options">
+                                                    <button 
+                                                        className="player-setting-btn"
+                                                        onClick={() => window.dispatchEvent(new CustomEvent('st-adjust-pitch', { detail: -1 }))}
+                                                        title="降低一个半音"
+                                                    >
+                                                        -
+                                                    </button>
+                                                    <button 
+                                                        className="player-setting-btn"
+                                                        onClick={() => window.dispatchEvent(new CustomEvent('st-reset-pitch'))}
+                                                        title="重置为原调"
+                                                        style={{ minWidth: '50px' }}
+                                                    >
+                                                        {getStCurrentKey()}
+                                                    </button>
+                                                    <button 
+                                                        className="player-setting-btn"
+                                                        onClick={() => window.dispatchEvent(new CustomEvent('st-adjust-pitch', { detail: 1 }))}
+                                                        title="升高一个半音"
+                                                    >
+                                                        +
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            
+                                            {/* 速度调节 */}
+                                            <div className="player-settings-group">
+                                                <div className="player-settings-label">速度调节</div>
+                                                <div className="player-settings-options">
+                                                    <button 
+                                                        className="player-setting-btn"
+                                                        onClick={() => {
+                                                            window.dispatchEvent(new CustomEvent('st-adjust-speed', { detail: -0.05 }));
+                                                        }}
+                                                        title="降低速度 0.05x"
+                                                        disabled={stPlaybackSpeed <= 0.5}
+                                                    >
+                                                        -
+                                                    </button>
+                                                    <button 
+                                                        className="player-setting-btn"
+                                                        onClick={() => {
+                                                            window.dispatchEvent(new CustomEvent('st-reset-speed'));
+                                                        }}
+                                                        title="重置为正常速度"
+                                                        style={{ minWidth: '60px' }}
+                                                    >
+                                                        {stPlaybackSpeed.toFixed(2)}x
+                                                    </button>
+                                                    <button 
+                                                        className="player-setting-btn"
+                                                        onClick={() => {
+                                                            window.dispatchEvent(new CustomEvent('st-adjust-speed', { detail: 0.05 }));
+                                                        }}
+                                                        title="升高速度 0.05x"
+                                                        disabled={stPlaybackSpeed >= 2.0}
+                                                    >
+                                                        +
+                                                    </button>
+                                                </div>
+                                                {/* 速度滑动条 */}
+                                                <div className="speed-control-slider" style={{ marginTop: '8px' }}>
+                                                    <input
+                                                        type="range"
+                                                        min="-0.693"
+                                                        max="0.693"
+                                                        step="any"
+                                                        value={Math.log(stPlaybackSpeed)}
+                                                        onChange={(e) => {
+                                                            const logValue = parseFloat(e.target.value);
+                                                            const newSpeed = Math.exp(logValue);
+                                                            const clampedSpeed = Math.max(0.5, Math.min(2.0, newSpeed));
+                                                            window.dispatchEvent(new CustomEvent('st-adjust-speed-to', { detail: clampedSpeed }));
+                                                        }}
+                                                        title={`当前速度: ${stPlaybackSpeed.toFixed(2)}x`}
+                                                    />
+                                                </div>
+                                            </div>
+                                            
+                                            {/* ✅ 去人声（伴奏模式）- 已禁用 */}
+                                            {/* <div className="player-settings-group">
+                                                <div className="player-settings-label">去人声（伴奏模式）</div>
+                                                <div className="player-settings-options">
+                                                    <label className="toggle-switch" title="使用相位抵消法去除居中人声，仅播放伴奏">
+                                                        <input 
+                                                            type="checkbox" 
+                                                            checked={stVocalRemoval}
+                                                            onChange={() => window.dispatchEvent(new CustomEvent('st-toggle-vocal-removal'))}
+                                                        />
+                                                        <span className="toggle-switch-label"></span>
+                                                    </label>
+                                                </div>
+                                            </div> */}
+                                        </>
+                                    )}
 
                                 </div>
                             )}
                         </div>
                     )}
                     
-                    {/* ST 按钮 - 只在 player 页面显示 */}
-                    {isPlayerPage && (
+                    {/* ✅ ST 按钮 - 只在 Web 环境的 player 页面显示 */}
+                    {isPlayerPage && !isAndroidNative() && (
                         <button 
                             className="header-control-button player-soundtouch-btn"
                             onClick={() => {
@@ -799,6 +1071,17 @@ export const Header: React.FC = () => {
                     )}
                 </div>
             </div>
+            
+            {/* Android 特定的播放列表面板 */}
+            {showMSPanel && (
+                <MSFileListPanel
+                    onPlayTrack={handlePlayMSTrack}
+                    onClose={() => {
+                        setShowMSPanel(false);
+                    }}
+                    lang={lang} // ✅ 传递多语言配置
+                />
+            )}
         </>
     );
 };

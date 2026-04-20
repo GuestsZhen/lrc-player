@@ -6,11 +6,11 @@
     animation: slide-in-up var(--animation-duration) ease forwards;
 }
 
-/* Portrait mode - constrain to 1/6 of screen height */
+/* Portrait mode - allow flexible height based on content */
 @media (max-width: 768px) and (orientation: portrait) {
     .app-footer {
-        height: calc(100vh / 6);
-        max-height: calc(100vh / 6);
+        height: auto;
+        max-height: none;
     }
 }
 

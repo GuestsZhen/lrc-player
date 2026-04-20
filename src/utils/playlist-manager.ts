@@ -29,7 +29,7 @@ class PlaylistManager {
             const request = indexedDB.open(DB_NAME, DB_VERSION);
             
             request.onerror = () => {
-                console.error('IndexedDB 打开失败');
+                // IndexedDB 打开失败处理
                 reject(request.error);
             };
             

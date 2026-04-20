@@ -38,7 +38,14 @@ swWorker.addEventListener("fetch", (event) => {
         return;
     }
 
-    if (!/(?:\.css|\.js|\.svg)$/i.test(url.pathname) && url.origin !== swWorker.location.origin) {
+    // ✅ 离线模式：跳过所有外部 CDN 请求，只缓存本地资源
+    if (url.origin !== swWorker.location.origin) {
+        // 不拦截外部请求（CDN、第三方 API 等）
+        return;
+    }
+
+    // 只处理本地资源 (.css, .js, .svg)
+    if (!/(?:\.css|\.js|\.svg)$/i.test(url.pathname)) {
         return;
     }
 

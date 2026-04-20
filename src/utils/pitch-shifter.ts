@@ -43,7 +43,6 @@ export class PitchShifterManager {
             // 连接到输出
             this.shifter.connect(this.gainNode);
         } catch (error) {
-            console.error('[PitchShifter] Initialization failed:', error);
             throw error;
         }
     }
@@ -72,7 +71,6 @@ export class PitchShifterManager {
      */
     setPitch(semitones: number): void {
         if (!this.shifter) {
-            console.warn('[PitchShifter] Not initialized');
             return;
         }
 
