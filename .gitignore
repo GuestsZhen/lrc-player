@@ -68,8 +68,16 @@ build.es6/
 # Local subproject
 lrc-utils2/
 
-# Capacitor generated platforms (auto-generated, do not commit)
-android/
+# Capacitor generated platforms
+# android/ - Android 源码已添加到版本控制
+android/app/build/
+android/.gradle/
+android/.idea/
+android/capacitor-cordova-android-plugins/build/
+android/*.jks
+android/local.properties
+android/**/*.apk
+android/**/*.aab
 ios/
 cap-dev.bat
 capacitor.config.ts
