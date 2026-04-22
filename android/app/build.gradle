@@ -20,6 +20,9 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            
+            // ✅ 自动签名配置（CI 环境使用环境变量注入）
+            signingConfig signingConfigs.debug // 默认使用 debug，CI 会覆盖
         }
     }
 }
