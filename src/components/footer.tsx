@@ -215,24 +215,17 @@ export const Footer: React.FC = () => {
 
     // 上一首歌
     const onPreviousTrack = useCallback(async () => {
-        console.log('⏮️ ========== onPreviousTrack() START ==========');
-        console.log('🔍 Current track index:', currentTrackIndex);
-        console.log('🔍 Playlist length:', playlist.length);
-        console.log('🔍 Play mode:', playMode);
-        
+
         // ✅ 检查是否是 MS 播放列表
         const msTracks = (window as any).__msTracks;
         const msCurrentIndex = (window as any).__msCurrentIndex;
         
-        console.log('🔍 MS Tracks:', msTracks ? `Array(${msTracks.length})` : 'null');
-        console.log('🔍 MS Current Index:', msCurrentIndex);
-        
+
         if (msTracks && msTracks.length > 1) {
-            console.log('📋 Using MS playlist for previous track');
+
             // MS 播放列表：使用统一的索引计算
             const prevIndex = calculateNextIndex(msCurrentIndex, msTracks.length, playMode, 'prev');
-            console.log('🔍 Calculated previous index:', prevIndex);
-            
+
             try {
                 await loadMSTrack(
                     msTracks,
@@ -242,43 +235,42 @@ export const Footer: React.FC = () => {
                     loadLrcFile,
                     setDisplayTrackName
                 );
-                console.log('✅ MS track loaded successfully');
+
             } catch (error) {
                 console.error('❌ Failed to load MS track:', error);
             }
-            console.log('⏮️ ========== onPreviousTrack() END (MS) ==========');
+
             return;
         }
         
-        console.log('📋 Using regular playlist for previous track');
+
         // 普通播放列表逻辑
         if (playlist.length === 0) {
-            console.warn('⚠️ Playlist is empty, cannot go to previous track');
-            console.log('⏮️ ========== onPreviousTrack() END (empty) ==========');
+
             return;
         }
         
         let startIndex = currentTrackIndex;
         if (startIndex < 0 || startIndex >= playlist.length) {
-            console.warn('⚠️ Invalid start index, resetting to 0');
+
             startIndex = 0;
         }
         
         const newIndex = calculateNextIndex(startIndex, playlist.length, playMode, 'prev');
-        console.log('🔍 Calculated new index:', newIndex);
+
         setCurrentTrackIndex(newIndex);
         
         const track = playlist[newIndex];
         if (track.file) {
-            console.log('🎵 Loading track:', track.fileName);
+
             receiveFile(track.file, setAudioSrc);
             setTimeout(() => {
                 audioRef.current?.play();
-                console.log('▶️ Track playback started');
+
             }, 200);
             
             if (track.lrcFile) {
-                console.log('📝 Loading LRC file');
+
                 loadLrcFile(track.lrcFile);
             }
             
@@ -287,33 +279,26 @@ export const Footer: React.FC = () => {
             }));
             
             updateCurrentTrackName(newIndex, playlist);
-            console.log('✅ Previous track loaded and playing');
+
         } else {
             console.error('❌ Track file is null or undefined');
         }
-        console.log('⏮️ ========== onPreviousTrack() END ==========');
+
     }, [playlist, currentTrackIndex, playMode, updateCurrentTrackName, readAudioFile, readLrcFile, loadLrcFile]);
 
     // 下一首歌（支持多种播放模式）
     const onNextTrack = useCallback(async (_mode?: number) => {
-        console.log('⏭️ ========== onNextTrack() START ==========');
-        console.log('🔍 Current track index:', currentTrackIndex);
-        console.log('🔍 Playlist length:', playlist.length);
-        console.log('🔍 Play mode:', playMode);
-        
+
         // ✅ 检查是否是 MS 播放列表
         const msTracks = (window as any).__msTracks;
         const msCurrentIndex = (window as any).__msCurrentIndex;
         
-        console.log('🔍 MS Tracks:', msTracks ? `Array(${msTracks.length})` : 'null');
-        console.log('🔍 MS Current Index:', msCurrentIndex);
-        
+
         if (msTracks && msTracks.length > 1) {
-            console.log('📋 Using MS playlist for next track');
+
             // MS 播放列表：使用统一的索引计算
             const nextIndex = calculateNextIndex(msCurrentIndex, msTracks.length, playMode, 'next');
-            console.log('🔍 Calculated next index:', nextIndex);
-            
+
             try {
                 await loadMSTrack(
                     msTracks,
@@ -323,43 +308,42 @@ export const Footer: React.FC = () => {
                     loadLrcFile,
                     setDisplayTrackName
                 );
-                console.log('✅ MS track loaded successfully');
+
             } catch (error) {
                 console.error('❌ Failed to load MS track:', error);
             }
-            console.log('⏭️ ========== onNextTrack() END (MS) ==========');
+
             return;
         }
         
-        console.log('📋 Using regular playlist for next track');
+
         // 普通播放列表逻辑
         if (playlist.length === 0) {
-            console.warn('⚠️ Playlist is empty, cannot go to next track');
-            console.log('⏭️ ========== onNextTrack() END (empty) ==========');
+
             return;
         }
         
         let startIndex = currentTrackIndex;
         if (startIndex < 0 || startIndex >= playlist.length) {
-            console.warn('⚠️ Invalid start index, resetting to 0');
+
             startIndex = 0;
         }
         
         const newIndex = calculateNextIndex(startIndex, playlist.length, playMode, 'next');
-        console.log('🔍 Calculated new index:', newIndex);
+
         setCurrentTrackIndex(newIndex);
         
         const track = playlist[newIndex];
         if (track.file) {
-            console.log('🎵 Loading track:', track.fileName);
+
             receiveFile(track.file, setAudioSrc);
             setTimeout(() => {
                 audioRef.current?.play();
-                console.log('▶️ Track playback started');
+
             }, 200);
             
             if (track.lrcFile) {
-                console.log('📝 Loading LRC file');
+
                 loadLrcFile(track.lrcFile);
             }
             
@@ -368,11 +352,11 @@ export const Footer: React.FC = () => {
             }));
             
             updateCurrentTrackName(newIndex, playlist);
-            console.log('✅ Next track loaded and playing');
+
         } else {
             console.error('❌ Track file is null or undefined');
         }
-        console.log('⏭️ ========== onNextTrack() END ==========');
+
     }, [playlist, currentTrackIndex, playMode, updateCurrentTrackName, readAudioFile, readLrcFile, loadLrcFile]);
 
     // 处理播放列表关闭（带动画）

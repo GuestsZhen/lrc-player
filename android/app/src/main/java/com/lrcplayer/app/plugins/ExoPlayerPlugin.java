@@ -66,7 +66,7 @@ public class ExoPlayerPlugin extends Plugin {
     @Override
     public void load() {
         super.load();
-        Log.d(TAG, "ExoPlayerPlugin loaded");
+
     }
     
     /**
@@ -81,7 +81,7 @@ public class ExoPlayerPlugin extends Plugin {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.POST_NOTIFICATIONS) 
                             != PackageManager.PERMISSION_GRANTED) {
-                        Log.d(TAG, "Requesting POST_NOTIFICATIONS permission...");
+
                         // ✅ 直接在主线程请求权限
                         ActivityCompat.requestPermissions(
                             getActivity(),
@@ -122,31 +122,30 @@ public class ExoPlayerPlugin extends Plugin {
             
             // 创建 ExoPlayer
             exoPlayer = new ExoPlayer.Builder(context).build();
-            Log.d(TAG, "✅ ExoPlayer created");
-            
+
             // ✅ 创建 ForwardingPlayer 包装 ExoPlayer，拦截上一曲/下一曲事件
             forwardingPlayer = new ForwardingPlayer(exoPlayer) {
                 @Override
                 public void seekToNext() {
-                    Log.d(TAG, "⏭️========== seekToNext() called ==========");
+
                     playNextTrack();
                 }
                 
                 @Override
                 public void seekToPrevious() {
-                    Log.d(TAG, "⏮️========== seekToPrevious() called ==========");
+
                     playPreviousTrack();
                 }
                 
                 @Override
                 public void seekToNextMediaItem() {
-                    Log.d(TAG, "⏭️========== seekToNextMediaItem() called ==========");
+
                     playNextTrack();
                 }
                 
                 @Override
                 public void seekToPreviousMediaItem() {
-                    Log.d(TAG, "⏮️========== seekToPreviousMediaItem() called ==========");
+
                     playPreviousTrack();
                 }
                 
@@ -156,7 +155,7 @@ public class ExoPlayerPlugin extends Plugin {
                     long currentPosition = exoPlayer.getCurrentPosition();
                     long duration = exoPlayer.getDuration();
                     long newPosition = Math.min(currentPosition + 10000, duration);  // 快进 10 秒
-                    Log.d(TAG, "⏩ Fast forward: " + currentPosition + " -> " + newPosition);
+
                     exoPlayer.seekTo(newPosition);
                 }
                 
@@ -165,7 +164,7 @@ public class ExoPlayerPlugin extends Plugin {
                 public void seekBack() {
                     long currentPosition = exoPlayer.getCurrentPosition();
                     long newPosition = Math.max(currentPosition - 10000, 0);  // 快退 10 秒
-                    Log.d(TAG, "⏪ Rewind: " + currentPosition + " -> " + newPosition);
+
                     exoPlayer.seekTo(newPosition);
                 }
                 
@@ -186,11 +185,10 @@ public class ExoPlayerPlugin extends Plugin {
                         .build();
                 }
             };
-            Log.d(TAG, "✅ ForwardingPlayer created with custom commands");
-            
+
             // ✅ 释放旧的 MediaSession（如果存在）
             if (mediaSession != null) {
-                Log.d(TAG, "🔄 Releasing old MediaSession");
+
                 mediaSession.release();
                 mediaSession = null;
             }
@@ -210,12 +208,7 @@ public class ExoPlayerPlugin extends Plugin {
                 .setId(sessionId)  // ✅ 设置唯一的 Session ID
                 .setSessionActivity(sessionPendingIntent)  // 点击通知打开应用
                 .build();
-            Log.d(TAG, "✅ MediaSession created with ID: " + sessionId);
-            Log.d(TAG, "🔍 MediaSession object: " + mediaSession);
-            Log.d(TAG, "🔍 MediaSession player: " + mediaSession.getPlayer());
-            Log.d(TAG, "🔍 Note: Media3 MediaSession auto-activates when player starts playing");
-            Log.d(TAG, "📊 Progress bar support: ACTION_SEEK_TO enabled by default in Media3");
-            
+
             // ✅ 创建通知渠道（Android 8.0+）
             createNotificationChannel(context);
             
@@ -227,30 +220,27 @@ public class ExoPlayerPlugin extends Plugin {
                 @Override
                 public void onPlaybackStateChanged(int playbackState) {
                     String stateStr = getStateString(playbackState);
-                    Log.d(TAG, "=== Playback State Changed: " + stateStr + " ===");
-                    
+
                     JSObject event = new JSObject();
                     event.put("state", stateStr);
                     notifyListeners("onPlaybackStateChanged", event);
                     
                     // ✅ 当播放器准备就绪时，启动状态更新
                     if (playbackState == Player.STATE_READY) {
-                        Log.d(TAG, "✅ Player is READY, starting status updates");
+
                         startStatusUpdates();
                     }
                     
                     // ✅ 处理播放完成事件
                     if (playbackState == Player.STATE_ENDED) {
-                        Log.d(TAG, "🎵🎵🎵 Playback ENDED - Notifying web layer 🎵🎵🎵");
-                        Log.d(TAG, "Current thread: " + Thread.currentThread().getName());
-                        
+
                         JSObject endedEvent = new JSObject();
                         endedEvent.put("type", "ended");
                         endedEvent.put("timestamp", System.currentTimeMillis());
                         
                         try {
                             notifyListeners("onTrackEnded", endedEvent);
-                            Log.d(TAG, "✅✅✅ onTrackEnded event dispatched successfully");
+
                         } catch (Exception e) {
                             Log.e(TAG, "❌❌❌ Failed to dispatch onTrackEnded event", e);
                         }
@@ -261,7 +251,7 @@ public class ExoPlayerPlugin extends Plugin {
                     
                     // ✅ 当播放器空闲或缓冲时，停止状态更新
                     if (playbackState == Player.STATE_IDLE || playbackState == Player.STATE_BUFFERING) {
-                        Log.d(TAG, "Stopping status updates (state: " + stateStr + ")");
+
                         stopStatusUpdates();
                     }
                 }
@@ -282,7 +272,7 @@ public class ExoPlayerPlugin extends Plugin {
             result.put("message", "ExoPlayer initialized successfully");
             call.resolve(result);
             
-            Log.d(TAG, "ExoPlayer initialized");
+
         } catch (Exception e) {
             Log.e(TAG, "Failed to initialize ExoPlayer", e);
             call.reject("Failed to initialize: " + e.getMessage());
@@ -315,8 +305,7 @@ public class ExoPlayerPlugin extends Plugin {
                 String title = call.getString("title", "Unknown Title");
                 String artist = call.getString("artist", "Unknown Artist");
                             
-                Log.d(TAG, "🎵 Playing: " + uri);
-                            
+
                 // 构建 MediaItem 并设置元数据（用于通知栏显示歌曲名）
                 MediaItem mediaItem = new MediaItem.Builder()
                     .setUri(Uri.parse(uri))
@@ -341,8 +330,7 @@ public class ExoPlayerPlugin extends Plugin {
                     public void onPlaybackStateChanged(int playbackState) {
                         if (playbackState == Player.STATE_READY) {
                             long duration = exoPlayer.getDuration();
-                            Log.d(TAG, "📊 Song duration detected: " + duration + "ms");
-                            
+
                             // ✅ 更新当前 MediaItem 的元数据，添加时长
                             MediaItem currentItem = exoPlayer.getCurrentMediaItem();
                             if (currentItem != null) {
@@ -356,7 +344,7 @@ public class ExoPlayerPlugin extends Plugin {
                                 int currentIndex = exoPlayer.getCurrentMediaItemIndex();
                                 exoPlayer.replaceMediaItem(currentIndex, updatedItem);
                                 
-                                Log.d(TAG, "✅ MediaItem updated with duration: " + duration);
+
                             }
                             
                             // 移除这个一次性监听器
@@ -370,9 +358,7 @@ public class ExoPlayerPlugin extends Plugin {
                 forwardingPlayer.setPlayWhenReady(true);
                 
                 // ✅ Media3 MediaSession 会在播放时自动激活
-                Log.d(TAG, "🔍 MediaSession will auto-activate when playback starts");
-                Log.d(TAG, "🔍 CurrentMediaItem title: " + mediaItem.mediaMetadata.title);
-                
+
                 // ✅ 状态更新将在 onPlaybackStateChanged(STATE_READY) 中启动
                 
                 JSObject result = new JSObject();
@@ -380,7 +366,7 @@ public class ExoPlayerPlugin extends Plugin {
                 result.put("message", "Playing started");
                 call.resolve(result);
                 
-                Log.d(TAG, "✅ Play command completed");
+
             } catch (Exception e) {
                 Log.e(TAG, "❌ Failed to play", e);
                 call.reject("Failed to play: " + e.getMessage());
@@ -403,7 +389,7 @@ public class ExoPlayerPlugin extends Plugin {
             
             // ✅ 更新 MediaSession 状态
             if (mediaSession != null) {
-                Log.d(TAG, "🔍 MediaSession paused, playbackState: " + exoPlayer.getPlaybackState());
+
             }
             
             JSObject result = new JSObject();
@@ -411,7 +397,7 @@ public class ExoPlayerPlugin extends Plugin {
             result.put("message", "Paused");
             call.resolve(result);
             
-            Log.d(TAG, "Paused");
+
         });
     }
     
@@ -433,7 +419,7 @@ public class ExoPlayerPlugin extends Plugin {
             result.put("message", "Resumed");
             call.resolve(result);
             
-            Log.d(TAG, "Resumed");
+
         });
     }
     
@@ -456,7 +442,7 @@ public class ExoPlayerPlugin extends Plugin {
             result.put("message", "Stopped");
             call.resolve(result);
             
-            Log.d(TAG, "Stopped");
+
         });
     }
     
@@ -486,7 +472,7 @@ public class ExoPlayerPlugin extends Plugin {
             result.put("message", "Seeked to " + position + "ms");
             call.resolve(result);
             
-            Log.d(TAG, "Seeked to: " + position + "ms");
+
         });
     }
     
@@ -516,7 +502,7 @@ public class ExoPlayerPlugin extends Plugin {
             result.put("message", "Speed set to " + speed);
             call.resolve(result);
             
-            Log.d(TAG, "Speed set to: " + speed);
+
         });
     }
     
@@ -548,7 +534,7 @@ public class ExoPlayerPlugin extends Plugin {
             result.put("message", "Pitch set to " + pitch);
             call.resolve(result);
             
-            Log.d(TAG, "Pitch set to: " + pitch);
+
         });
     }
     
@@ -586,7 +572,7 @@ public class ExoPlayerPlugin extends Plugin {
                 exoPlayer.release();
                 exoPlayer = null;
                 isInitialized = false;
-                Log.d(TAG, "ExoPlayer released");
+
             }
             
             JSObject result = new JSObject();
@@ -648,7 +634,7 @@ public class ExoPlayerPlugin extends Plugin {
         };
         
         statusUpdateHandler.post(statusUpdateRunnable);
-        Log.d(TAG, "Status updates started on thread: " + Thread.currentThread().getName());
+
     }
     
     /**
@@ -659,7 +645,7 @@ public class ExoPlayerPlugin extends Plugin {
             statusUpdateHandler.removeCallbacks(statusUpdateRunnable);
             statusUpdateHandler = null;
             statusUpdateRunnable = null;
-            Log.d(TAG, "Status updates stopped");
+
         }
     }
     
@@ -675,7 +661,7 @@ public class ExoPlayerPlugin extends Plugin {
             exoPlayer = null;
             forwardingPlayer = null;  // ✅ 释放 ForwardingPlayer
             isInitialized = false;
-            Log.d(TAG, "ExoPlayer released on destroy");
+
         }
     }
     
@@ -690,10 +676,10 @@ public class ExoPlayerPlugin extends Plugin {
             
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(serviceIntent);
-                Log.d(TAG, "Started foreground service");
+
             } else {
                 context.startService(serviceIntent);
-                Log.d(TAG, "Started background service");
+
             }
             
             JSObject result = new JSObject();
@@ -719,8 +705,7 @@ public class ExoPlayerPlugin extends Plugin {
             Intent serviceIntent = new Intent(context, PlaybackService.class);
             context.stopService(serviceIntent);
             
-            Log.d(TAG, "Stopped background service");
-            
+
             JSObject result = new JSObject();
             result.put("success", true);
             result.put("message", "Background service stopped");
@@ -739,23 +724,19 @@ public class ExoPlayerPlugin extends Plugin {
      * 这个方法会被 MediaSession 自动调用，无需 Web 层直接调用
      */
     private void playNextTrack() {
-        Log.d(TAG, "🎵⏭️ ========== playNextTrack() START ==========");
-        Log.d(TAG, "🔍 Current thread: " + Thread.currentThread().getName());
-        Log.d(TAG, "🔍 ExoPlayer state: " + getStateString(exoPlayer.getPlaybackState()));
-        Log.d(TAG, "🔍 Current position: " + exoPlayer.getCurrentPosition());
-        
+
         // ✅ 通过 WebView 执行 JavaScript 触发自定义事件
         String jsCode = "window.dispatchEvent(new CustomEvent('onNotificationAction', {" +
                        "detail: { action: 'next', timestamp: " + System.currentTimeMillis() + " }" +
                        "}));";
         
-        Log.d(TAG, "📤 Executing JS to dispatch onNotificationAction event");
+
         getActivity().runOnUiThread(() -> {
             bridge.getWebView().evaluateJavascript(jsCode, null);
-            Log.d(TAG, "✅ JS executed successfully");
+
         });
         
-        Log.d(TAG, "🎵⏭️ ========== playNextTrack() END ==========");
+
     }
     
     /**
@@ -763,23 +744,19 @@ public class ExoPlayerPlugin extends Plugin {
      * 这个方法会被 MediaSession 自动调用，无需 Web 层直接调用
      */
     private void playPreviousTrack() {
-        Log.d(TAG, "🎵⏮️ ========== playPreviousTrack() START ==========");
-        Log.d(TAG, "🔍 Current thread: " + Thread.currentThread().getName());
-        Log.d(TAG, "🔍 ExoPlayer state: " + getStateString(exoPlayer.getPlaybackState()));
-        Log.d(TAG, "🔍 Current position: " + exoPlayer.getCurrentPosition());
-        
+
         // ✅ 通过 WebView 执行 JavaScript 触发自定义事件
         String jsCode = "window.dispatchEvent(new CustomEvent('onNotificationAction', {" +
                        "detail: { action: 'previous', timestamp: " + System.currentTimeMillis() + " }" +
                        "}));";
         
-        Log.d(TAG, "📤 Executing JS to dispatch onNotificationAction event");
+
         getActivity().runOnUiThread(() -> {
             bridge.getWebView().evaluateJavascript(jsCode, null);
-            Log.d(TAG, "✅ JS executed successfully");
+
         });
         
-        Log.d(TAG, "🎵⏮️ ========== playPreviousTrack() END ==========");
+
     }
     
     /**
@@ -792,13 +769,12 @@ public class ExoPlayerPlugin extends Plugin {
         if (requestCode == 1001) {  // POST_NOTIFICATIONS 权限请求
             PluginCall savedCall = getSavedCall();
             if (savedCall == null) {
-                Log.w(TAG, "No saved call for permission result");
+
                 return;
             }
             
             boolean granted = grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED;
-            Log.d(TAG, "Notification permission granted: " + granted);
-            
+
             // ✅ 在主线程继续初始化
             getActivity().runOnUiThread(() -> {
                 try {
@@ -826,15 +802,14 @@ public class ExoPlayerPlugin extends Plugin {
             
             // ✅ 只有当有有效时长时才更新
             if (duration <= 0) {
-                Log.d(TAG, "⚠️ Duration is invalid, skipping progress update");
+
                 return;
             }
             
             // ✅ 计算已播放时间（用于 chronometer）
             long elapsedTime = System.currentTimeMillis() - currentPosition;
             
-            Log.d(TAG, "📊 Updating notification progress: " + currentPosition + "/" + duration + "ms");
-            
+
             // ✅ 注意：PlayerNotificationManager 会自动管理通知更新
             // 在 Android 12及以下，进度条由 MediaSession 的 PlaybackState 控制
             // 我们只需要确保 MediaSession 正确设置了 ACTION_SEEK_TO
@@ -860,7 +835,7 @@ public class ExoPlayerPlugin extends Plugin {
             NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
             notificationManager.createNotificationChannel(channel);
             
-            Log.d(TAG, "✅ Notification channel created: " + NOTIFICATION_CHANNEL_ID);
+
         }
     }
     
@@ -919,11 +894,10 @@ public class ExoPlayerPlugin extends Plugin {
             .setNotificationListener(new PlayerNotificationManager.NotificationListener() {
                 @Override
                 public void onNotificationPosted(int notificationId, android.app.Notification notification, boolean ongoing) {
-                    Log.d(TAG, "🔔 Notification posted (ID: " + notificationId + ", ongoing: " + ongoing + ")");
-                    Log.d(TAG, "📊 Notification actions count: " + (notification.actions != null ? notification.actions.length : 0));
+
                     if (notification.actions != null) {
                         for (int i = 0; i < notification.actions.length; i++) {
-                            Log.d(TAG, "  Action[" + i + "]: " + notification.actions[i].title);
+
                         }
                     }
                     
@@ -933,8 +907,7 @@ public class ExoPlayerPlugin extends Plugin {
                         long currentPosition = exoPlayer.getCurrentPosition();
                         
                         if (duration > 0) {
-                            Log.d(TAG, "📊 Adding progress bar to notification: " + currentPosition + "/" + duration);
-                            
+
                             try {
                                 // 复制原有的 notification 并添加进度条
                                 androidx.core.app.NotificationCompat.Builder builder = 
@@ -974,7 +947,7 @@ public class ExoPlayerPlugin extends Plugin {
                                     context.getSystemService(android.app.NotificationManager.class);
                                 nm.notify(notificationId, builder.build());
                                 
-                                Log.d(TAG, "✅ Notification updated with progress bar");
+
                             } catch (Exception e) {
                                 Log.e(TAG, "❌ Failed to update notification", e);
                             }
@@ -984,7 +957,7 @@ public class ExoPlayerPlugin extends Plugin {
                 
                 @Override
                 public void onNotificationCancelled(int notificationId, boolean dismissedByUser) {
-                    Log.d(TAG, "🔕 Notification cancelled (ID: " + notificationId + ", dismissed: " + dismissedByUser + ")");
+
                 }
             })
             .build();
@@ -1004,8 +977,7 @@ public class ExoPlayerPlugin extends Plugin {
             // ✅ 关联 ExoPlayer（使用 ForwardingPlayer）
             notificationManager.setPlayer(forwardingPlayer);
             
-            Log.d(TAG, "✅ PlayerNotificationManager initialized successfully");
-            Log.d(TAG, "📊 Progress bar: Auto-enabled on Android 13+, manual update on Android 12-");
+
         } catch (Exception e) {
             Log.e(TAG, "❌ Failed to initialize notification manager", e);
         }

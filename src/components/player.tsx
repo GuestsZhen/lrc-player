@@ -123,7 +123,6 @@ export const Player: React.FC<IPlayerProps> = ({ state, dispatch }) => {
     }, [playerSettings]);
     
 
-
     // 自动滚动到当前行（歌词中心点在屏幕 70% 高度处，从下往上计算）
     const ul = useRef<HTMLUListElement>(null);
     
@@ -253,7 +252,6 @@ export const Player: React.FC<IPlayerProps> = ({ state, dispatch }) => {
     //         // iOS 可能不支持全屏，静默失败
     //     }
     // }, []);
-
 
     // 初始化：无需手动读取，已由 initializePlayerSettings 处理
     useEffect(() => {

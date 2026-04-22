@@ -201,7 +201,6 @@ export const stopBackgroundService = async (): Promise<void> => {
 export const setVocalRemoval = async (enabled: boolean): Promise<{ success: boolean; enabled: boolean; message: string }> => {
   try {
     const result = await ExoPlayerPlugin.setVocalRemoval({ enabled });
-    console.log('🎤 Vocal removal:', enabled ? 'ENABLED' : 'DISABLED');
     return result;
   } catch (error) {
     console.error('❌ Failed to set vocal removal:', error);
@@ -215,7 +214,6 @@ export const setVocalRemoval = async (enabled: boolean): Promise<{ success: bool
 export const getVocalRemovalStatus = async (): Promise<{ enabled: boolean; available: boolean; stats?: string }> => {
   try {
     const status = await ExoPlayerPlugin.getVocalRemovalStatus();
-    console.log('📊 Vocal removal status:', status);
     return status;
   } catch (error) {
     console.error('❌ Failed to get vocal removal status:', error);

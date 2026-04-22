@@ -38,10 +38,7 @@ public class PlaybackService extends MediaSessionService {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d(TAG, "=== Service onCreate ===");
-        Log.d(TAG, "📱 Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT);
-        Log.d(TAG, "📱 Package name: " + getPackageName());
-        
+
         // 创建通知渠道（Android 8.0+）
         createNotificationChannel();
         
@@ -52,28 +49,24 @@ public class PlaybackService extends MediaSessionService {
         // PlayerNotificationManager 会稍后更新这个通知为媒体控制通知
         Notification notification = buildSimpleNotification();
         startForeground(NOTIFICATION_ID, notification);
-        Log.d(TAG, "✅ Foreground service started with simple notification (will be updated by PlayerNotificationManager)");
-        Log.d(TAG, "=== Service onCreate Complete ===");
+
     }
     
     @Override
     public void onTaskRemoved(@Nullable Intent rootIntent) {
-        Log.d(TAG, "=== onTaskRemoved ===");
-        Log.d(TAG, "Task removed from recent apps");
+
         // 不主动停止服务，让系统根据前台服务规则处理
-        Log.d(TAG, "=== onTaskRemoved End ===");
+
     }
     
     @Override
     public void onDestroy() {
-        Log.d(TAG, "=== Service onDestroy ===");
-        Log.d(TAG, "Reason: Service is being destroyed");
-        
+
         // ✅ 释放 WakeLock
         releaseWakeLock();
         
         super.onDestroy();
-        Log.d(TAG, "=== Service Destroyed ===");
+
     }
     
     @Nullable
@@ -81,14 +74,11 @@ public class PlaybackService extends MediaSessionService {
     public androidx.media3.session.MediaSession onGetSession(androidx.media3.session.MediaSession.ControllerInfo controllerInfo) {
         // ✅ 返回 ExoPlayerPlugin 的 MediaSession，让系统显示播放控制通知
         androidx.media3.session.MediaSession session = com.lrcplayer.app.plugins.ExoPlayerPlugin.getMediaSession();
-        Log.d(TAG, "🔍🔍🔍 onGetSession called by: " + controllerInfo.getPackageName());
-        Log.d(TAG, "🔍 MediaSession: " + (session != null ? "exists" : "null"));
+
         if (session != null) {
-            Log.d(TAG, "🔍 Session player: " + session.getPlayer());
-            Log.d(TAG, "🔍 Session playbackState: " + session.getPlayer().getPlaybackState());
-            Log.d(TAG, "🔍 Session currentMediaItem: " + session.getPlayer().getCurrentMediaItem());
+
             if (session.getPlayer().getCurrentMediaItem() != null) {
-                Log.d(TAG, "🔍 Song title: " + session.getPlayer().getCurrentMediaItem().mediaMetadata.title);
+
             }
             
             // ✅ 当 MediaSession 可用时，更新通知以包含媒体控制
@@ -103,11 +93,10 @@ public class PlaybackService extends MediaSessionService {
      * ✅ 当 MediaSession 可用时，更新通知
      */
     private void updateNotificationWithMediaControls(androidx.media3.session.MediaSession session) {
-        Log.d(TAG, "🔄 Updating notification with MediaSession controls...");
-        
+
         // MediaSession 会自动管理通知，我们只需要确保服务处于前台状态
         // Media3 的 MediaSessionService 会自动处理通知更新
-        Log.d(TAG, "✅ MediaSessionService will automatically manage notification via MediaSession");
+
     }
     
     /**
@@ -126,7 +115,7 @@ public class PlaybackService extends MediaSessionService {
             NotificationManager manager = getSystemService(NotificationManager.class);
             if (manager != null) {
                 manager.createNotificationChannel(channel);
-                Log.d(TAG, "Notification channel created: " + CHANNEL_ID);
+
             }
         }
     }
@@ -136,8 +125,7 @@ public class PlaybackService extends MediaSessionService {
      * ⚠️ 注意：要获得完整的媒体控制（播放按钮、进度条等），需要使用 DefaultMediaNotificationProvider
      */
     private Notification buildSimpleNotification() {
-        Log.d(TAG, "🔨 Building simple notification...");
-        
+
         // ✅ 创建点击通知时的 Intent（打开应用）
         Intent openAppIntent = getPackageManager().getLaunchIntentForPackage(getPackageName());
         PendingIntent openAppPendingIntent = PendingIntent.getActivity(
@@ -157,7 +145,7 @@ public class PlaybackService extends MediaSessionService {
             .setShowWhen(false)
             .setContentIntent(openAppPendingIntent);
         
-        Log.d(TAG, "🔨 Simple notification built");
+
         return builder.build();
     }
     
@@ -172,7 +160,7 @@ public class PlaybackService extends MediaSessionService {
                 );
                 wakeLock.setReferenceCounted(false);  // 不使用引用计数
                 wakeLock.acquire(10 * 60 * 1000L);  // 最多持有 10 分钟
-                Log.d(TAG, "✅ WakeLock acquired (PARTIAL_WAKE_LOCK)");
+
             } else {
                 Log.e(TAG, "❌ Failed to get PowerManager");
             }
@@ -186,7 +174,7 @@ public class PlaybackService extends MediaSessionService {
         if (wakeLock != null && wakeLock.isHeld()) {
             wakeLock.release();
             wakeLock = null;
-            Log.d(TAG, "✅ WakeLock released");
+
         }
     }
 }

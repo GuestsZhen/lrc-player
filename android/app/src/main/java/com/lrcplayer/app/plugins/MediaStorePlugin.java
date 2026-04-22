@@ -28,8 +28,7 @@ public class MediaStorePlugin extends Plugin {
      */
     @PluginMethod
     public void scanAudioFiles(PluginCall call) {
-        Log.d(TAG, "========== scanAudioFiles called ==========");
-        
+
         try {
             Context context = getContext();
             ContentResolver resolver = context.getContentResolver();
@@ -48,14 +47,14 @@ public class MediaStorePlugin extends Plugin {
             };
             
             // ✅ 关键：先查询所有文件，看看是否能访问
-            Log.d(TAG, "Testing: Querying ALL audio files first...");
+
             Cursor allCursor = resolver.query(uri, projection, null, null, null);
             if (allCursor != null) {
-                Log.d(TAG, "ALL files count: " + allCursor.getCount());
+
                 if (allCursor.moveToFirst()) {
                     int dataCol = allCursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA);
                     String firstPath = allCursor.getString(dataCol);
-                    Log.d(TAG, "First file path: " + firstPath);
+
                 }
                 allCursor.close();
             }
@@ -129,8 +128,7 @@ public class MediaStorePlugin extends Plugin {
             
             cursor.close();
             
-            Log.d(TAG, "Query returned " + count + " tracks");
-            
+
             JSObject result = new JSObject();
             result.put("tracks", tracks);
             result.put("count", count);
@@ -148,11 +146,9 @@ public class MediaStorePlugin extends Plugin {
      */
     @PluginMethod
     public void getTracksInFolder(PluginCall call) {
-        Log.d(TAG, "========== getTracksInFolder called ==========");
-        
+
         String folderPath = call.getString("folderPath");
-        Log.d(TAG, "Input folderPath: " + folderPath);
-        
+
         if (folderPath == null || folderPath.isEmpty()) {
             Log.e(TAG, "folderPath is null or empty");
             call.reject("folderPath is required");
@@ -177,14 +173,14 @@ public class MediaStorePlugin extends Plugin {
             };
             
             // 调试：先查询所有文件，看看是否能访问
-            Log.d(TAG, "Testing: Querying ALL audio files first...");
+
             Cursor allCursor = resolver.query(uri, projection, null, null, null);
             if (allCursor != null) {
-                Log.d(TAG, "ALL files count: " + allCursor.getCount());
+
                 if (allCursor.moveToFirst()) {
                     int dataCol = allCursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA);
                     String firstPath = allCursor.getString(dataCol);
-                    Log.d(TAG, "First file path: " + firstPath);
+
                 }
                 allCursor.close();
             }
@@ -193,11 +189,7 @@ public class MediaStorePlugin extends Plugin {
             String selection = MediaStore.Audio.Media.DATA + " LIKE ?";
             String[] selectionArgs = new String[]{ folderPath + "%" };
             
-            Log.d(TAG, "Using selection: " + selection);
-            Log.d(TAG, "With args: " + folderPath + "%");
-            Log.d(TAG, "Selection args length: " + selectionArgs.length);
-            Log.d(TAG, "Selection args[0]: '" + selectionArgs[0] + "'");
-            
+
             Cursor cursor = resolver.query(uri, projection, selection, selectionArgs, 
                                           MediaStore.Audio.Media.TITLE + " ASC");
             
@@ -208,8 +200,7 @@ public class MediaStorePlugin extends Plugin {
             }
             
             // 调试：打印 cursor 计数
-            Log.d(TAG, "Cursor count: " + cursor.getCount());
-            
+
             JSArray tracks = new JSArray();
             int count = 0;
             
@@ -271,8 +262,7 @@ public class MediaStorePlugin extends Plugin {
             
             cursor.close();
             
-            Log.d(TAG, "Query returned " + count + " tracks");
-            
+
             JSObject result = new JSObject();
             result.put("tracks", tracks);
             result.put("count", count);
@@ -291,8 +281,7 @@ public class MediaStorePlugin extends Plugin {
     @PluginMethod
     public void getAudioFilePath(PluginCall call) {
         String contentUri = call.getString("contentUri");
-        Log.d(TAG, "getAudioFilePath called with: " + contentUri);
-        
+
         if (contentUri == null || contentUri.isEmpty()) {
             call.reject("contentUri is required");
             return;
@@ -331,8 +320,7 @@ public class MediaStorePlugin extends Plugin {
                 String filePath = cursor.getString(columnIndex);
                 cursor.close();
                 
-                Log.d(TAG, "Found file path: " + filePath);
-                
+
                 JSObject result = new JSObject();
                 result.put("filePath", filePath);
                 call.resolve(result);
@@ -355,9 +343,7 @@ public class MediaStorePlugin extends Plugin {
     @PluginMethod
     public void findLrcFile(PluginCall call) {
         String audioPath = call.getString("audioPath");
-        Log.d(TAG, "========== findLrcFile START ==========");
-        Log.d(TAG, "Input audioPath: " + audioPath);
-        
+
         if (audioPath == null || audioPath.isEmpty()) {
             Log.e(TAG, "audioPath is null or empty!");
             call.reject("audioPath is required");
@@ -369,13 +355,11 @@ public class MediaStorePlugin extends Plugin {
             
             // ✅ 关键修复：如果是 content URI，先转换为真实文件路径
             if (audioPath.startsWith("content://")) {
-                Log.d(TAG, "Detected content URI, converting to real path...");
-                
+
                 // 从 content URI 提取 ID
                 android.net.Uri uri = android.net.Uri.parse(audioPath);
                 String id = uri.getLastPathSegment();
-                Log.d(TAG, "Extracted ID from URI: " + id);
-                
+
                 if (id != null) {
                     Context context = getContext();
                     ContentResolver resolver = context.getContentResolver();
@@ -384,7 +368,7 @@ public class MediaStorePlugin extends Plugin {
                     String selection = MediaStore.Audio.Media._ID + " = ?";
                     String[] selectionArgs = new String[]{ id };
                     
-                    Log.d(TAG, "Querying MediaStore for ID: " + id);
+
                     android.database.Cursor cursor = resolver.query(
                         MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                         projection, selection, selectionArgs, null
@@ -394,7 +378,7 @@ public class MediaStorePlugin extends Plugin {
                         int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA);
                         realAudioPath = cursor.getString(columnIndex);
                         cursor.close();
-                        Log.d(TAG, "✅ Converted to real path: " + realAudioPath);
+
                     } else {
                         if (cursor != null) {
                             cursor.close();
@@ -413,33 +397,28 @@ public class MediaStorePlugin extends Plugin {
                     return;
                 }
             } else {
-                Log.d(TAG, "Not a content URI, using as-is: " + realAudioPath);
+
             }
             
             // 移除音频扩展名，添加 .lrc
             String lrcPath = realAudioPath.replaceAll("\\.(mp3|flac|wav|m4a|aac|ogg|wma|ape|opus)$", ".lrc");
-            Log.d(TAG, "Generated LRC path: " + lrcPath);
-            
+
             File lrcFile = new File(lrcPath);
-            Log.d(TAG, "Checking if LRC file exists: " + lrcFile.getAbsolutePath());
-            Log.d(TAG, "File exists: " + lrcFile.exists());
-            Log.d(TAG, "File canRead: " + lrcFile.canRead());
-            
+
             JSObject result = new JSObject();
             if (lrcFile.exists()) {
-                Log.d(TAG, "✅ Found LRC file: " + lrcPath);
+
                 result.put("lrcPath", lrcPath);
             } else {
-                Log.d(TAG, "❌ LRC file not found: " + lrcPath);
-                
+
                 // 尝试其他可能的扩展名
                 String[] extensions = {".txt", ".lyric", ".lrc.txt"};
                 for (String ext : extensions) {
                     String altPath = realAudioPath.replaceAll("\\.(mp3|flac|wav|m4a|aac|ogg|wma|ape|opus)$", ext);
                     File altFile = new File(altPath);
-                    Log.d(TAG, "Trying alternative: " + altPath + " -> exists: " + altFile.exists());
+
                     if (altFile.exists()) {
-                        Log.d(TAG, "✅ Found alternative LRC: " + altPath);
+
                         result.put("lrcPath", altPath);
                         call.resolve(result);
                         return;
@@ -450,8 +429,7 @@ public class MediaStorePlugin extends Plugin {
             }
             
             call.resolve(result);
-            Log.d(TAG, "========== findLrcFile END ==========");
-            
+
         } catch (Exception e) {
             Log.e(TAG, "❌ Error finding LRC file", e);
             e.printStackTrace();
@@ -466,8 +444,7 @@ public class MediaStorePlugin extends Plugin {
     public void refreshLibrary(PluginCall call) {
         try {
             String folder = call.getString("folder");
-            Log.d(TAG, "refreshLibrary called with folder: " + (folder != null ? folder : "all"));
-            
+
             Context context = getContext();
             
             if (folder != null && !folder.isEmpty()) {
@@ -480,7 +457,7 @@ public class MediaStorePlugin extends Plugin {
                         new String[]{ folder },
                         null,
                         (path, uri) -> {
-                            Log.d(TAG, "Scanned: " + path + " -> " + uri);
+
                         }
                     );
                     
@@ -498,7 +475,7 @@ public class MediaStorePlugin extends Plugin {
                     new String[]{ android.os.Environment.getExternalStorageDirectory().toString() },
                     null,
                     (path, uri) -> {
-                        Log.d(TAG, "Scanned: " + path + " -> " + uri);
+
                     }
                 );
                 
@@ -525,8 +502,7 @@ public class MediaStorePlugin extends Plugin {
                 return;
             }
             
-            Log.d(TAG, "Reading file as Base64: " + uri);
-            
+
             // 处理 content:// URI 和 file:// URI
             InputStream inputStream = null;
             
@@ -559,8 +535,7 @@ public class MediaStorePlugin extends Plugin {
             // 转换为 Base64 字符串
             String base64 = android.util.Base64.encodeToString(fileBytes, android.util.Base64.NO_WRAP);
             
-            Log.d(TAG, "Successfully read " + fileBytes.length + " bytes as Base64");
-            
+
             JSObject result = new JSObject();
             result.put("base64", base64);
             result.put("size", fileBytes.length);
