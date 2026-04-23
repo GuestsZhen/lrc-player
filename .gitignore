@@ -82,4 +82,8 @@ ios/
 cap-dev.bat
 capacitor.config.ts
 
+# 🔒 签名密钥文件（绝不提交到 Git）
+*.keystore
+*.b64
+
 .DS_Store

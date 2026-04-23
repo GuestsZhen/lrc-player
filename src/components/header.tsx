@@ -159,6 +159,9 @@ export const Header: React.FC = () => {
     // ST 速度调节状态
     const [stPlaybackSpeed, setStPlaybackSpeed] = useState(1.0);
     
+    // ST 去人声（伴奏模式）状态
+    const [stVocalRemoval, setStVocalRemoval] = useState(false);
+    
     // 根据检测到的调和半音偏移计算当前调
     const getStCurrentKey = (): string => {
         
@@ -409,6 +412,16 @@ export const Header: React.FC = () => {
         return () => window.removeEventListener('st-speed-change' as any, handleStSpeedChange as any);
     }, []);
     
+    // 监听 ST去人声状态更新
+    useEffect(() => {
+        const handleStVocalRemovalChange = (event: CustomEvent<boolean>) => {
+            setStVocalRemoval(event.detail);
+        };
+        
+        window.addEventListener('st-vocal-removal-change' as any, handleStVocalRemovalChange as any);
+        return () => window.removeEventListener('st-vocal-removal-change' as any, handleStVocalRemovalChange as any);
+    }, []);
+    
     // ✅ Android 模式下处理音高调节、速度调节、去人声事件
     useEffect(() => {
         const isAndroid = isAndroidNative();
@@ -487,12 +500,25 @@ export const Header: React.FC = () => {
                 window.dispatchEvent(new CustomEvent('st-speed-change', { detail: newSpeed }));
             };
             
+            // ✅ 切换去人声（伴奏模式）
+            const handleToggleVocalRemoval = async () => {
+                setStVocalRemoval(prevState => {
+                    const newState = !prevState;
+                    // 异步调用 ExoPlayer
+                    import('../utils/exoplayer-plugin.js').then(({ setVocalRemoval }) => {
+                        setVocalRemoval(newState).catch(console.error);
+                    });
+                    return newState;
+                });
+            };
+            
             // 注册事件监听器
             window.addEventListener('st-adjust-pitch' as any, handleAdjustPitch as any);
             window.addEventListener('st-reset-pitch' as any, handleResetPitch as any);
             window.addEventListener('st-adjust-speed' as any, handleAdjustSpeed as any);
             window.addEventListener('st-reset-speed' as any, handleResetSpeed as any);
             window.addEventListener('st-adjust-speed-to' as any, handleSetSpeed as any);
+            window.addEventListener('st-toggle-vocal-removal' as any, handleToggleVocalRemoval as any);
             
             return () => {
                 window.removeEventListener('st-adjust-pitch' as any, handleAdjustPitch as any);
@@ -500,6 +526,7 @@ export const Header: React.FC = () => {
                 window.removeEventListener('st-adjust-speed' as any, handleAdjustSpeed as any);
                 window.removeEventListener('st-reset-speed' as any, handleResetSpeed as any);
                 window.removeEventListener('st-adjust-speed-to' as any, handleSetSpeed as any);
+                window.removeEventListener('st-toggle-vocal-removal' as any, handleToggleVocalRemoval as any);
             };
         });
     }, []);  // ✅ 空依赖数组，只注册一次
@@ -870,8 +897,8 @@ export const Header: React.FC = () => {
                                         </div>
                                     </div>
                                     
-                                    {/* ✅ 去人声（伴奏模式）- 已禁用 */}
-                                    {/* <div className="player-settings-group">
+                                    {/* 去人声（伴奏模式） */}
+                                    <div className="player-settings-group">
                                         <div className="player-settings-label">去人声（伴奏模式）</div>
                                         <div className="player-settings-options">
                                             <label className="toggle-switch" title="使用相位抵消法去除居中人声，仅播放伴奏">
@@ -883,7 +910,7 @@ export const Header: React.FC = () => {
                                                 <span className="toggle-switch-label"></span>
                                             </label>
                                         </div>
-                                    </div> */}
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -1029,8 +1056,8 @@ export const Header: React.FC = () => {
                                                 </div>
                                             </div>
                                             
-                                            {/* ✅ 去人声（伴奏模式）- 已禁用 */}
-                                            {/* <div className="player-settings-group">
+                                            {/* 去人声（伴奏模式） */}
+                                            <div className="player-settings-group">
                                                 <div className="player-settings-label">去人声（伴奏模式）</div>
                                                 <div className="player-settings-options">
                                                     <label className="toggle-switch" title="使用相位抵消法去除居中人声，仅播放伴奏">
@@ -1042,7 +1069,7 @@ export const Header: React.FC = () => {
                                                         <span className="toggle-switch-label"></span>
                                                     </label>
                                                 </div>
-                                            </div> */}
+                                            </div>
                                         </>
                                     )}
 
