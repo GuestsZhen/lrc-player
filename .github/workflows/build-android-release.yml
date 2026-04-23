@@ -29,7 +29,8 @@ jobs:
 
       - name: Sync to Android
         run: |
-          npx cap sync
+          npm run build
+          npx cap sync android
           python3 scripts/register-mediastore-plugin.py
 
       - name: Setup Java
