@@ -30,6 +30,7 @@ jobs:
       - name: Sync to Android
         run: |
           npm run build
+          npx cap init "LRC Player" com.lrcplayer.app --web-dir build
           npx cap sync android
           python3 scripts/register-mediastore-plugin.py
 
