@@ -38,7 +38,23 @@ jobs:
 
       - name: Sync to Android
         run: |
-          npx cap init "LRC Player" com.lrcplayer.app --web-dir build --yes
+          # 确保 capacitor.config.json 使用正确的 webDir
+          cat > capacitor.config.json << 'EOF'
+          {
+            "appId": "com.lrcplayer.app",
+            "appName": "LRC Player",
+            "webDir": "build",
+            "server": {
+              "androidScheme": "https",
+              "cleartext": false
+            },
+            "android": {
+              "allowMixedContent": false,
+              "captureInput": true,
+              "webContentsDebuggingEnabled": true
+            }
+          }
+          EOF
           npx cap sync android
           python3 scripts/register-mediastore-plugin.py
 
