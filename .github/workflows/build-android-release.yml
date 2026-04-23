@@ -24,21 +24,19 @@ jobs:
           run_install: |
             - args: [--frozen-lockfile, --strict-peer-dependencies]
 
-      - name: Build Web assets
-        run: npm run build
-
-      - name: Sync to Android
-        run: |
-          npm run build
-          npx cap init "LRC Player" com.lrcplayer.app --web-dir build
-          npx cap sync android
-          python3 scripts/register-mediastore-plugin.py
-
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '21'
+
+      - name: Build Web assets
+        run: npm run build
+
+      - name: Sync to Android
+        run: |
+          npx cap sync android
+          python3 scripts/register-mediastore-plugin.py
 
       - name: Decode Keystore
         run: |
