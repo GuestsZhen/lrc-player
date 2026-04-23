@@ -1,7 +1,7 @@
 import SSK from "#const/session_key.json" assert { type: "json" };
-import { useCallback, useContext, useEffect, useReducer, useRef, useState, useMemo } from "react";
+import { useCallback, useContext, useEffect, useReducer, useState, useMemo } from "react";
 import { useKeyBindings } from "../hooks/useKeyBindings.js";
-import { AudioActionType, audioRef, audioStatePubSub, currentTimePubSub } from "../utils/audiomodule.js";
+import { audioRef, audioStatePubSub, currentTimePubSub } from "../utils/audiomodule.js";
 import { InputAction } from "../utils/input-action.js";
 import { isKeyboardElement } from "../utils/is-keyboard-element.js";
 import { getMatchedAction } from "../utils/keybindings.js";

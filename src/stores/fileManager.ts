@@ -147,7 +147,7 @@ export const useFileManager = create<FileManagerState>((set, get) => ({
     }
     
     // 从 IndexedDB 中移除
-    playlistManager.deleteTrack(fileName).catch((err: unknown) => {
+    playlistManager.deleteTrack(fileName).catch((_err: unknown) => {
       // 删除失败处理
     });
     
@@ -166,7 +166,7 @@ export const useFileManager = create<FileManagerState>((set, get) => ({
     });
     
     // 清理 IndexedDB 中的所有 tracks
-    playlistManager.clearAllTracks().catch(err => {
+    playlistManager.clearAllTracks().catch(_err => {
       // 清理失败处理
     });
   },
@@ -197,7 +197,7 @@ export const useFileManager = create<FileManagerState>((set, get) => ({
     // 保存到 IndexedDB
     const id = `${fileName}-${file.size}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
     const name = fileName.substring(0, fileName.lastIndexOf('.'));
-    playlistManager.saveTrack({ id, name, fileName, file, lrcFile }).catch(err => {
+    playlistManager.saveTrack({ id, name, fileName, file, lrcFile }).catch(_err => {
       // 保存失败处理
     });
     

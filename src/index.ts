@@ -18,7 +18,7 @@ initializePlayerSettings()
     const root = createRoot(document.querySelector(".app-container")!);
     root.render(createElement(App));
   })
-  .catch((error) => {
+  .catch((_error) => {
     // 即使初始化失败，也要渲染 App
     initializeNotificationControls();
     const root = createRoot(document.querySelector(".app-container")!);

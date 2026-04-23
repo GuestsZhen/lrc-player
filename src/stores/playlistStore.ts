@@ -34,7 +34,7 @@ interface PlaylistState {
     clearMSTracks: () => void;
 }
 
-export const usePlaylistStore = create<PlaylistState>((set, get) => ({
+export const usePlaylistStore = create<PlaylistState>((set, _get) => ({
     // 初始状态
     playlist: [],
     currentTrackIndex: -1,

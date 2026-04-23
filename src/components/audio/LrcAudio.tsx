@@ -3,16 +3,16 @@
  */
 import { convertTimeToTag } from "@lrc-maker/lrc-parser";
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { audioRef, audioStatePubSub, currentTimePubSub, AudioActionType, type AudioState } from "../../utils/audiomodule.js";
+import { audioRef, audioStatePubSub, AudioActionType, type AudioState } from "../../utils/audiomodule.js";
 import { appContext, ChangBits } from "../app.context";
-import { loadAudioDialogRef } from "../loadaudio.js";
-import { Waveform } from "../waveform";
+// import { loadAudioDialogRef } from "../loadaudio.js";
+// import { Waveform } from "../waveform";
 // ✅ 使用新创建的子组件和 Hooks
 import { TimeLine } from "./TimeLine";
 import { RateSlider } from "./RateSlider";
 import { PlaybackControls } from "./PlaybackControls";
 import { useAudioControl } from '../../hooks/useAudioControl';
-import { usePlaybackMode, type PlayMode } from '../../hooks/usePlaybackMode';
+import { usePlaybackMode } from '../../hooks/usePlaybackMode';
 // ✅ 导入 SVG 图标
 import { PreviousSVG, NextSVG, RepeatSVG, ShuffleSVG, RepeatOneSVG, PlaySVG, PauseSVG } from "../svg.js";
 import { isAndroidNative } from '../../utils/platform-detector.js';
@@ -30,7 +30,7 @@ interface ILrcAudioProps {
 export const LrcAudio: React.FC<ILrcAudioProps> = ({ lang, currentTrackName, currentTrackFilePath }) => {
     
     // ✅ 使用 Hooks 管理状态
-    const { paused, duration, currentTime, rate, togglePlay } = useAudioControl();
+    const { paused, duration, currentTime, rate: _rate, togglePlay } = useAudioControl();
     const { playMode, togglePlayMode } = usePlaybackMode();
     
     const [localAudioMode, setLocalAudioMode] = useState(false);
@@ -71,7 +71,7 @@ export const LrcAudio: React.FC<ILrcAudioProps> = ({ lang, currentTrackName, cur
                 
                 // 将 Base64 转换为 Blob
                 const byteCharacters = atob(result.base64);
-                const byteNumbers = new Array(byteCharacters.length);
+                const byteNumbers = new Array<number>(byteCharacters.length);
                 for (let i = 0; i < byteCharacters.length; i++) {
                     byteNumbers[i] = byteCharacters.charCodeAt(i);
                 }
@@ -80,7 +80,7 @@ export const LrcAudio: React.FC<ILrcAudioProps> = ({ lang, currentTrackName, cur
                 const url = URL.createObjectURL(blob);
                 setAudioBlobUrl(url);
             })
-            .catch((error) => {
+            .catch((_error) => {
             });
         
         return () => {

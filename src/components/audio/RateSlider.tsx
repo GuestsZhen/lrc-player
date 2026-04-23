@@ -17,7 +17,7 @@ interface IRateSliderProps {
 
 export const RateSlider: React.FC<IRateSliderProps> = ({ lang }) => {
     // ✅ 使用 useMenu Hook
-    const { isOpen: showMenu, isHiding, menuRef, close: closeMenu, toggle: toggleMenu } = useMenu();
+    const { isOpen: showMenu, isHiding, menuRef, close: _closeMenu, toggle: toggleMenu } = useMenu();
 
     const [playbackRate, setPlaybackRate] = useState(audioRef.playbackRate || 1);
 

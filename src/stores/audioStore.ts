@@ -27,7 +27,7 @@ interface AudioState {
     nextTrack: () => void;
 }
 
-export const useAudioStore = create<AudioState>((set, get) => ({
+export const useAudioStore = create<AudioState>((set, _get) => ({
     // 初始状态
     paused: true,
     duration: 0,

@@ -61,7 +61,7 @@ export function useMediaStore(): UseMediaStoreReturn {
             const lrcBlob = new Blob([lrcText], { type: 'text/plain' });
             
             return new File([lrcBlob], lrcFileName, { type: 'text/plain' });
-        } catch (error) {
+        } catch (_error) {
             // LRC 文件读取失败，返回 undefined
             return undefined;
         }

@@ -5,7 +5,7 @@
 
 import { useEffect, useCallback } from 'react';
 import type { ITrackInfo } from '../utils/playlist-manager.js';
-import { playlistManager } from '../utils/playlist-manager.js';
+// import { playlistManager } from '../utils/playlist-manager.js';
 import { receiveFile } from '../utils/audio-decoder.js';
 import { getBaseName } from '../utils/file-utils.js';
 import { audioRef } from '../utils/audiomodule.js';
@@ -45,7 +45,7 @@ export const usePlaylistEvents = (options: UsePlaylistEventsOptions) => {
         updateCurrentTrackName,
         setPlaylist,
         setCurrentTrackIndex,
-        setSearchQuery,
+        setSearchQuery: _setSearchQuery,
         readAudioFile,
         readLrcFile,
     } = options;
