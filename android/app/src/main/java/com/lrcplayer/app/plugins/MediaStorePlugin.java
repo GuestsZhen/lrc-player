@@ -1,11 +1,17 @@
 package com.lrcplayer.app.plugins;
 
+import android.Manifest;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.provider.MediaStore;
 import android.util.Log;
+
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
@@ -13,12 +19,23 @@ import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
+import com.getcapacitor.annotation.Permission;
+import com.getcapacitor.annotation.PermissionCallback;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 
-@CapacitorPlugin(name = "MediaStore")
+@CapacitorPlugin(
+    name = "MediaStore",
+    permissions = {
+        @Permission(alias = "storage", strings = {
+            Manifest.permission.READ_MEDIA_AUDIO,
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.MANAGE_EXTERNAL_STORAGE
+        })
+    }
+)
 public class MediaStorePlugin extends Plugin {
 
     private static final String TAG = "MediaStorePlugin";
@@ -28,6 +45,20 @@ public class MediaStorePlugin extends Plugin {
      */
     @PluginMethod
     public void scanAudioFiles(PluginCall call) {
+        // ✅ 检查存储权限
+        if (!hasStoragePermission()) {
+            requestStoragePermission(call);
+            return;
+        }
+        
+        // 有权限，执行扫描
+        scanAudioFilesInternal(call);
+    }
+    
+    /**
+     * 内部扫描方法（已有权限时调用）
+     */
+    private void scanAudioFilesInternal(PluginCall call) {
 
         try {
             Context context = getContext();
@@ -544,6 +575,53 @@ public class MediaStorePlugin extends Plugin {
         } catch (Exception e) {
             Log.e(TAG, "Error reading file as Base64", e);
             call.reject("Error: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * 检查是否有存储权限
+     */
+    private boolean hasStoragePermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // Android 13+ (API 33+)
+            return ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_MEDIA_AUDIO) 
+                == PackageManager.PERMISSION_GRANTED;
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            // Android 11-12 (API 30-32)
+            return ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE) 
+                == PackageManager.PERMISSION_GRANTED;
+        } else {
+            // Android 10 及以下
+            return ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE) 
+                == PackageManager.PERMISSION_GRANTED;
+        }
+    }
+    
+    /**
+     * 请求存储权限
+     */
+    private void requestStoragePermission(PluginCall call) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // Android 13+
+            requestPermissionForAlias("storage", call, "permissionCallback");
+        } else {
+            // Android 12 及以下
+            requestPermissionForAlias("storage", call, "permissionCallback");
+        }
+    }
+    
+    /**
+     * 权限请求回调
+     */
+    @PermissionCallback
+    private void permissionCallback(PluginCall call) {
+        if (hasStoragePermission()) {
+            // 权限已授予，重新执行扫描
+            scanAudioFilesInternal(call);
+        } else {
+            // 权限被拒绝
+            Log.e(TAG, "Storage permission denied");
+            call.reject("Storage permission is required to scan audio files. Please grant permission in Settings.");
         }
     }
 }

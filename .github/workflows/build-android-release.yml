@@ -85,5 +85,32 @@ jobs:
           generate_release_notes: true
           draft: false
           prerelease: false
+          body: |
+            ## 📱 LRC Player v6.0.6
+            
+            ### ⚠️ 首次使用必读
+            
+            安装后请按照以下步骤授予权限：
+            
+            1. **打开应用** → 会自动请求权限
+            2. **允许存储权限** → 点击“允许”
+            3. **如果找不到音频文件**：
+               - 进入手机 **设置** → **应用** → **LRC Player** → **权限**
+               - 允许 **“音乐和音频”** 或 **“文件和媒体”** 权限
+               - Android 11+ 还需要允许 **“所有文件访问”** 权限
+            
+            ### 🔧 通过 ADB 授予权限（可选）
+            
+            ```bash
+            # 连接手机后执行
+            adb shell pm grant com.lrcplayer.app android.permission.READ_MEDIA_AUDIO
+            adb shell appops set com.lrcplayer.app MANAGE_EXTERNAL_STORAGE allow
+            ```
+            
+            ### ✨ 本次更新
+            
+            - 修复 Android 版本音频文件扫描问题
+            - 优化 MediaStore 插件注册流程
+            - 改进权限请求逻辑
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
