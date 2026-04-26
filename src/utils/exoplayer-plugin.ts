@@ -195,6 +195,18 @@ export const stopBackgroundService = async (): Promise<void> => {
 };
 
 /**
+ * ✅ 恢复播放（从暂停状态继续）
+ */
+export const resumeExoPlayer = async (): Promise<void> => {
+  try {
+    await ExoPlayerPlugin.resume();
+  } catch (error) {
+    console.error('❌ Failed to resume ExoPlayer:', error);
+    throw error;
+  }
+};
+
+/**
  * ✅ 启用/禁用去人声功能（相位抵消法）
  * @param enabled - 是否启用
  */

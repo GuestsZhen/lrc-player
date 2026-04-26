@@ -248,21 +248,95 @@ export const PlayerSoundTouch: React.FC<IPlayerProps> = ({ state, dispatch }) =>
             if (matchingLrc) {
                 // 通过事件通知父组件加载 LRC
                 window.dispatchEvent(new CustomEvent('load-lrc-file', {
-                    detail: { lrcFile: matchingLrc }
+                    detail: { text: await matchingLrc.text() }
                 }));
             }
-            
-            // 不自动播放，等待用户点击播放按钮
         } catch (error) {
-            alert('音频文件加载失败');
-            setIsAudioInitialized(false);  // 初始化失败，重置状态
-        }
-        
-        // 清空 input，允许重复选择同一文件
-        if (fileInputRef.current) {
-            fileInputRef.current.value = '';
+            console.error('Failed to load audio file:', error);
+            alert('加载音频文件失败');
         }
     };
+
+    // ✅ 拖放文件处理 - 使用 Web Audio Player
+    useEffect(() => {
+        function onDrop(ev: DragEvent) {
+            ev.preventDefault();
+            const files = ev.dataTransfer?.files;
+            if (!files || files.length === 0) {
+                return;
+            }
+
+            // 分离音频文件和 LRC 文件
+            const audioFiles = Array.from(files).filter(file => 
+                file.type.startsWith('audio/') || 
+                ['.mp3', '.wav', '.flac', '.aac', '.ogg', '.m4a', '.wma', '.ape', '.opus', '.ncm'].some(ext => 
+                    file.name.toLowerCase().endsWith(ext)
+                )
+            );
+            
+            const lrcFiles = Array.from(files).filter(file => 
+                file.name.toLowerCase().endsWith('.lrc')
+            );
+            
+            if (audioFiles.length > 0) {
+                // 使用第一个音频文件
+                const audioFile = audioFiles[0];
+                const matchingLrc = findMatchingLrcFile(audioFile.name, lrcFiles);
+                
+                // ✅ 调用 handleFileSelect 相同的逻辑
+                (async () => {
+                    try {
+                        setAudioFileName(audioFile.name);
+                        currentAudioFile = audioFile;
+                        setIsAudioInitialized(false);
+                        
+                        await webAudioPlayer.init({
+                            audioFile: audioFile,
+                            initialPitch: pitchSemitones,
+                            initialSpeed: playbackSpeed
+                        });
+                        
+                        webAudioPlayer.setTimeUpdateCallback((time: number) => {
+                            setCurrentTime(time);
+                            dispatch({ type: ActionType.refresh, payload: time });
+                        });
+                        
+                        setDuration(webAudioPlayer.getDuration());
+                        setIsAudioInitialized(true);
+                        
+                        if (matchingLrc) {
+                            window.dispatchEvent(new CustomEvent('load-lrc-file', {
+                                detail: { text: await matchingLrc.text() }
+                            }));
+                        }
+                    } catch (error) {
+                        console.error('Failed to load dropped audio file:', error);
+                    }
+                })();
+            } else if (lrcFiles.length > 0) {
+                // 如果只有 LRC 文件，加载第一个 LRC 文件
+                const fileReader = new FileReader();
+                fileReader.addEventListener("load", () => {
+                    window.dispatchEvent(new CustomEvent('load-lrc-file', {
+                        detail: { text: fileReader.result as string }
+                    }));
+                });
+                fileReader.readAsText(lrcFiles[0], "utf-8");
+            }
+        }
+
+        function onDragOver(ev: DragEvent) {
+            ev.preventDefault(); // 允许拖放
+        }
+
+        document.documentElement.addEventListener("drop", onDrop);
+        document.documentElement.addEventListener("dragover", onDragOver);
+
+        return () => {
+            document.documentElement.removeEventListener("drop", onDrop);
+            document.documentElement.removeEventListener("dragover", onDragOver);
+        };
+    }, [pitchSemitones, playbackSpeed, dispatch]);
 
     // 播放/暂停切换
     const togglePlay = () => {
@@ -308,7 +382,7 @@ export const PlayerSoundTouch: React.FC<IPlayerProps> = ({ state, dispatch }) =>
         }
     }, [seekTime, currentTime, seekTo]);
 
-    // 点击歌词跳转
+    // 点击歌词跳转并播放
     const onLineClick = useCallback(
         (ev: React.MouseEvent<HTMLLIElement>) => {
             ev.stopPropagation();
@@ -317,6 +391,8 @@ export const PlayerSoundTouch: React.FC<IPlayerProps> = ({ state, dispatch }) =>
             
             if (lineTime !== undefined && !isNaN(lineTime)) {
                 seekTo(lineTime);
+                // ✅ 点击后自动恢复播放
+                webAudioPlayer.play();
             } else {
             }
         },

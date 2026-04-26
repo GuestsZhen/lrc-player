@@ -1,0 +1,14 @@
+{
+  "appId": "com.lrcplayer.app",
+  "appName": "LRC Player",
+  "webDir": "build",
+  "server": {
+    "androidScheme": "https",
+    "cleartext": false
+  },
+  "android": {
+    "allowMixedContent": false,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": true
+  }
+}

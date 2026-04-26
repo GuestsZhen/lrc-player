@@ -285,7 +285,7 @@ export const Player: React.FC<IPlayerProps> = ({ state, dispatch }) => {
         return () => window.removeEventListener('player-bg-color-change', handleBgColorChange);
     }, []);
 
-    // 点击歌词跳转到指定时间
+    // 点击歌词跳转到指定时间并播放
     const onLineClick = useCallback(
         (ev: React.MouseEvent<HTMLLIElement>) => {
             ev.stopPropagation();
@@ -297,10 +297,18 @@ export const Player: React.FC<IPlayerProps> = ({ state, dispatch }) => {
                 // ✅ Android 模式下使用 ExoPlayer seekTo
                 if (isAndroidNative()) {
                     audioSeekTo(lineTime);
+                    // ✅ 点击后自动恢复播放
+                    import('../utils/exoplayer-plugin.js').then(({ resumeExoPlayer }) => {
+                        resumeExoPlayer();
+                    });
                 } else {
                     // Web 模式使用 HTML5 Audio
                     if (audioRef.current) {
                         audioRef.current.currentTime = lineTime;
+                        // ✅ 点击后自动播放
+                        audioRef.current.play().catch(() => {
+                            // 自动播放可能被浏览器阻止，忽略错误
+                        });
                     }
                 }
             }

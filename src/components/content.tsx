@@ -601,6 +601,7 @@ export const Content: React.FC = () => {
 
     useEffect(() => {
         function onDrop(ev: DragEvent) {
+            ev.preventDefault();
             const file = ev.dataTransfer?.files[0];
             if (file && (file.type.startsWith("text/") || /(?:\.lrc|\.txt)$/i.test(file.name))) {
                 const fileReader = new FileReader();
@@ -622,8 +623,17 @@ export const Content: React.FC = () => {
                 fileReader.readAsText(file, "utf-8");
             }
         }
+        
+        function onDragOver(ev: DragEvent) {
+            ev.preventDefault(); // 允许拖放
+        }
+        
         document.documentElement.addEventListener("drop", onDrop);
-        return () => document.documentElement.removeEventListener("drop", onDrop);
+        document.documentElement.addEventListener("dragover", onDragOver);
+        return () => {
+            document.documentElement.removeEventListener("drop", onDrop);
+            document.documentElement.removeEventListener("dragover", onDragOver);
+        };
     }, [lrcDispatch, trimOptions]);
 
     useEffect(() => {

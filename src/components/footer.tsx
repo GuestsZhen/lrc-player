@@ -525,13 +525,57 @@ export const Footer: React.FC = () => {
 
     useEffect(() => {
         function onDrop(ev: DragEvent) {
-            const file = ev.dataTransfer!.files[0];
-            receiveFile(file, setAudioSrc);
+            ev.preventDefault();
+            
+            // ✅ 检测当前是否在 player-soundtouch 页面，如果是则不处理（让该页面自己处理）
+            const currentHash = window.location.hash;
+            if (currentHash.includes('player-soundtouch') || currentHash.includes('st')) {
+                return; // 让 player-soundtouch.tsx 自己处理
+            }
+            
+            const files = ev.dataTransfer?.files;
+            if (!files || files.length === 0) {
+                return;
+            }
+
+            // 分离音频文件和 LRC 文件
+            const audioFiles = Array.from(files).filter(file => 
+                file.type.startsWith('audio/') || 
+                ['.ncm', '.qmcflac', '.qmc0', '.qmc1', '.qmc2', '.qmc3', '.qmcogg'].some(ext => 
+                    file.name.toLowerCase().endsWith(ext)
+                )
+            );
+            
+            const lrcFiles = Array.from(files).filter(file => 
+                file.name.toLowerCase().endsWith('.lrc')
+            );
+            
+            if (audioFiles.length > 0) {
+                // ✅ 使用 fileManager 添加文件到播放列表
+                import('../stores/fileManager.js').then(({ useFileManager }) => {
+                    const store = useFileManager.getState();
+                    store.addFiles(audioFiles, lrcFiles);
+                });
+            } else if (lrcFiles.length > 0) {
+                // 如果只有 LRC 文件，加载第一个 LRC 文件
+                const fileReader = new FileReader();
+                fileReader.addEventListener("load", () => {
+                    window.dispatchEvent(new CustomEvent('load-lrc-file', {
+                        detail: { text: fileReader.result as string }
+                    }));
+                });
+                fileReader.readAsText(lrcFiles[0], "utf-8");
+            }
         }
 
         document.documentElement.addEventListener("drop", onDrop);
+        document.documentElement.addEventListener("dragover", (ev) => {
+            ev.preventDefault(); // 允许拖放
+        });
 
-        return () => document.documentElement.removeEventListener("drop", onDrop);
+        return () => {
+            document.documentElement.removeEventListener("drop", onDrop);
+        };
     }, []);
 
     const onAudioInputChange = useCallback((ev: React.ChangeEvent<HTMLInputElement>) => {
