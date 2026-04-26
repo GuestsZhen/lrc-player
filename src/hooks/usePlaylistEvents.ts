@@ -137,6 +137,12 @@ export const usePlaylistEvents = (options: UsePlaylistEventsOptions) => {
                     setCurrentTrackIndex(trackIndex);
                     receiveFile(prevPlaylist[trackIndex].file!, setAudioSrc);
                     
+                    // ✅ 同步更新 fileManager 的 currentPlayingFile
+                    import('../stores/fileManager.js').then(({ useFileManager }) => {
+                        const store = useFileManager.getState();
+                        store.setCurrentPlayingFile(file.name);
+                    });
+                    
                     // 自动播放
                     setTimeout(() => {
                         audioRef.current?.play();
@@ -162,6 +168,13 @@ export const usePlaylistEvents = (options: UsePlaylistEventsOptions) => {
                     
                     // 加载音频并播放
                     receiveFile(file, setAudioSrc);
+                    
+                    // ✅ 同步更新 fileManager 的 currentPlayingFile
+                    import('../stores/fileManager.js').then(({ useFileManager }) => {
+                        const store = useFileManager.getState();
+                        store.setCurrentPlayingFile(file.name);
+                    });
+                    
                     setTimeout(() => {
                         audioRef.current?.play();
                     }, 200);
@@ -231,6 +244,12 @@ export const usePlaylistEvents = (options: UsePlaylistEventsOptions) => {
                         setCurrentTrackIndex(prev.length);
                         receiveFile(file, setAudioSrc);
                         
+                        // ✅ 关键修复：同步更新 fileManager 的 currentPlayingFile
+                        import('../stores/fileManager.js').then(({ useFileManager }) => {
+                            const store = useFileManager.getState();
+                            store.setCurrentPlayingFile(file.name);
+                        });
+                        
                         setTimeout(() => {
                             audioRef.current?.play();
                         }, 200);
@@ -250,12 +269,17 @@ export const usePlaylistEvents = (options: UsePlaylistEventsOptions) => {
 
     // 处理从播放列表删除文件
     const handleRemoveFileFromPlaylist = useCallback((event: Event) => {
-        const customEvent = event as CustomEvent<{ fileName: string }>;
+        const customEvent = event as CustomEvent<{
+            fileName: string;
+            wasPlaying: boolean;
+            currentIndex: number;
+            newFileCount: number;
+        }>;
         if (!customEvent.detail?.fileName) {
             return;
         }
         
-        const { fileName } = customEvent.detail;
+        const { fileName, wasPlaying, currentIndex: _deletedIndex, newFileCount } = customEvent.detail;
         
         setPlaylist(prev => {
             const index = prev.findIndex(track => track.fileName === fileName);
@@ -265,16 +289,65 @@ export const usePlaylistEvents = (options: UsePlaylistEventsOptions) => {
             
             const newPlaylist = prev.filter(track => track.fileName !== fileName);
             
-            if (index === currentTrackIndex) {
+            // ✅ 如果删除的是当前正在播放的歌曲
+            if (wasPlaying && newFileCount > 0) {
+                // ✅ 关键修复：先暂停，避免在切换时出现错误
+                if (audioRef.current) {
+                    audioRef.current.pause();
+                }
+                
+                // 计算下一首的索引
+                let nextIndex = index;
+                if (nextIndex >= newFileCount) {
+                    nextIndex = newFileCount - 1; // 如果删除的是最后一首，播放新的最后一首
+                }
+                
+                // ✅ 直接在这里播放下一首，而不是触发事件（避免闭包问题）
+                setTimeout(() => {
+                    const nextTrack = newPlaylist[nextIndex];
+                    if (nextTrack && nextTrack.file) {
+                        setCurrentTrackIndex(nextIndex);
+                        receiveFile(nextTrack.file, setAudioSrc);
+                        
+                        // ✅ 同步更新 fileManager 的 currentPlayingFile
+                        import('../stores/fileManager.js').then(({ useFileManager }) => {
+                            const store = useFileManager.getState();
+                            store.setCurrentPlayingFile(nextTrack.fileName);
+                        });
+                        
+                        setTimeout(() => {
+                            audioRef.current?.play();
+                        }, 200);
+                        
+                        if (nextTrack.lrcFile) {
+                            loadLrcFile(nextTrack.lrcFile);
+                        }
+                        
+                        window.dispatchEvent(new CustomEvent('current-playing-file-change', {
+                            detail: { fileName: nextTrack.fileName }
+                        }));
+                    }
+                }, 100);
+            } else if (wasPlaying && newFileCount === 0) {
+                // 如果删除后没有歌曲了，停止播放
+                if (audioRef.current) {
+                    audioRef.current.pause();
+                    audioRef.current.currentTime = 0;
+                    // ✅ 使用 removeAttribute 而不是设置为空字符串
+                    audioRef.current.removeAttribute('src');
+                    audioRef.current.load();
+                }
                 setCurrentTrackIndex(-1);
-                setAudioSrc('');
+                // 清除 LRC
+                window.dispatchEvent(new CustomEvent('clear-lrc'));
             } else if (index < currentTrackIndex) {
+                // 如果删除的歌曲在当前播放歌曲之前，调整索引
                 setCurrentTrackIndex(currentTrackIndex - 1);
             }
             
             return newPlaylist;
         });
-    }, [currentTrackIndex, setPlaylist, setCurrentTrackIndex]);
+    }, [currentTrackIndex, setPlaylist, setCurrentTrackIndex, setAudioSrc, loadLrcFile]);
 
     // 注册所有事件监听器
     useEffect(() => {

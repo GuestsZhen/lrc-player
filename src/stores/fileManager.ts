@@ -132,6 +132,9 @@ export const useFileManager = create<FileManagerState>((set, get) => ({
   },
   
   removeFile: (fileName) => {
+    const wasPlaying = fileName === get().currentPlayingFile;
+    const currentIndex = get().selectedFiles.indexOf(fileName);
+    
     const newSelectedFiles = get().selectedFiles.filter(f => f !== fileName);
     const newFileObjects = new Map(get().fileObjects);
     newFileObjects.delete(fileName);
@@ -142,7 +145,7 @@ export const useFileManager = create<FileManagerState>((set, get) => ({
     });
     
     // 如果删除的是当前播放的文件，清空当前播放
-    if (fileName === get().currentPlayingFile) {
+    if (wasPlaying) {
       set({ currentPlayingFile: '' });
     }
     
@@ -153,7 +156,7 @@ export const useFileManager = create<FileManagerState>((set, get) => ({
     
     // 通知 Footer 组件更新播放列表
     window.dispatchEvent(new CustomEvent('remove-file-from-playlist', {
-      detail: { fileName }
+      detail: { fileName, wasPlaying, currentIndex, newFileCount: newSelectedFiles.length }
     }));
   },
   

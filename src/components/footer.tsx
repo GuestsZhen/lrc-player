@@ -362,6 +362,10 @@ export const Footer: React.FC = () => {
         
         const track = playlist[newIndex];
         if (track.file) {
+            // ✅ 关键修复：先暂停当前播放，避免在切换 URL 时出现错误
+            if (audioRef.current) {
+                audioRef.current.pause();
+            }
 
             receiveFile(track.file, setAudioSrc);
             setTimeout(() => {
