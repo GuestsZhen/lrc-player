@@ -1,7 +1,5 @@
 import { useWavesurfer } from "@wavesurfer/react";
 import { useEffect, useRef } from "react";
-import { audioRef } from "../utils/audiomodule";
-import { isAndroidNative } from "../utils/platform-detector";
 import "./waveform.css";
 
 interface IWaveformProps {
@@ -50,8 +48,8 @@ export const Waveform: React.FC<IWaveformProps> = ({ value, onSeek, className, a
         let cancelled = false;
         
         if (wavesurfer) {
-            // ✅ Android 模式下使用传入的 audioSrc，Web 模式使用 audioRef.src
-            const src = isAndroidNative() ? audioSrc : audioRef.src;
+            // ✅ Android 模式下使用传入的 audioSrc，Web 模式也使用传入的 audioSrc
+            const src = audioSrc;
             
             if (src) {
                 // ✅ 切换歌曲时先清空旧波形
@@ -66,6 +64,7 @@ export const Waveform: React.FC<IWaveformProps> = ({ value, onSeek, className, a
                     .catch((error) => {
                         // 忽略 AbortError，这是正常的取消操作
                         if (error.name !== 'AbortError') {
+                            console.error('Waveform load error:', error);
                         }
                     });
             } else {
@@ -77,7 +76,7 @@ export const Waveform: React.FC<IWaveformProps> = ({ value, onSeek, className, a
         return () => {
             cancelled = true;
         };
-    }, [wavesurfer, audioSrc]);  // ❌ 移除 value 依赖
+    }, [wavesurfer, audioSrc]);  // ✅ 只依赖 audioSrc，当切换歌曲时重新加载
 
     return <div className={`waveform ${className || ""}`} ref={containerRef}></div>;
 };

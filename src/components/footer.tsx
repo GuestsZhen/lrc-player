@@ -769,6 +769,7 @@ export const Footer: React.FC = () => {
                     lang={lang} 
                     currentTrackName={displayTrackName || undefined}
                     currentTrackFilePath={currentTrackFilePath}
+                    audioSrc={audioSrc}
                 />
             )}
         </footer>

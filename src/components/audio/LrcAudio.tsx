@@ -25,9 +25,13 @@ interface ILrcAudioProps {
      * ✅ Android 模式下传入当前曲目文件路径（用于波形显示）
      */
     currentTrackFilePath?: string;
+    /**
+     * ✅ Web 模式下传入音频 Blob URL（用于波形显示）
+     */
+    audioSrc?: string;
 }
 
-export const LrcAudio: React.FC<ILrcAudioProps> = ({ lang, currentTrackName, currentTrackFilePath }) => {
+export const LrcAudio: React.FC<ILrcAudioProps> = ({ lang, currentTrackName, currentTrackFilePath, audioSrc }) => {
     
     // ✅ 使用 Hooks 管理状态
     const { paused, duration, currentTime, rate: _rate, togglePlay } = useAudioControl();
@@ -93,10 +97,10 @@ export const LrcAudio: React.FC<ILrcAudioProps> = ({ lang, currentTrackName, cur
     }, [currentTrackFilePath]);
 
     const { prefState } = useContext(appContext, ChangBits.prefState);
-    // ✅ Android 模式下使用 Blob URL，Web 模式使用 localAudioMode
+    // ✅ Android 模式下使用 Blob URL，Web 模式使用传入的 audioSrc
     const showWaveform = isAndroidNative() 
         ? (prefState.showWaveform && !!audioBlobUrl)
-        : (prefState.showWaveform && localAudioMode);
+        : (prefState.showWaveform && !!audioSrc);
     
     const fixed = showWaveform ? prefState.fixed : 0;
 
@@ -140,7 +144,7 @@ export const LrcAudio: React.FC<ILrcAudioProps> = ({ lang, currentTrackName, cur
                         duration={duration} 
                         paused={paused} 
                         showTimeText={false}
-                        audioSrc={isAndroidNative() ? audioBlobUrl : undefined}
+                        audioSrc={isAndroidNative() ? audioBlobUrl : audioSrc}
                     />
                 </div>
                 
@@ -198,7 +202,7 @@ export const LrcAudio: React.FC<ILrcAudioProps> = ({ lang, currentTrackName, cur
                     <NextSVG />
                 </button>
 
-                <TimeLine duration={duration} paused={paused} />
+                <TimeLine duration={duration} paused={paused} audioSrc={isAndroidNative() ? audioBlobUrl : audioSrc} />
                 <RateSlider lang={lang} />
             </div>
         </section>
