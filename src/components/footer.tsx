@@ -115,6 +115,32 @@ export const Footer: React.FC = () => {
         
         window.addEventListener('play-mode-change', handlePlayModeChange as EventListener);
         
+        // ✅ 监听清除播放列表事件（来自 fileManager.clearAllFiles）
+        const handleClearPlaylist = () => {
+            // 清空播放列表状态
+            setPlaylist([]);
+            setCurrentTrackIndex(-1);
+            setDisplayTrackName('');
+            setSearchQuery('');
+            
+            // ✅ 停止当前播放的音频（避免触发错误事件）
+            if (audioRef.current) {
+                // 先暂停
+                audioRef.current.pause();
+                // 重置时间
+                audioRef.current.currentTime = 0;
+                // ✅ 使用 removeAttribute 而不是设置为空字符串，避免触发 error 事件
+                audioRef.current.removeAttribute('src');
+                // 重新加载以清除缓冲
+                audioRef.current.load();
+            }
+            
+            // ✅ 同时清除已加载的 LRC 文件
+            window.dispatchEvent(new CustomEvent('clear-lrc'));
+        };
+        
+        window.addEventListener('clear-playlist', handleClearPlaylist as EventListener);
+        
         // ✅ Android 模式下监听 ExoPlayer 播放完成事件
         if (isAndroidNative()) {
             addTrackEndedListener(() => {
@@ -126,6 +152,7 @@ export const Footer: React.FC = () => {
         return () => {
             window.removeEventListener('audio-file-update', handleAudioFileUpdate as EventListener);
             window.removeEventListener('play-mode-change', handlePlayModeChange as EventListener);
+            window.removeEventListener('clear-playlist', handleClearPlaylist as EventListener);
             // 组件卸载时不需要关闭数据库，因为可能在其他地方还在使用
         };
     }, []);

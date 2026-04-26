@@ -550,6 +550,20 @@ export const Content: React.FC = () => {
         window.addEventListener('load-lrc-file' as any, handleLoadLrcFile as any);
         return () => window.removeEventListener('load-lrc-file' as any, handleLoadLrcFile as any);
     }, [lrcDispatch]);
+    
+    // ✅ 监听清除 LRC 事件（来自 footer.tsx 的清除播放列表）
+    useEffect(() => {
+        const handleClearLrc = () => {
+            // 通过 parse 空字符串来清除 LRC
+            lrcDispatch({
+                type: LrcActionType.parse,
+                payload: { text: '', options: trimOptions },
+            });
+        };
+        
+        window.addEventListener('clear-lrc', handleClearLrc as EventListener);
+        return () => window.removeEventListener('clear-lrc', handleClearLrc as EventListener);
+    }, [lrcDispatch, trimOptions]);
 
     useEffect(() => {
         return audioStatePubSub.sub(self.current, (data) => {

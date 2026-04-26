@@ -169,6 +169,9 @@ export const useFileManager = create<FileManagerState>((set, get) => ({
     playlistManager.clearAllTracks().catch(_err => {
       // 清理失败处理
     });
+    
+    // ✅ 通知 Footer 组件清空播放列表并停止播放
+    window.dispatchEvent(new CustomEvent('clear-playlist'));
   },
   
   playFile: (fileName) => {
