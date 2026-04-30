@@ -78,6 +78,7 @@ android/*.jks
 android/local.properties
 android/**/*.apk
 android/**/*.aab
+android/capacitor.settings.gradle
 ios/
 cap-dev.bat
 capacitor.config.ts

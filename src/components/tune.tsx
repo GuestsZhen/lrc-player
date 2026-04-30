@@ -87,12 +87,16 @@ export const Tune: React.FC<{
             return text;
         }
 
-        // 第一步：提取并保护时间轴
+        // 第一步：提取并保护时间轴和元数据
         const timePlaceholders: string[] = [];
         let timeIndex = 0;
-        // ✅ 修复：使用更精确的正则表达式，并转义点号
-        const timePattern = /\[([0-9]{2}:[0-9]{2}\.[0-9]{2,3})\]/g;
-        const protectedText = text.replace(timePattern, (match) => {
+        
+        // ✅ 匹配多种格式：
+        // 1. [00:16.63] - 时间轴
+        // 2. [length: 03:41.26] - 长度元数据
+        // 3. [ar:歌手名] - 其他元数据
+        const metadataPattern = /\[[^\]]*\]/g;
+        const protectedText = text.replace(metadataPattern, (match) => {
             // ✅ 使用不含数字和#的占位符，使用字母表示索引（A-Z, AA-ZZ等）
             const placeholder = `__${numberToLetters(timeIndex)}__`;
             timePlaceholders[timeIndex] = match;
