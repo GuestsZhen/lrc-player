@@ -35,6 +35,8 @@ export const MSFileListPanel: React.FC<IMSFileListPanelProps> = ({
   const [isInitialLoad, setIsInitialLoad] = useState(true); // ✅ 标记是否正在初始加载
   const [searchQuery, setSearchQuery] = useState(''); // ✅ 搜索关键词
   const listContainerRef = useRef<HTMLDivElement>(null); // ✅ 列表容器引用
+  const searchInputRef = useRef<HTMLInputElement>(null); // ✅ 搜索输入框引用
+  const lastValueRef = useRef<string>(''); // ✅ 记录上一次的输入框值
   
   // ✅ 播放列表持久化存储键名
   const PLAYLIST_TRACKS_KEY = 'ms_playlist_tracks';
@@ -250,7 +252,8 @@ export const MSFileListPanel: React.FC<IMSFileListPanelProps> = ({
   const filteredTracks = searchQuery
     ? tracks.filter(track => {
         const trackName = (track.name || track.fileName || '').toLowerCase();
-        return trackName.includes(searchQuery.toLowerCase());
+        const query = searchQuery.toLowerCase();
+        return trackName.includes(query);
       })
     : tracks;
   
@@ -494,6 +497,24 @@ export const MSFileListPanel: React.FC<IMSFileListPanelProps> = ({
     };
   }, []); // ✅ 只在组件挂载时执行一次
   
+  // ✅ 方案C：轮询检查输入框值（Android WebView 中文输入法兼容方案）
+  useEffect(() => {
+    if (!isAndroidNative()) return; // 只在 Android 原生环境启用
+    
+    const intervalId = setInterval(() => {
+      const inputElement = searchInputRef.current;
+      if (!inputElement) return;
+      
+      const currentValue = inputElement.value;
+      if (currentValue !== lastValueRef.current) {
+        lastValueRef.current = currentValue;
+        setSearchQuery(currentValue);
+      }
+    }, 100); // 每 100ms 检查一次
+    
+    return () => clearInterval(intervalId);
+  }, []);
+  
   // 关闭面板（带动画）
   const closePanel = useCallback(() => {
     setIsHiding(true);
@@ -529,11 +550,14 @@ export const MSFileListPanel: React.FC<IMSFileListPanelProps> = ({
         {/* ✅ 搜索框 - 放在标题右边 */}
         <div className="ms-search-box-header" style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1, minWidth: 0 }}>
           <input
+            ref={searchInputRef}
             type="text"
             className="ms-search-input-header"
             placeholder={lang?.msPlaylist?.searchPlaceholder || '搜索歌曲...'}
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onInput={(e) => {
+              setSearchQuery((e.target as HTMLInputElement).value);
+            }}
             onMouseDown={(e) => e.stopPropagation()}
             style={{
               padding: '4px 8px',

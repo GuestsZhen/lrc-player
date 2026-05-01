@@ -61,7 +61,7 @@ export const testExoPlayer = async () => {
     await stopExoPlayer();
 
   } catch (error) {
-    console.error('❌ Test failed:', error);
+    // console.error('❌ Test failed:', error);
   }
 };
 
@@ -85,12 +85,12 @@ export const testExoPlayerEvents = async () => {
     // 监听错误事件
 
     await ExoPlayerPlugin.addListener('onPlayerError', (event) => {
-      console.error('📢 Player error:', event.error);
+      // console.error('📢 Player error:', event.error);
     });
     
 
   } catch (error) {
-    console.error('❌ Failed to setup event listeners:', error);
+    // console.error('❌ Failed to setup event listeners:', error);
   }
 };
 

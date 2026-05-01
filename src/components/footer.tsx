@@ -264,7 +264,7 @@ export const Footer: React.FC = () => {
                 );
 
             } catch (error) {
-                console.error('❌ Failed to load MS track:', error);
+                // console.error('❌ Failed to load MS track:', error);
             }
 
             return;
@@ -308,7 +308,7 @@ export const Footer: React.FC = () => {
             updateCurrentTrackName(newIndex, playlist);
 
         } else {
-            console.error('❌ Track file is null or undefined');
+            // console.error('❌ Track file is null or undefined');
         }
 
     }, [playlist, currentTrackIndex, playMode, updateCurrentTrackName, readAudioFile, readLrcFile, loadLrcFile]);
@@ -337,7 +337,7 @@ export const Footer: React.FC = () => {
                 );
 
             } catch (error) {
-                console.error('❌ Failed to load MS track:', error);
+                // console.error('❌ Failed to load MS track:', error);
             }
 
             return;
@@ -385,7 +385,7 @@ export const Footer: React.FC = () => {
             updateCurrentTrackName(newIndex, playlist);
 
         } else {
-            console.error('❌ Track file is null or undefined');
+            // console.error('❌ Track file is null or undefined');
         }
 
     }, [playlist, currentTrackIndex, playMode, updateCurrentTrackName, readAudioFile, readLrcFile, loadLrcFile]);
@@ -512,7 +512,7 @@ export const Footer: React.FC = () => {
                 case InputAction.ResetRate:
                     ev.preventDefault();
                     if (isAndroidNative()) {
-                        setExoPlayerSpeed(1).catch(console.error);
+                        setExoPlayerSpeed(1).catch(() => {});
                     } else {
                         audioRef.playbackRate = 1;
                     }
@@ -524,7 +524,7 @@ export const Footer: React.FC = () => {
                         : audioRef.playbackRate;
                     const newRate = Math.exp(Math.min(Math.log(currentRate) + 0.2, 1));
                     if (isAndroidNative()) {
-                        setExoPlayerSpeed(newRate).catch(console.error);
+                        setExoPlayerSpeed(newRate).catch(() => {});
                     } else {
                         audioRef.playbackRate = newRate;
                     }
@@ -537,7 +537,7 @@ export const Footer: React.FC = () => {
                         : audioRef.playbackRate;
                     const newRate = Math.exp(Math.max(Math.log(currentRate) - 0.2, -1));
                     if (isAndroidNative()) {
-                        setExoPlayerSpeed(newRate).catch(console.error);
+                        setExoPlayerSpeed(newRate).catch(() => {});
                     } else {
                         audioRef.playbackRate = newRate;
                     }

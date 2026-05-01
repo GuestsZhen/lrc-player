@@ -64,7 +64,7 @@ export const Waveform: React.FC<IWaveformProps> = ({ value, onSeek, className, a
                     .catch((error) => {
                         // 忽略 AbortError，这是正常的取消操作
                         if (error.name !== 'AbortError') {
-                            console.error('Waveform load error:', error);
+                            // console.error('Waveform load error:', error);
                         }
                     });
             } else {

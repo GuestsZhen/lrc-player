@@ -448,7 +448,7 @@ export const Header: React.FC = () => {
                     const pitch = Math.pow(1.05946, clampedSemitones);
                     
                     // 异步调用 ExoPlayer
-                    setExoPlayerPitch(pitch).catch(console.error);
+                    setExoPlayerPitch(pitch).catch(() => {});
                     
                     // 通知 UI 更新
                     window.dispatchEvent(new CustomEvent('st-pitch-change', { detail: clampedSemitones }));
@@ -506,7 +506,7 @@ export const Header: React.FC = () => {
                     const newState = !prevState;
                     // 异步调用 ExoPlayer
                     import('../utils/exoplayer-plugin.js').then(({ setVocalRemoval }) => {
-                        setVocalRemoval(newState).catch(console.error);
+                        setVocalRemoval(newState).catch(() => {});
                     });
                     return newState;
                 });

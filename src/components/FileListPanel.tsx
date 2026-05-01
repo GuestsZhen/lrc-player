@@ -183,7 +183,17 @@ export const FileListPanel: React.FC<FileListPanelProps> = ({ onClose, lang }) =
               className="file-search-input"
               placeholder={lang.playlist?.searchPlaceholder || '搜索歌曲...'}
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                // ✅ 只在输入法未激活时更新状态（英文输入、数字输入等）
+                const target = e.target as HTMLInputElement;
+                if (!(target as any).isComposing) {
+                  setSearchQuery(e.target.value);
+                }
+              }}
+              onCompositionEnd={(e) => {
+                // ✅ 中文/日文/韩文输入法输入完成时立即更新
+                setSearchQuery(e.currentTarget.value);
+              }}
             />
             {searchQuery && (
               <button

@@ -252,7 +252,7 @@ export const PlayerSoundTouch: React.FC<IPlayerProps> = ({ state, dispatch }) =>
                 }));
             }
         } catch (error) {
-            console.error('Failed to load audio file:', error);
+            // console.error('Failed to load audio file:', error);
             alert('加载音频文件失败');
         }
     };
@@ -310,7 +310,7 @@ export const PlayerSoundTouch: React.FC<IPlayerProps> = ({ state, dispatch }) =>
                             }));
                         }
                     } catch (error) {
-                        console.error('Failed to load dropped audio file:', error);
+                        // console.error('Failed to load dropped audio file:', error);
                     }
                 })();
             } else if (lrcFiles.length > 0) {

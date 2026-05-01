@@ -201,7 +201,7 @@ export const resumeExoPlayer = async (): Promise<void> => {
   try {
     await ExoPlayerPlugin.resume();
   } catch (error) {
-    console.error('❌ Failed to resume ExoPlayer:', error);
+    // console.error('❌ Failed to resume ExoPlayer:', error);
     throw error;
   }
 };
@@ -215,7 +215,7 @@ export const setVocalRemoval = async (enabled: boolean): Promise<{ success: bool
     const result = await ExoPlayerPlugin.setVocalRemoval({ enabled });
     return result;
   } catch (error) {
-    console.error('❌ Failed to set vocal removal:', error);
+    // console.error('❌ Failed to set vocal removal:', error);
     throw error;
   }
 };
@@ -228,7 +228,7 @@ export const getVocalRemovalStatus = async (): Promise<{ enabled: boolean; avail
     const status = await ExoPlayerPlugin.getVocalRemovalStatus();
     return status;
   } catch (error) {
-    console.error('❌ Failed to get vocal removal status:', error);
+    // console.error('❌ Failed to get vocal removal status:', error);
     throw error;
   }
 };

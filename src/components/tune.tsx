@@ -306,15 +306,9 @@ export const Tune: React.FC<{
         const originalText = originalTextarea.current?.value || originalLyricRef.current;
         if (!originalText) return;
 
-        console.log('[转调调试]');
-        console.log('  fromKey:', KEYS[fromKey], '(index:', fromKey, ')');
-        console.log('  toKey:', KEYS[toKey], '(index:', toKey, ')');
-        console.log('  semitones:', fromKey - toKey);
-
         const mode = fromKey - toKey;  // ✅ 参考 main.js 第147行
         const result = transposeText(originalText, mode);
         
-        console.log('  结果:', result);
         setTransposedText(result);
         setIsTransposed(true);
     }, [fromKey, toKey, transposeText]);
