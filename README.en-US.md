@@ -18,7 +18,7 @@
 
 ### 📥 Download Android APK
 
-Latest Version: **v6.0.6** - [View Releases](https://github.com/GuestsZhen/lrc-player/releases/latest)
+Latest Version: - [View Releases](https://github.com/GuestsZhen/lrc-player/releases/latest)
 
 > ⚠️ **First Time Setup**: Please grant storage permissions after installation to access local music files
 
@@ -100,13 +100,15 @@ Thanks to Akari, the original project can be found at: https://github.com/magic-
 - ⚠️ Technical limitations: Cannot adjust playback progress or seek to specific timestamps
 - 🌐 **Web environment only**, not supported on Android
 
-#### 9. File Manager ⭐Completed
-- 📂 Local audio file scanning and management
-- 🎶 Playlist management (add, remove, reorder)
-- 💾 IndexedDB persistent storage (Web) / Capacitor Preferences (Android)
-- 🔄 Cross-component state synchronization (Zustand Stores)
-- 📱 Web and Android dual-platform support
-- 📍 **Playlist scroll position memory** - Automatically scrolls to current playing song when reopened
+#### 9. Android Exclusive Features ⭐Completed
+- 🎵 **MediaStore API Integration** - Direct system media library scanning
+- 📁 **Folder Picker** - Capacitor FilePicker native file selection
+- 💾 **Preferences Storage** - Capacitor Preferences persistent configuration
+- 🔌 **Fully Offline** - All dependencies packaged in APK, no network required
+- 🎨 **Platform Adaptation** - Auto-detect platform, seamless Web/Android switching
+- 🎤 **Vocal Removal** - Phase cancellation to remove centered vocals (instrumental mode)
+- 🎼 **Pitch Adjustment** - ±12 semitone key adjustment
+- ⚡ **Speed Control** - 0.5x - 2.0x playback speed control
 
 ### 🛠️ Technical Features
 
@@ -119,20 +121,11 @@ Thanks to Akari, the original project can be found at: https://github.com/magic-
 - **Responsive Design**: Supports desktop and mobile devices
 - **📱 Android Support**: Capacitor 8 + MediaStore API + Fully Offline
 
-## How to Use
+## How to Use 🌐 Web Version
 
-### Basic Operations
+**Live Demo**: https://guestszhen.github.io/lrc-player
+
 Drag and drop files into the page to load them, use arrow keys and spacebar to insert timestamps. You can bookmark this link in your browser.
-
-Live Demo: https://guestszhen.github.io/lrc-player
-
-### 💡 Use Cases
-
-1. **Music Producers**: Create precise timeline lyrics for numbered notation songs
-2. **KTV Systems**: Create karaoke subtitle files
-3. **Music Education**: Numbered notation teaching and transposition practice
-4. **Lyrics Enthusiasts**: Organize and beautify lyrics files
-5. **Developers**: Learn React + TypeScript best practices
 
 ## Hotkeys
 
@@ -167,6 +160,8 @@ Recommended browser versions:
 
 If you want to run this project on your local machine, follow the steps below.
 
+### Web Version Development
+
 ```bash
 # Clone this repository
 git clone https://github.com/GuestsZhen/lrc-player.git
@@ -183,9 +178,45 @@ pnpm build
 pnpm start
 ```
 
+### Android Version Development
+
+```bash
+# Prerequisites
+# - Java JDK 21
+# - Android SDK
+# - Node.js
+
+# Install dependencies
+npm install
+
+# Add Android platform (first time only)
+npx cap add android
+
+# Standard deployment command (recommended)
+npm run cap:android:deploy
+
+# Or open in Android Studio
+npx cap open android
+```
 ```
 
+
+
+## 📚 Documentation
+
+### Core Documentation
+- [PROJECT-ARCHITECTURE.md](docs/PROJECT-ARCHITECTURE.md) - Project Architecture Details
+- [DEPLOYMENT.md](docs/DEPLOYMENT.md) - Web Version Deployment Guide
+
+### Android Development
+- [ANDROID-CAPACITOR-STATUS.md](docs/ANDROID-CAPACITOR-STATUS.md) - Capacitor Migration Status
+- [ANDROID-MEDIASTORE-DEBUG-GUIDE.md](docs/ANDROID-MEDIASTORE-DEBUG-GUIDE.md) - MediaStore Debugging Guide
+
+---
+
 ## Production Deployment
+
+### Web Version
 
 After building (`npm run build`), the `build` folder contains static website files.
 You can deploy it to any CDN or static file server.
@@ -199,6 +230,19 @@ docker build -t lrc-player .
 # Create a container and serve on port 8080
 docker run -d -p 8080:80 lrc-player
 ```
+
+### Android Version
+
+```bash
+# Build Release APK
+cd android
+./gradlew assembleRelease
+
+# Or build AAB (for Google Play release)
+./gradlew bundleRelease
+```
+
+---
 
 ## Give this project a star :star:
 
