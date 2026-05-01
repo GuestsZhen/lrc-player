@@ -34,6 +34,7 @@ export const MSFileListPanel: React.FC<IMSFileListPanelProps> = ({
   const [hoveredTrackIndex, setHoveredTrackIndex] = useState<number | null>(null); // ✅ 跟踪悬停的歌曲
   const [isInitialLoad, setIsInitialLoad] = useState(true); // ✅ 标记是否正在初始加载
   const [searchQuery, setSearchQuery] = useState(''); // ✅ 搜索关键词
+  const listContainerRef = useRef<HTMLDivElement>(null); // ✅ 列表容器引用
   
   // ✅ 播放列表持久化存储键名
   const PLAYLIST_TRACKS_KEY = 'ms_playlist_tracks';
@@ -405,6 +406,35 @@ export const MSFileListPanel: React.FC<IMSFileListPanelProps> = ({
     loadPlaylist();
   }, []);
   
+  // ✅ 当 tracks 变化或面板打开时，滚动到当前播放的歌曲
+  useEffect(() => {
+    if (tracks.length === 0 || !listContainerRef.current) {
+      return;
+    }
+    
+    // 获取当前播放的索引
+    const msCurrentIndex = (window as any).__msCurrentIndex;
+    if (msCurrentIndex === undefined || msCurrentIndex < 0 || msCurrentIndex >= tracks.length) {
+      return;
+    }
+    
+    // ✅ 同步 currentPlayingFile 状态
+    const currentTrack = tracks[msCurrentIndex];
+    if (currentTrack) {
+      setCurrentPlayingFile(currentTrack.name || '');
+    }
+    
+    // 找到对应的歌曲元素并直接跳转到该位置（不平滑滚动）
+    const timer = setTimeout(() => {
+      const playingItem = listContainerRef.current?.querySelector(`[data-track-index="${msCurrentIndex}"]`);
+      if (playingItem) {
+        playingItem.scrollIntoView({ behavior: 'auto', block: 'center' });
+      }
+    }, 300); // 等待 DOM 渲染完成
+    
+    return () => clearTimeout(timer);
+  }, [tracks]);
+  
   // ✅ 当 tracks 或 selectedFolders 变化时自动保存
   useEffect(() => {
     // ✅ 初始加载时不执行自动保存/清除逻辑
@@ -568,7 +598,7 @@ export const MSFileListPanel: React.FC<IMSFileListPanelProps> = ({
       </div>
       
       {/* 播放列表页面 - 歌曲列表 */}
-      <div className="folders-view" style={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto', padding: '10px' }}>
+      <div className="folders-view" ref={listContainerRef} style={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto', padding: '10px' }}>
           {/* ✅ 在文件夹列表上方添加操作按钮 */}
           <div className="folder-actions" style={{ 
             display: 'flex', 
@@ -716,11 +746,14 @@ export const MSFileListPanel: React.FC<IMSFileListPanelProps> = ({
                         }}>
                           {folderData.tracks.map((track, index) => {
                             const isPlaying = track.name === currentPlayingFile;
+                            // ✅ 计算该歌曲在全局 tracks 数组中的索引
+                            const globalIndex = tracks.findIndex(t => t.id === track.id);
                                   
                             return (
                               <li 
                                 key={index} 
                                 className={`selected-file-item ${isPlaying ? 'playing' : ''}`}
+                                data-track-index={globalIndex}
                                 style={{
                                   background: isPlaying ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
                                   borderLeft: isPlaying ? '3px solid rgba(255, 255, 255, 0.3)' : '3px solid transparent',
@@ -744,13 +777,8 @@ export const MSFileListPanel: React.FC<IMSFileListPanelProps> = ({
                                     className="file-name file-name-marquee" 
                                     title={track.name || track.fileName}
                                     style={{
-                                      flex: 1,
-                                      overflow: 'hidden',
-                                      textOverflow: 'ellipsis',
-                                      whiteSpace: 'nowrap',
                                       fontSize: isPlaying ? '1.5rem' : '1.2rem',
                                       color: '#eeeeee',
-                                      display: 'block',
                                       minWidth: 0,
                                       fontWeight: isPlaying ? 'bold' : 'normal',
                                     }}

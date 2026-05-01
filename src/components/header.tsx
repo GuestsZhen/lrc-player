@@ -748,8 +748,8 @@ export const Header: React.FC = () => {
                         <PlaySVG />
                     </a>
                     
-                    {/* 全屏按钮 - 在 Player 和 Player-SoundTouch 页面显示 */}
-                    {(isPlayerPage || location.hash.includes(ROUTER.playerSoundTouchJS)) && (
+                    {/* 全屏按钮 - 在 Player 和 Player-SoundTouch 页面显示（Android 下隐藏） */}
+                    {(isPlayerPage || location.hash.includes(ROUTER.playerSoundTouchJS)) && !isAndroidNative() && (
                         <button 
                             className="header-control-button fullscreen-btn"
                             onClick={toggleFullscreen}
