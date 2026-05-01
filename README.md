@@ -16,6 +16,12 @@
 - **Web 版本**：浏览器在线使用，支持 PWA 离线访问
 - **Android 版本**：原生 App，完全离线可用，支持 MediaStore API 扫描本地音乐库
 
+### 📥 下载 Android APK
+
+最新版本：**v6.0.6** - [查看 Releases](https://github.com/GuestsZhen/lrc-player/releases/latest)
+
+> ⚠️ **首次使用必读**：安装后请授予存储权限以访问本地音乐文件
+
 ## 这个项目是什么
 
 这是一个基于 Akari 的 lrc-maker 制作的简谱播放工具，原程序为滚动歌词制作工具，在此基础上增加了首调唱名法转调、独立播放界面、播放列表等功能。
@@ -79,21 +85,28 @@
 #### 8. 测试版 ST播放器 (player-soundtouch)
 - 🎵 实现歌曲转调
 - 🎤 去人声（伴奏模式）- 使用相位抵消法去除居中人声，仅播放伴奏
-- 受技术限制，无法调整播放进度，指定时间点（seek）等
+- ⚠️ 受技术限制，无法调整播放进度，指定时间点（seek）等
+- 🌐 **仅限 Web 环境使用**，Android 版本不支持
 
-#### 9. 文件管理 (File Manager) ⭐新增
+#### 9. 文件管理 (File Manager) ⭐已完成
 - 📂 本地音频文件扫描和管理
 - 🎶 播放列表管理（添加、删除、排序）
-- 💾 IndexedDB 持久化存储
+- 💾 IndexedDB 持久化存储 (Web) / Capacitor Preferences (Android)
 - 🔄 跨组件状态同步（Zustand Stores）
 - 📱 Web 和 Android 双端支持
+- 📍 **播放列表滚动位置记忆** - 重新打开时自动定位到当前播放歌曲
 
-#### 10. Android 专属功能 ⭐新增
+#### 10. Android 专属功能 ⭐已完成
 - 🎵 **MediaStore API 集成** - 直接扫描系统媒体库
 - 📁 **文件夹选择器** - Capacitor FilePicker 原生文件选择
 - 💾 **Preferences 存储** - Capacitor Preferences 持久化配置
 - 🔌 **完全离线** - 所有依赖打包到 APK，无需网络
 - 🎨 **平台适配** - 自动检测平台，无缝切换 Web/Android
+- 🎤 **去人声功能** - 相位抵消法去除居中人声（伴奏模式）
+- 🎼 **音高调节** - ±12 半音调性调整
+- ⚡ **速度调节** - 0.5x - 2.0x 播放速度控制
+- 📱 **UI 优化** - 隐藏全屏按钮，优化按钮布局
+- 📝 **长歌名显示** - 修复跑马灯动画，完整显示歌名
 
 ### 🛠️ 技术特性
 

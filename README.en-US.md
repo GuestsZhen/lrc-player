@@ -11,6 +11,17 @@
 
 # Numbered Musical Notation LRC Player
 
+## 📱 Dual Platform Support
+
+- **Web Version**: Use in browser, supports PWA offline access
+- **Android Version**: Native app, fully offline, supports MediaStore API to scan local music library
+
+### 📥 Download Android APK
+
+Latest Version: **v6.0.6** - [View Releases](https://github.com/GuestsZhen/lrc-player/releases/latest)
+
+> ⚠️ **First Time Setup**: Please grant storage permissions after installation to access local music files
+
 ## What is this project?
 
 This is a numbered musical notation (Jianpu) playback tool based on Akari's lrc-maker. The original program was a scrolling lyrics production tool, and we have added features such as movable-do solfeggio transposition, independent playback interface, and playlist functionality.
@@ -86,24 +97,27 @@ Thanks to Akari, the original project can be found at: https://github.com/magic-
 #### 8. Beta ST Player (player-soundtouch)
 - 🎵 Song transposition support
 - 🎤 Vocal removal (instrumental mode) - Uses phase cancellation to remove centered vocals
-- Technical limitations: Cannot adjust playback progress or seek to specific timestamps
+- ⚠️ Technical limitations: Cannot adjust playback progress or seek to specific timestamps
+- 🌐 **Web environment only**, not supported on Android
 
-#### 9. File Manager ⭐New
+#### 9. File Manager ⭐Completed
 - 📂 Local audio file scanning and management
 - 🎶 Playlist management (add, remove, reorder)
-- 💾 IndexedDB persistent storage
+- 💾 IndexedDB persistent storage (Web) / Capacitor Preferences (Android)
 - 🔄 Cross-component state synchronization (Zustand Stores)
 - 📱 Web and Android dual-platform support
+- 📍 **Playlist scroll position memory** - Automatically scrolls to current playing song when reopened
 
 ### 🛠️ Technical Features
 
 - **Frontend Architecture**: React 18 + TypeScript + Vite 6
-- **State Management**: Zustand - Lightweight global state management library ⭐New
+- **State Management**: Zustand - Lightweight global state management library ⭐Completed
 - **Audio Processing**: WaveSurfer.js waveform visualization
 - **Internationalization**: Three-language support (English, Simplified Chinese, Traditional Chinese)
 - **Data Processing**: @lrc-maker/lrc-parser lyrics parsing library
 - **PWA Support**: Service Worker offline caching, installable as desktop app
 - **Responsive Design**: Supports desktop and mobile devices
+- **📱 Android Support**: Capacitor 8 + MediaStore API + Fully Offline
 
 ## How to Use
 
