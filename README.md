@@ -18,7 +18,7 @@
 
 ### 📥 下载 Android APK
 
-最新版本：**v6.0.6** - [查看 Releases](https://github.com/GuestsZhen/lrc-player/releases/latest)
+最新版本：- [查看 Releases](https://github.com/GuestsZhen/lrc-player/releases/latest)
 
 > ⚠️ **首次使用必读**：安装后请授予存储权限以访问本地音乐文件
 
@@ -111,45 +111,12 @@
 - **响应式设计**：支持桌面端和移动端
 - **📱 Android 支持**：Capacitor 8 + MediaStore API + 完全离线
 
-## 如何使用
-
-### 🌐 Web 版本
-
-将文件拖放到页面中加载，使用箭头键和空格键插入时间戳。你可以把这个链接收藏到浏览器书签。
+## 如何使用🌐 Web 版本
 
 **在线体验**：https://guestszhen.github.io/lrc-player
 
-### 📱 Android 版本
+将文件拖放到页面中加载，使用箭头键和空格键插入时间戳。你可以把这个链接收藏到浏览器书签。
 
-**快速开始**：
-```bash
-# 克隆项目
-git clone https://github.com/GuestsZhen/lrc-player.git
-cd lrc-player
-
-# 安装依赖
-npm install
-
-# 一键部署到 Android 设备
-npm run cap:android:deploy
-```
-
-**Android 特性**：
-- ✅ 完全离线可用（无需网络）
-- ✅ MediaStore API 扫描本地音乐库
-- ✅ 支持文件夹选择和批量导入
-- ✅ 自动匹配 LRC 歌词文件
-- ✅ 所有 Web 功能完整保留
-
-详见：[ANDROID-CROSS-PLATFORM-GUIDE.md](docs/ANDROID-CROSS-PLATFORM-GUIDE.md)
-
-### 💡 应用场景
-
-1. **音乐制作人**：为简谱歌曲制作精准的时间轴歌词
-2. **KTV 系统**：创建卡拉OK字幕文件
-3. **音乐教育**：简谱教学和转调练习
-4. **歌词爱好者**：整理和美化歌词文件
-5. **开发者**：学习 React + TypeScript 最佳实践
 
 ## 热键
 
@@ -223,42 +190,8 @@ npm run cap:android:deploy
 npx cap open android
 ```
 
-详见：
-- [ANDROID-CROSS-PLATFORM-GUIDE.md](docs/ANDROID-CROSS-PLATFORM-GUIDE.md) - 跨平台开发指南
-- [ANDROID-MEDIASTORE-DEBUG-GUIDE.md](docs/ANDROID-MEDIASTORE-DEBUG-GUIDE.md) - MediaStore 调试指南
-- [ANDROID-CAPACITOR-STATUS.md](docs/ANDROID-CAPACITOR-STATUS.md) - Capacitor 迁移状态
 
-## 📝 版本管理
 
-### 更新版本号
-
-```bash
-# 小修复（最常用）
-pnpm version:patch      # 6.0.4 → 6.0.5
-
-# 新功能
-pnpm version:minor      # 6.0.5 → 6.1.0
-
-# 重大变更
-pnpm version:major      # 6.1.0 → 7.0.0
-```
-
-### 更新 CHANGELOG
-
-在 `docs/CHANGELOG.md` 的 `[Unreleased]` 部分添加更新内容：
-
-```markdown
-### Added - 新增
-- 你的新功能
-
-### Changed - 修改
-- 你的修改
-
-### Fixed - 修复
-- 你修复的问题
-```
-
----
 
 ## 📚 文档
 
@@ -267,9 +200,9 @@ pnpm version:major      # 6.1.0 → 7.0.0
 - [DEPLOYMENT.md](docs/DEPLOYMENT.md) - Web 版本部署指南
 
 ### Android 开发
-- [ANDROID-CROSS-PLATFORM-GUIDE.md](docs/ANDROID-CROSS-PLATFORM-GUIDE.md) - 跨平台开发完整指南
-- [ANDROID-MEDIASTORE-DEBUG-GUIDE.md](docs/ANDROID-MEDIASTORE-DEBUG-GUIDE.md) - MediaStore 调试指南
 - [ANDROID-CAPACITOR-STATUS.md](docs/ANDROID-CAPACITOR-STATUS.md) - Capacitor 迁移状态
+- [ANDROID-MEDIASTORE-DEBUG-GUIDE.md](docs/ANDROID-MEDIASTORE-DEBUG-GUIDE.md) - MediaStore 调试指南
+
 
 ---
 
@@ -301,7 +234,6 @@ cd android
 ./gradlew bundleRelease
 ```
 
-详见：[ANDROID-CROSS-PLATFORM-GUIDE.md](docs/ANDROID-CROSS-PLATFORM-GUIDE.md)
 
 ## 给这个项目点一个星星 :star:
 
