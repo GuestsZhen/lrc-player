@@ -7,7 +7,7 @@
 **Android 版本**通过 Capacitor 框架将 Web 应用转换为原生 Android App，使用 MediaStore API 直接访问系统媒体库。
 
 - **项目名称**: lrc-player
-- **当前版本**: 6.0.5 (重构优化版)
+- **当前版本**: 6.0.6 (UI优化版)
 - **作者**: magic-akari (forked and enhanced by GuestsZhen)
 - **许可证**: MIT
 - **在线地址**: https://guestszhen.github.io/lrc-player
@@ -69,20 +69,30 @@
 
 ### 8. 测试版 ST播放器 (player-soundtouch)
 - 🎵 实现歌曲转调
-- 受技术限制，无法调整播放进度，指定时间点（seek）等
+- ⚠️ 受技术限制，无法调整播放进度，指定时间点（seek）等
+- 🌐 **仅限 Web 环境使用**，Android 版本不支持
 
 ### 9. 文件管理 (File Manager) ⭐新增
 - 📂 本地音频文件扫描和管理
 - 🎶 播放列表管理（添加、删除、排序）
-- 💾 IndexedDB 持久化存储
+- 💾 IndexedDB 持久化存储 (Web) / Capacitor Preferences (Android)
 - 🔄 跨组件状态同步
 - 📱 Web 和 Android 双端支持
+- 📍 **播放列表滚动位置记忆** - 重新打开时自动定位到当前播放歌曲
 
-### 10. Footer 组件重构 ⭐最新
+### 10. Footer 组件重构 ⭐已完成
 - 📦 **模块化架构**: 从单体 683 行优化为模块化结构
 - 🔧 **工具函数提取**: file-utils.ts, audio-decoder.ts, playback-control.ts
 - 🎣 **Hook 封装**: usePlaylistEvents.ts 管理 10 个事件监听器
 - ✨ **代码质量**: 提取 PlaylistPanel 组件，提升可维护性
+
+### 11. Android Player 页面 UI 优化 ⭐最新
+- 📱 **隐藏全屏按钮** - Android 环境下自动隐藏全屏按钮
+- ⬆️ **按钮位置调整** - 文字设置和调性识别按钮自动上移
+- 🎤 **去人声功能** - Android 支持相位抵消法去除居中人声（伴奏模式）
+- 🎼 **音高调节** - Android 支持 ±12 半音调性调整
+- ⚡ **速度调节** - Android 支持 0.5x - 2.0x 播放速度控制
+- 📝 **长歌名显示** - 修复跑马灯动画，完整显示长歌名
 
 ---
 
@@ -135,7 +145,7 @@
 | `content.tsx` | 主要内容区域，根据路由动态加载不同页面组件 |
 | `footer.tsx` | 底部控制栏，播放控制、进度条、信息显示 ⭐已重构 |
 
-**音频子组件 (audio/)：** ⭐新增
+**音频子组件 (audio/)：** ⭐已完成
 
 | 组件文件 | 功能说明 |
 |---------|---------||
@@ -146,7 +156,7 @@
 | `Slider.tsx` | 通用滑块组件 |
 | `index.ts` | Audio 组件统一导出 |
 
-**播放列表相关组件：** ⭐新增
+**播放列表相关组件：** ⭐已完成
 
 | 组件文件 | 功能说明 |
 |---------|---------||
@@ -154,7 +164,7 @@
 | `FileListPanel.tsx` | 文件列表面板组件，显示所有音频文件 |
 | `MSFileListPanel.tsx` | Android MediaStore 播放列表面板 |
 
-**导航和设置组件：** ⭐新增
+**导航和设置组件：** ⭐已完成
 
 | 组件文件 | 功能说明 |
 |---------|---------||
@@ -204,7 +214,7 @@
 | `useKeyBindings.ts` | 键盘快捷键绑定，处理用户输入 |
 | `useMediaStore.ts` | MediaStore 媒体库访问 Hook (Android) |
 | `useAudioEvents.ts` | 音频事件处理 Hook (play/pause/ended/timeupdate) |
-| `usePlaylistEvents.ts` | 播放列表事件监听 Hook ⭐新增 (管理 10 个事件) |
+| `usePlaylistEvents.ts` | 播放列表事件监听 Hook ⭐已完成 (管理 10 个事件) |
 | `useAudioControl.ts` | 音频控制 Hook (音量、静音等) |
 | `useMenu.ts` | 菜单状态管理 Hook |
 | `usePageDetection.ts` | 页面检测 Hook |
@@ -222,13 +232,13 @@
 | `audiomodule.ts` | 音频模块管理，统一音频状态和操作 |
 | `playlist-manager.ts` | 播放列表管理，支持多音频文件 |
 | `pitch-shifter.ts` | 音调转换工具，实现变调功能 |
-| `file-utils.ts` | 文件处理工具 (getBaseName, findMatchingLrcFile) ⭐新增 |
-| `audio-decoder.ts` | 音频解码工具 (NCM/QMC 解密) ⭐新增 |
-| `playback-control.ts` | 播放控制工具 (索引计算、歌曲加载) ⭐新增 |
-| `exoplayer-plugin.ts` | ExoPlayer 插件接口 (Android) ⭐新增 |
-| `exoplayer-key-detector.ts` | ExoPlayer 按键检测器 ⭐新增 |
-| `platform-detector.ts` | 平台检测工具 ⭐新增 |
-| `mediastore-plugin.ts` | MediaStore 插件接口 (Android) ⭐新增 |
+| `file-utils.ts` | 文件处理工具 (getBaseName, findMatchingLrcFile) ⭐已完成 |
+| `audio-decoder.ts` | 音频解码工具 (NCM/QMC 解密) ⭐已完成 |
+| `playback-control.ts` | 播放控制工具 (索引计算、歌曲加载) ⭐已完成 |
+| `exoplayer-plugin.ts` | ExoPlayer 插件接口 (Android) ⭐已完成 |
+| `exoplayer-key-detector.ts` | ExoPlayer 按键检测器 ⭐已完成 |
+| `platform-detector.ts` | 平台检测工具 ⭐已完成 |
+| `mediastore-plugin.ts` | MediaStore 插件接口 (Android) ⭐已完成 |
 
 **输入处理：**
 
@@ -249,7 +259,7 @@
 | `router.ts` | 前端路由管理，页面导航 |
 | `pubsub.ts` | 发布订阅模式实现，组件间通信 |
 
-**状态管理 (Zustand Stores)：** ⭐新增
+**状态管理 (Zustand Stores)：** ⭐已完成
 
 | Store 文件 | 功能说明 |
 |-----------|----------|
@@ -595,20 +605,20 @@ App (根组件)
 │   ├── PlaylistPanel (播放列表面板)
 │   └── LoadAudio (音频加载)
 │
-├── FileListPanel (文件列表面板) ⭐新增
-├── MSFileListPanel (Android 播放列表) ⭐新增
+├── FileListPanel (文件列表面板) ⭐已完成
+├── MSFileListPanel (Android 播放列表) ⭐已完成
 └── Toast (消息提示)
 
 工具层：
 ├── web-audio-player.ts (音频播放)
 ├── audiomodule.ts (音频管理)
 ├── playlist-manager.ts (播放列表)
-├── file-utils.ts (文件处理工具) ⭐新增
-├── audio-decoder.ts (音频解码) ⭐新增
-├── playback-control.ts (播放控制) ⭐新增
-├── exoplayer-plugin.ts (ExoPlayer 插件) ⭐新增
-├── platform-detector.ts (平台检测) ⭐新增
-├── mediastore-plugin.ts (MediaStore 插件) ⭐新增
+├── file-utils.ts (文件处理工具) ⭐已完成
+├── audio-decoder.ts (音频解码) ⭐已完成
+├── playback-control.ts (播放控制) ⭐已完成
+├── exoplayer-plugin.ts (ExoPlayer 插件) ⭐已完成
+├── platform-detector.ts (平台检测) ⭐已完成
+├── mediastore-plugin.ts (MediaStore 插件) ⭐已完成
 ├── key-detector.ts (按键检测)
 ├── gistapi.ts (Gist API)
 └── router.ts (路由)
@@ -616,7 +626,7 @@ App (根组件)
 Hooks 层：
 ├── useMediaStore.ts (MediaStore 访问)
 ├── useAudioEvents.ts (音频事件)
-└── usePlaylistEvents.ts (播放列表事件) ⭐新增
+└── usePlaylistEvents.ts (播放列表事件) ⭐已完成
 
 Worker 层：
 ├── sw.ts (Service Worker)
@@ -633,7 +643,7 @@ Worker 层：
 - 组件职责单一，易于维护和测试
 - 使用懒加载优化首屏性能
 
-### 2. 状态管理 ⭐重构
+### 2. 状态管理 ⭐重构完成
 - **Zustand Store**：轻量级全局状态管理（playerSettings、navigation、fileManager）
 - **React Context API**：应用级状态共享（语言、偏好设置）
 - **自定义 Hooks**：封装业务逻辑（useLrc、usePref、useLang、usePlaylistEvents）
@@ -662,11 +672,12 @@ Worker 层：
 - 后台同步
 - 推送通知（可扩展）
 
-### 7. 跨平台适配 ⭐新增
+### 7. 跨平台适配 ⭐已完成
 - **Web 版本**：标准 HTML5 Audio API
 - **Android 版本**：ExoPlayer + MediaStore API
 - **平台检测**：自动识别运行环境
 - **统一接口**：抽象层屏蔽平台差异
+- **UI 差异化**：Android 隐藏全屏按钮，优化按钮布局
 
 ---
 
@@ -908,7 +919,7 @@ android/
 - [ANDROID-MEDIASTORE-DEBUG-GUIDE.md](./ANDROID-MEDIASTORE-DEBUG-GUIDE.md) - MediaStore 调试指南
 - [ANDROID-CAPACITOR-STATUS.md](./ANDROID-CAPACITOR-STATUS.md) - Capacitor 迁移状态
 
-### ExoPlayer 集成 ⭐新增
+### ExoPlayer 集成 ⭐已完成
 
 Android 版本使用 **ExoPlayer** 替代 HTML5 Audio，提供更好的性能和功能。
 
@@ -920,6 +931,7 @@ Android 版本使用 **ExoPlayer** 替代 HTML5 Audio，提供更好的性能和
 - 🔊 音量控制
 - 📢 播放完成事件通知
 - 🔄 与 Web 层的双向通信
+- 🎤 **去人声（伴奏模式）** - 相位抵消法去除居中人声
 
 #### 关键特性
 
@@ -927,6 +939,9 @@ Android 版本使用 **ExoPlayer** 替代 HTML5 Audio，提供更好的性能和
 2. **锁屏控制**：支持锁屏界面播放控制
 3. **音频焦点管理**：自动处理与其他应用的音频冲突
 4. **格式支持广泛**：支持更多音频格式（MP3, FLAC, AAC, OGG 等）
+5. **实时音高调节**：支持 ±12 半音调性调整
+6. **速度调节**：精确的 0.5x - 2.0x 速度控制
+7. **去人声功能**：基于相位抵消法的伴奏模式
 
 
 ### 关键技术点
@@ -965,6 +980,6 @@ usePlaylistEvents({
 
 ---
 
-**文档生成时间**: 2026-04-19  
-**项目版本**: 6.0.5 (重构优化版)  
-**文档版本**: 2.3.0 
+**文档生成时间**: 2026-05-01  
+**项目版本**: 6.0.6 (UI优化版)  
+**文档版本**: 2.4.0 
