@@ -18,7 +18,7 @@
 
 ### 📥 Download Android APK
 
-Latest Version: - [View Releases](https://github.com/GuestsZhen/lrc-player/releases/latest)
+Latest Version: [View Releases](https://github.com/GuestsZhen/lrc-player/releases/latest)
 
 > ⚠️ **First Time Setup**: Please grant storage permissions after installation to access local music files
 
@@ -32,35 +32,13 @@ Thanks to Akari, the original project can be found at: https://github.com/magic-
 
 ### 🎯 Core Modules
 
-#### 1. Lyrics Editor (Editor)
-- 📝 Visual lyrics editing interface
-- 🏷️ Support for inserting and managing time tags
-- 💾 Lyrics import/export functionality
-- ☁️ GitHub Gist cloud synchronization
-- 📋 Copy and download lyrics files
-- 🔧 Lyrics metadata editing (title, artist, etc.)
-
-#### 2. Lyrics Synchronizer (Synchronizer)
-- ⏱️ Real-time lyrics timeline synchronization
-- 🎮 Two synchronization modes:
-  - **Selection Mode**: Manually select lines and mark timestamps
-  - **Highlight Mode**: Automatically highlight following playback
-- ⌨️ Keyboard shortcut support
-- 🔄 Smooth scrolling to current line
-- ⚡ Time tag fine-tuning functionality
-
-#### 3. Player (Player)
-- 🎵 Independent full-screen playback interface
-- 🎨 Highly customizable:
-  - Font size adjustment
-  - Alignment options (left/center/right)
-  - Background color customization
-  - Lyrics color customization
-  - Timeline display toggle
+#### 1. Player (Player)
+- 🎵 Numbered notation LRC highlighted scrolling playback - Double-line display via "/" symbol in lyrics
+- 🎨 Highly customizable: Font size adjustment, alignment (left/center/right), background color customization, lyrics color customization, major/minor key recognition
 - 🌓 Theme adaptation (light/dark)
 - 🖥️ Full-screen mode support
 
-#### 4. Numbered Notation Transposition Tool (Tune) ⭐Featured Feature
+#### 2. Numbered Notation Transposition Tool (Tune) ⭐Featured Feature
 - 🎼 **Movable-do solfeggio transposition** (core feature)
 - 🔄 Numbered notation to note name mapping conversion
 - 🎹 Support for octave markers:
@@ -70,15 +48,25 @@ Thanks to Akari, the original project can be found at: https://github.com/magic-
 - 🌍 Multi-key transposition (C key, D key, etc.)
 - 📋 Conversion result preview and export
 
-#### 5. Lyrics Toolbox (Lrc-utils)
-- 🔧 Various practical tools:
-  - **Lyrics Compression**: Remove extra spaces and tags
-  - **Time Offset**: Batch adjust timestamps
-  - **Time Transformation**: Linear time conversion (y = ax + c)
-  - **Translation Split**: Separate bilingual lyrics
-  - **Tag Removal**: Clean metadata tags
+#### 3. Lyrics Editor (Editor)
+- 📝 Visual lyrics editing interface
+- 🏷️ Support for inserting and managing time tags
+- 💾 Lyrics import/export functionality
+- ☁️ GitHub Gist cloud synchronization
+- 📋 Copy and download lyrics files
+- 🔧 Lyrics metadata editing (title, artist, etc.)
+
+#### 4. Lyrics Toolbox (Lrc-utils)
+- 🔧 Various practical tools: Lyrics compression, time offset, time transformation, translation split, tag removal
 - 📥 Original text and processed text comparison
 - 💾 Overwrite mode support
+
+#### 5. Lyrics Synchronizer (Synchronizer)
+- ⏱️ Real-time lyrics timeline synchronization
+- 🎮 Two synchronization modes: Selection mode (manually select lines and mark timestamps), Highlight mode (automatically highlight following playback)
+- ⌨️ Keyboard shortcut support
+- 🔄 Smooth scrolling to current line
+- ⚡ Time tag fine-tuning functionality
 
 #### 6. Preferences (Preferences)
 - 🎨 Theme settings (auto/light/dark)
@@ -96,24 +84,26 @@ Thanks to Akari, the original project can be found at: https://github.com/magic-
 
 #### 8. Beta ST Player (player-soundtouch)
 - 🎵 Song transposition support
-- 🎤 Vocal removal (instrumental mode) - Uses phase cancellation to remove centered vocals
+- 🎤 Vocal removal (instrumental mode) - Uses phase cancellation to remove centered vocals, plays only accompaniment
 - ⚠️ Technical limitations: Cannot adjust playback progress or seek to specific timestamps
 - 🌐 **Web environment only**, not supported on Android
 
+
 #### 9. Android Exclusive Features ⭐Completed
-- 🎵 **MediaStore API Integration** - Direct system media library scanning
+- 🎵 **MediaStore API Integration** - Directly scan system media library
 - 📁 **Folder Picker** - Capacitor FilePicker native file selection
 - 💾 **Preferences Storage** - Capacitor Preferences persistent configuration
-- 🔌 **Fully Offline** - All dependencies packaged in APK, no network required
-- 🎨 **Platform Adaptation** - Auto-detect platform, seamless Web/Android switching
-- 🎤 **Vocal Removal** - Phase cancellation to remove centered vocals (instrumental mode)
+- 🔌 **Fully Offline** - All dependencies packaged into APK, no network required
+- 🎨 **Platform Adaptation** - Automatic platform detection, seamless Web/Android switching
+- 🎤 **Vocal Removal** - Phase cancellation method to remove centered vocals (instrumental mode)
 - 🎼 **Pitch Adjustment** - ±12 semitone key adjustment
 - ⚡ **Speed Control** - 0.5x - 2.0x playback speed control
+
 
 ### 🛠️ Technical Features
 
 - **Frontend Architecture**: React 18 + TypeScript + Vite 6
-- **State Management**: Zustand - Lightweight global state management library ⭐Completed
+- **State Management**: Zustand - Lightweight global state management library ⭐New
 - **Audio Processing**: WaveSurfer.js waveform visualization
 - **Internationalization**: Three-language support (English, Simplified Chinese, Traditional Chinese)
 - **Data Processing**: @lrc-maker/lrc-parser lyrics parsing library
@@ -126,6 +116,7 @@ Thanks to Akari, the original project can be found at: https://github.com/magic-
 **Live Demo**: https://guestszhen.github.io/lrc-player
 
 Drag and drop files into the page to load them, use arrow keys and spacebar to insert timestamps. You can bookmark this link in your browser.
+
 
 ## Hotkeys
 
@@ -198,19 +189,20 @@ npm run cap:android:deploy
 # Or open in Android Studio
 npx cap open android
 ```
-```
+
 
 
 
 ## 📚 Documentation
 
 ### Core Documentation
-- [PROJECT-ARCHITECTURE.md](docs/PROJECT-ARCHITECTURE.md) - Project Architecture Details
-- [DEPLOYMENT.md](docs/DEPLOYMENT.md) - Web Version Deployment Guide
+- [PROJECT-ARCHITECTURE.md](docs/PROJECT-ARCHITECTURE.md) - Project architecture details
+- [DEPLOYMENT.md](docs/DEPLOYMENT.md) - Web version deployment guide
 
 ### Android Development
-- [ANDROID-CAPACITOR-STATUS.md](docs/ANDROID-CAPACITOR-STATUS.md) - Capacitor Migration Status
-- [ANDROID-MEDIASTORE-DEBUG-GUIDE.md](docs/ANDROID-MEDIASTORE-DEBUG-GUIDE.md) - MediaStore Debugging Guide
+- [ANDROID-CAPACITOR-STATUS.md](docs/ANDROID-CAPACITOR-STATUS.md) - Capacitor migration status
+- [ANDROID-MEDIASTORE-DEBUG-GUIDE.md](docs/ANDROID-MEDIASTORE-DEBUG-GUIDE.md) - MediaStore debugging guide
+
 
 ---
 
@@ -242,7 +234,6 @@ cd android
 ./gradlew bundleRelease
 ```
 
----
 
 ## Give this project a star :star:
 
