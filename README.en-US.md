@@ -13,12 +13,15 @@
 
 ## 📱 Dual Platform Support
 
-- **Web Version**: Use in browser, supports PWA offline access
+- **Web Version**:
+Use in browser at https://guestszhen.github.io/lrc-player
+Supports PWA offline access, drag and drop files into the page to load them, use arrow keys and spacebar to insert timestamps. You can bookmark this link in your browser.
+
 - **Android Version**: Native app, fully offline, supports MediaStore API to scan local music library
 
 ### 📥 Download Android APK
 
-Latest Version: [View Releases](https://github.com/GuestsZhen/lrc-player/releases/latest)
+Latest Version: - [View Releases](https://github.com/GuestsZhen/lrc-player/releases/latest)
 
 > ⚠️ **First Time Setup**: Please grant storage permissions after installation to access local music files
 
@@ -116,8 +119,6 @@ Thanks to Akari, the original project can be found at: https://github.com/magic-
 **Live Demo**: https://guestszhen.github.io/lrc-player
 
 Drag and drop files into the page to load them, use arrow keys and spacebar to insert timestamps. You can bookmark this link in your browser.
-
-
 ## Hotkeys
 
 |                            Keys                             |        Function        |
