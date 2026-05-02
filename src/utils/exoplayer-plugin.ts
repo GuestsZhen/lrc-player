@@ -103,6 +103,17 @@ export interface ExoPlayerPlugin {
   getVocalRemovalStatus(): Promise<{ enabled: boolean; available: boolean; stats?: string }>;
   
   /**
+   * ✅ 获取 EQ 频段信息
+   */
+  getEQBands(): Promise<{ bands: Array<{ index: number; freq: number; level: number; minLevel: number; maxLevel: number }>; numBands: number; minLevel: number; maxLevel: number }>;
+  
+  /**
+   * ✅ 设置 EQ 频段增益
+   * @param options - 包含 bandIndex (int), level (float)
+   */
+  setEQBandLevel(options: { bandIndex: number; level: number }): Promise<{ success: boolean; bandIndex: number; level: number }>;
+  
+  /**
    * 添加事件监听器
    * @param eventName - 事件名称
    * @param listenerFunc - 回调函数
@@ -215,7 +226,7 @@ export const setVocalRemoval = async (enabled: boolean): Promise<{ success: bool
     const result = await ExoPlayerPlugin.setVocalRemoval({ enabled });
     return result;
   } catch (error) {
-    // console.error('❌ Failed to set vocal removal:', error);
+    console.error('❌ [PLUGIN] Failed to set vocal removal:', error);
     throw error;
   }
 };
@@ -229,6 +240,34 @@ export const getVocalRemovalStatus = async (): Promise<{ enabled: boolean; avail
     return status;
   } catch (error) {
     // console.error('❌ Failed to get vocal removal status:', error);
+    throw error;
+  }
+};
+
+/**
+ * ✅ 获取 EQ 频段信息
+ */
+export const getEQBands = async (): Promise<{ bands: Array<{ index: number; freq: number; level: number; minLevel: number; maxLevel: number }>; numBands: number; minLevel: number; maxLevel: number }> => {
+  try {
+    const result = await ExoPlayerPlugin.getEQBands();
+    return result;
+  } catch (error) {
+    console.error('❌ Failed to get EQ bands:', error);
+    throw error;
+  }
+};
+
+/**
+ * ✅ 设置 EQ 频段增益
+ * @param bandIndex - 频段索引
+ * @param level - 增益值（dB）
+ */
+export const setEQBandLevel = async (bandIndex: number, level: number): Promise<{ success: boolean; bandIndex: number; level: number }> => {
+  try {
+    const result = await ExoPlayerPlugin.setEQBandLevel({ bandIndex, level });
+    return result;
+  } catch (error) {
+    console.error('❌ Failed to set EQ band level:', error);
     throw error;
   }
 };

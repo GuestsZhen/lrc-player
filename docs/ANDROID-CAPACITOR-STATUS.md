@@ -6,7 +6,7 @@
 ### 标准部署命令
 
 ```bash
-cd /Volumes/data/lingmaProjects/lrc-player && npm run cap:android:deploy
+cd lrc-player && npm run cap:android:deploy
 ```
 
 **命令详解** (`package.json` 第32行):
@@ -30,7 +30,11 @@ echo '✅ 部署完成，请测试'
 1. **构建和同步** (`npm run cap:sync`)
    - `npm run build` - Vite 构建 Web 资源到 `build/` 目录
    - `npx cap sync` - 同步 Web 资源到 Android 项目
-   - `python3 scripts/register-mediastore-plugin.py` - 注册 MediaStore 插件
+   - `python3 scripts/register-mediastore-plugin.py` - **注册 MediaStore 和 ExoPlayer 插件** ⚠️
+     - 自动将自定义插件添加到 `capacitor.plugins.json`
+     - 注册 `MediaStorePlugin`（媒体库扫描）
+     - 注册 `ExoPlayerPlugin`（音频播放 + 去人声功能）
+     - **重要**: 必须在 `npx cap sync` 之后运行，否则会被覆盖
 
 2. **编译 APK** (`./gradlew assembleDebug --no-daemon`)
    - 编译调试版 APK
@@ -59,6 +63,40 @@ echo '✅ 部署完成，请测试'
    sleep 2                                     # 等待2秒
    adb shell am start -n com.lrcplayer.app/.MainActivity  # 启动主活动
    ```
+
+**为什么需要手动注册插件？**
+
+Capacitor 的 `npx cap sync` 命令会根据 `package.json` 中的依赖自动检测并注册官方插件，但**不会自动发现自定义插件**。因此我们需要：
+
+1. **在 `cap:sync` 脚本中自动注册**
+   ```json
+   "cap:sync": "npm run build && npx cap sync && python3 scripts/register-mediastore-plugin.py"
+   ```
+
+2. **注册脚本的作用** (`scripts/register-mediastore-plugin.py`)
+   - 读取 `android/app/src/main/assets/capacitor.plugins.json`
+   - 检查是否已注册 `MediaStore` 和 `ExoPlayerPlugin`
+   - 如果未注册，则添加到插件列表
+   - 确保每次同步后插件都正确注册
+
+3. **验证插件注册**
+   ```bash
+   # 查看当前注册的插件
+   cat android/app/src/main/assets/capacitor.plugins.json
+   
+   # 应该包含:
+   # - @capacitor/preferences
+   # - @capawesome/capacitor-file-picker
+   # - MediaStore (自定义)
+   # - ExoPlayerPlugin (自定义)
+   ```
+
+4. **常见问题**
+   - ❌ **忘记注册插件**: 应用启动时自定义插件不会被加载
+   - ❌ **先运行 cap sync 再手动注册**: 下次 cap sync 会覆盖
+   - ✅ **正确做法**: 始终使用 `npm run cap:sync` 或 `npm run cap:android:deploy`
+
+---
 
 ### 为什么需要这个命令？
 
@@ -168,19 +206,7 @@ npm run cap:android:deploy
 
 ---
 
-## 📋 当前状态
 
-✅ **核心功能已完成**：
-- Capacitor 初始化和配置
-- MediaStore 插件开发
-- 平台检测工具 (`src/utils/platform-detector.ts`)
-- 音频文件适配器 (`src/utils/audio-file-adapter.ts`)
-- Android 专属播放列表面板 (`src/components/MSFileListPanel.tsx`)
-- Header/Footer 平台适配
-- Android 原生配置和权限管理
-- 完全离线支持
-- APK 构建流程
-- **自动化部署脚本 (`cap:android:deploy`)** ✨
 
 ## 🔧 待完成工作
 
@@ -232,29 +258,8 @@ cd android
 # 输出: android/app/build/outputs/bundle/release/app-release.aab
 ```
 
-### 2. 可选优化
-
-#### 2.1 通知栏播放控制
-- [ ] 添加 MediaSession 支持
-- [ ] 实现通知栏播放/暂停/上一首/下一首
-
-#### 2.2 后台播放
-- [ ] 配置 Foreground Service
-- [ ] 处理音频焦点
-
-#### 2.3 桌面小部件
-- [ ] 添加快速播放控制小部件
-
-#### 2.4 锁屏显示歌词
-- [ ] 自定义锁屏界面
-- [ ] 显示当前歌词行
-
 ## 📚 相关文档
 
-### 核心文档
-- [MIGRATION-COMPLETE-REPORT.md](./MIGRATION-COMPLETE-REPORT.md) - 迁移完成报告
-- [MIGRATION-GUIDE.md](./MIGRATION-GUIDE.md) - API 使用指南
-- [STORAGE-FILEPICKER-COMPLETE.md](./STORAGE-FILEPICKER-COMPLETE.md) - 存储层配置
 
 ### 技术参考
 - [Capacitor 官方文档](https://capacitorjs.com/docs)
@@ -295,66 +300,8 @@ src/
     └── fileManager.ts             # 文件管理
 ```
 
-## ❓ 常见问题
-
-### Q: Web 版本会受影响吗？
-A: 不会。所有 Android 特定代码都通过平台检测隔离，Web 版本完全不受影响。
-
-### Q: 如何处理新下载的音频文件？
-A: 点击"刷新媒体库"按钮，触发系统媒体扫描：
-```typescript
-await AudioFileAdapter.refreshLibrary();
-```
-
-### Q: 能否访问 WhatsApp、微信等应用的音频？
-A: 不能直接访问。这些文件不在系统媒体库中。用户可以：
-1. 将文件移动到 Music 文件夹
-2. 或使用文件选择器手动选择
-
-### Q: 如何强制离线运行？
-A: 在 `AndroidManifest.xml` 中移除网络权限：
-```xml
-<!-- 注释掉或删除 -->
-<!-- <uses-permission android:name="android.permission.INTERNET" /> -->
-```
-
-## 📝 维护建议
-
-### 代码组织
-- Android 特定代码添加注释: `// Android only`
-- 使用平台检测: `if (isAndroidNative()) { ... }`
-- 保持 Web 和 Android 代码分离
-
-### 版本控制
-```gitignore
-android/              # Android 原生代码（可选）
-*.jks                 # 签名密钥（绝不提交）
-local.properties      # 本地配置
-```
-
-### 测试清单
-
-#### Web 版本
-```bash
-npm start
-# ✅ 文件选择正常
-# ✅ 播放列表显示正常
-# ✅ 音频播放正常
-# ✅ 歌词同步正常
-```
-
-#### Android 版本
-```bash
-npm run cap:run:android
-# ✅ 权限请求正常
-# ✅ 音乐库扫描正常
-# ✅ 播放列表显示正常
-# ✅ 音频播放正常
-# ✅ 离线使用正常
-```
-
 ---
 
-**文档版本**: 2.0.0  
-**最后更新**: 2026-04-15  
-**状态**: 核心功能已完成，准备发布
+**文档版本**: 2.1.0  
+**最后更新**: 2026-05-02  
+

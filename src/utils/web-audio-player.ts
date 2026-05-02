@@ -653,18 +653,29 @@ export class WebAudioPlayer {
             this.vocalRemovalCopyL.gain.value = 1;
             this.vocalRemovalCopyR.gain.value = 1;
             
-            // 左声道分支：splitter[0] -> copyL -> [merger, inverterR]
-            splitter.connect(this.vocalRemovalCopyL, 0);                  // L -> copyL
-            this.vocalRemovalCopyL.connect(merger, 0, 0);                 // L -> merger左输入
-            this.vocalRemovalCopyL.connect(inverterR, 0);                 // L -> inverterR（用于右声道）
-            inverterR.connect(merger, 0, 1);             // -L -> merger右输入
+            // 去人声原理：(L - R) 消除居中人声
+            // 左声道输出 = L + (-R) = L - R
+            // 右声道输出 = R + (-L) = R - L
             
-            // 右声道分支：splitter[1] -> copyR -> [merger, inverterL]
+            // 左声道分支：splitter[0] -> copyL -> [merger 左输入, inverterR]
+            splitter.connect(this.vocalRemovalCopyL, 0);                  // L -> copyL
+                        
+            this.vocalRemovalCopyL.connect(merger, 0, 0);                 // L -> merger 左输入(channel 0)
+                        
+            this.vocalRemovalCopyL.connect(inverterR);                    // L -> inverterR（反相后用于右声道）
+                        
+            inverterR.connect(merger, 0, 1);                              // -L -> merger 右输入(channel 1)
+            
+            // 右声道分支：splitter[1] -> copyR -> [merger 右输入, inverterL]
             splitter.connect(this.vocalRemovalCopyR, 1);                  // R -> copyR
-            this.vocalRemovalCopyR.connect(merger, 0, 1);                 // R -> merger右输入
-            this.vocalRemovalCopyR.connect(inverterL, 0);                 // R -> inverterL（用于左声道）
-            inverterL.connect(merger, 0, 0);             // -R -> merger左输入
+                        
+            this.vocalRemovalCopyR.connect(merger, 0, 1);                 // R -> merger 右输入(channel 1)
+                        
+            this.vocalRemovalCopyR.connect(inverterL);                    // R -> inverterL（反相后用于左声道）
+                        
+            inverterL.connect(merger, 0, 0);                              // -R -> merger 左输入(channel 0)
         } catch (error) {
+            console.error('Failed to create vocal removal chain:', error);
             throw error;
         }
         

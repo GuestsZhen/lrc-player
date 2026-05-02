@@ -25,8 +25,10 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Build;
+import android.media.audiofx.Equalizer;  // ✅ Equalizer 去人声
 
 import com.getcapacitor.JSObject;
+import com.getcapacitor.JSArray;  // ✅ 用于返回数组
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
@@ -50,6 +52,10 @@ public class ExoPlayerPlugin extends Plugin {
     private android.os.Handler statusUpdateHandler;
     private Runnable statusUpdateRunnable;
     private static int sessionCounter = 0;  // ✅ 用于生成唯一的 Session ID
+    
+    // ✅ Equalizer 去人声
+    private Equalizer equalizer;
+    private boolean isVocalRemovalEnabled = false;
     
     // ✅ 通知渠道配置
     private static final String NOTIFICATION_CHANNEL_ID = "lrc_player_channel";
@@ -120,8 +126,11 @@ public class ExoPlayerPlugin extends Plugin {
             
             Context context = getContext();
             
-            // 创建 ExoPlayer
+            Log.d(TAG, "🚀 [INIT] Initializing ExoPlayer with Equalizer");
+            
+            // ✅ 创建标准 ExoPlayer（不使用自定义 RenderersFactory）
             exoPlayer = new ExoPlayer.Builder(context).build();
+            Log.d(TAG, "✅ [INIT] ExoPlayer created successfully");
 
             // ✅ 创建 ForwardingPlayer 包装 ExoPlayer，拦截上一曲/下一曲事件
             forwardingPlayer = new ForwardingPlayer(exoPlayer) {
@@ -544,6 +553,262 @@ public class ExoPlayerPlugin extends Plugin {
     }
     
     /**
+     * ✅ 启用/禁用去人声功能（Equalizer 方案）
+     * @param call - 包含 enabled (boolean)
+     */
+    @PluginMethod
+    public void setVocalRemoval(PluginCall call) {
+        Log.d(TAG, "🎤 [API] setVocalRemoval called from Web layer");
+        
+        getActivity().runOnUiThread(() -> {
+            try {
+                Boolean enabled = call.getBoolean("enabled", false);
+                Log.d(TAG, "🎤 [API] Requested state: " + enabled);
+                
+                if (exoPlayer == null) {
+                    Log.e(TAG, "❌ [ERROR] ExoPlayer is NULL!");
+                    call.reject("ExoPlayer not initialized. Play a song first.");
+                    return;
+                }
+                
+                // ✅ 初始化或配置 Equalizer
+                if (equalizer == null) {
+                    int audioSessionId = exoPlayer.getAudioSessionId();
+                    equalizer = new Equalizer(0, audioSessionId);
+                    Log.d(TAG, "✅ [EQUALIZER] Created with session ID: " + audioSessionId);
+                    
+                    // 输出 Equalizer 基本信息
+                    short numBands = equalizer.getNumberOfBands();
+                    short minLevel = equalizer.getBandLevelRange()[0];
+                    short maxLevel = equalizer.getBandLevelRange()[1];
+                    Log.d(TAG, String.format("🎵 [EQUALIZER] Info: %d bands, range %.1fdB to %.1fdB", 
+                        numBands, minLevel / 100.0f, maxLevel / 100.0f));
+                    
+                    // 输出所有频段的中心频率
+                    for (short i = 0; i < numBands; i++) {
+                        int freq = equalizer.getCenterFreq(i) / 1000;
+                        Log.d(TAG, String.format("🎵 [EQUALIZER] Band %d: %dHz", i, freq));
+                    }
+                }
+                
+                if (enabled) {
+                    // ✅ 启用去人声：激进参数配置
+                    equalizer.setEnabled(true);
+                    
+                    // 获取频段数量
+                    short numBands = equalizer.getNumberOfBands();
+                    Log.d(TAG, "🎵 [EQUALIZER] ========== AGGRESSIVE VOCAL REMOVAL ==========");
+                    Log.d(TAG, "🎵 [EQUALIZER] Number of bands: " + numBands);
+                    
+                    // 获取电平范围
+                    short minLevel = equalizer.getBandLevelRange()[0];
+                    short maxLevel = equalizer.getBandLevelRange()[1];
+                    Log.d(TAG, String.format("🎵 [EQUALIZER] Level range: %.1fdB to %.1fdB", 
+                        minLevel / 100.0f, maxLevel / 100.0f));
+                    
+                    // ✅ 激进去人声参数（基于专业音频处理经验）
+                    // 人声主要频率范围：250Hz - 4kHz
+                    for (short i = 0; i < numBands; i++) {
+                        int centerFreq = equalizer.getCenterFreq(i) / 1000;  // 转换为 Hz
+                        short level;
+                        
+                        // 🔧 激进去人声参数
+                        if (centerFreq <= 100) {
+                            // 60Hz及以下：保持原样（低频基础）
+                            level = 0;
+                            Log.d(TAG, String.format("🎵 [EQUALIZER] Band %d (%dHz): %.1fdB (bass keep)", 
+                                i, centerFreq, level / 100.0f));
+                        } else if (centerFreq >= 200 && centerFreq <= 250) {
+                            // 230Hz附近：大幅削减 -12dB（人声低频基音）
+                            level = (short)(-12 * 100);  // -12dB
+                            Log.d(TAG, String.format("🎵 [EQUALIZER] Band %d (%dHz): %.1fdB ⬇️ VOCAL BASS (aggressive)", 
+                                i, centerFreq, level / 100.0f));
+                        } else if (centerFreq >= 800 && centerFreq <= 1000) {
+                            // 910Hz附近：最大削减 -15dB（人声核心频段）
+                            level = minLevel;  // 降到最低
+                            Log.d(TAG, String.format("🎵 [EQUALIZER] Band %d (%dHz): %.1fdB ⬇️⬇️ VOCAL CORE (max cut)", 
+                                i, centerFreq, level / 100.0f));
+                        } else if (centerFreq >= 3000 && centerFreq <= 4000) {
+                            // 3.6kHz附近：大幅削减 -12dB（人声高频泛音）
+                            level = (short)(-12 * 100);  // -12dB
+                            Log.d(TAG, String.format("🎵 [EQUALIZER] Band %d (%dHz): %.1fdB ⬇️ VOCAL TREBLE (aggressive)", 
+                                i, centerFreq, level / 100.0f));
+                        } else if (centerFreq >= 10000) {
+                            // 14kHz及以上：轻微提升 +3dB（补偿伴奏高频空气感）
+                            level = (short)(3 * 100);  // +3dB
+                            Log.d(TAG, String.format("🎵 [EQUALIZER] Band %d (%dHz): %.1fdB ⬆️ AIR COMPENSATION", 
+                                i, centerFreq, level / 100.0f));
+                        } else {
+                            // 其他频段：保持原样
+                            level = 0;
+                            Log.d(TAG, String.format("🎵 [EQUALIZER] Band %d (%dHz): %.1fdB (unchanged)", 
+                                i, centerFreq, level / 100.0f));
+                        }
+                        
+                        equalizer.setBandLevel(i, level);
+                    }
+                    
+                    isVocalRemovalEnabled = true;
+                    Log.d(TAG, "🎵 [EQUALIZER] ===========================================");
+                    Log.d(TAG, "✅ [EQUALIZER] Aggressive vocal removal ENABLED");
+                } else {
+                    // ✅ 禁用去人声：重置所有频段
+                    short numBands = equalizer.getNumberOfBands();
+                    Log.d(TAG, "🎵 [EQUALIZER] ========== VOCAL REMOVAL DISABLED ==========");
+                    Log.d(TAG, "🎵 [EQUALIZER] Resetting all " + numBands + " bands to 0dB");
+                    
+                    equalizer.setEnabled(false);
+                    
+                    // 重置所有频段为 0dB
+                    for (short i = 0; i < numBands; i++) {
+                        equalizer.setBandLevel(i, (short)0);
+                    }
+                    
+                    isVocalRemovalEnabled = false;
+                    Log.d(TAG, "✅ [EQUALIZER] Vocal removal DISABLED, Equalizer turned off");
+                }
+                
+                JSObject result = new JSObject();
+                result.put("success", true);
+                result.put("enabled", enabled);
+                result.put("message", "Vocal removal " + (enabled ? "enabled" : "disabled") + " (Equalizer)");
+                call.resolve(result);
+                
+                Log.d(TAG, "✅ [API] setVocalRemoval completed successfully");
+            } catch (Exception e) {
+                Log.e(TAG, "❌ [ERROR] Failed to set vocal removal", e);
+                call.reject("Failed: " + e.getMessage());
+            }
+        });
+    }
+    
+    /**
+     * ✅ 获取去人声状态
+     */
+    @PluginMethod
+    public void getVocalRemovalStatus(PluginCall call) {
+        getActivity().runOnUiThread(() -> {
+            try {
+                JSObject result = new JSObject();
+                
+                if (equalizer != null) {
+                    result.put("enabled", isVocalRemovalEnabled);
+                    result.put("available", true);
+                    result.put("method", "equalizer");
+                } else {
+                    result.put("enabled", false);
+                    result.put("available", false);
+                    result.put("method", "none");
+                }
+                
+                call.resolve(result);
+            } catch (Exception e) {
+                Log.e(TAG, "❌ Failed to get vocal removal status", e);
+                call.reject("Failed: " + e.getMessage());
+            }
+        });
+    }
+    
+    /**
+     * ✅ 获取 EQ 频段信息
+     */
+    @PluginMethod
+    public void getEQBands(PluginCall call) {
+        getActivity().runOnUiThread(() -> {
+            try {
+                // ✅ 如果 equalizer 未初始化，先初始化它（不启用去人声）
+                if (equalizer == null) {
+                    if (exoPlayer == null) {
+                        call.reject("ExoPlayer not initialized. Play a song first.");
+                        return;
+                    }
+                    
+                    int audioSessionId = exoPlayer.getAudioSessionId();
+                    equalizer = new Equalizer(0, audioSessionId);
+                    Log.d(TAG, "✅ [EQUALIZER] Created for getEQBands with session ID: " + audioSessionId);
+                    
+                    // 输出 Equalizer 基本信息
+                    short numBands = equalizer.getNumberOfBands();
+                    short minLevel = equalizer.getBandLevelRange()[0];
+                    short maxLevel = equalizer.getBandLevelRange()[1];
+                    Log.d(TAG, String.format("🎵 [EQUALIZER] Info: %d bands, range %.1fdB to %.1fdB", 
+                        numBands, minLevel / 100.0f, maxLevel / 100.0f));
+                    
+                    // ✅ 默认禁用 equalizer（不应用任何效果）
+                    equalizer.setEnabled(false);
+                    Log.d(TAG, "🎵 [EQUALIZER] Disabled by default (no effect applied)");
+                }
+                
+                short numBands = equalizer.getNumberOfBands();
+                short minLevel = equalizer.getBandLevelRange()[0];
+                short maxLevel = equalizer.getBandLevelRange()[1];
+                
+                JSObject result = new JSObject();
+                JSArray bandsArray = new JSArray();
+                
+                for (short i = 0; i < numBands; i++) {
+                    int centerFreq = equalizer.getCenterFreq(i) / 1000;  // 转换为 Hz
+                    short currentLevel = equalizer.getBandLevel(i);
+                    
+                    JSObject band = new JSObject();
+                    band.put("index", i);
+                    band.put("freq", centerFreq);
+                    band.put("level", currentLevel / 100.0f);  // 转换为 dB
+                    band.put("minLevel", minLevel / 100.0f);
+                    band.put("maxLevel", maxLevel / 100.0f);
+                    
+                    bandsArray.put(band);
+                }
+                
+                result.put("bands", bandsArray);
+                result.put("numBands", numBands);
+                result.put("minLevel", minLevel / 100.0f);
+                result.put("maxLevel", maxLevel / 100.0f);
+                
+                call.resolve(result);
+            } catch (Exception e) {
+                Log.e(TAG, "❌ Failed to get EQ bands", e);
+                call.reject("Failed: " + e.getMessage());
+            }
+        });
+    }
+    
+    /**
+     * ✅ 设置 EQ 频段增益
+     * @param call - 包含 bandIndex (int), level (float)
+     */
+    @PluginMethod
+    public void setEQBandLevel(PluginCall call) {
+        getActivity().runOnUiThread(() -> {
+            try {
+                if (equalizer == null) {
+                    call.reject("Equalizer not initialized. Enable vocal removal first.");
+                    return;
+                }
+                
+                int bandIndex = call.getInt("bandIndex", 0);
+                double levelDouble = call.getDouble("level", 0.0);
+                float level = (float) levelDouble;
+                
+                // 转换为 millibels
+                short level_mB = (short)(level * 100);
+                
+                equalizer.setBandLevel((short)bandIndex, level_mB);
+                Log.d(TAG, String.format("🎵 [EQUALIZER] Set band %d to %.1fdB", bandIndex, level));
+                
+                JSObject result = new JSObject();
+                result.put("success", true);
+                result.put("bandIndex", bandIndex);
+                result.put("level", level);
+                call.resolve(result);
+            } catch (Exception e) {
+                Log.e(TAG, "❌ Failed to set EQ band level", e);
+                call.reject("Failed: " + e.getMessage());
+            }
+        });
+    }
+    
+    /**
      * 获取当前播放状态
      */
     @PluginMethod
@@ -660,6 +925,14 @@ public class ExoPlayerPlugin extends Plugin {
         
         // ✅ 停止状态更新
         stopStatusUpdates();
+        
+        // ✅ 释放 Equalizer 资源
+        if (equalizer != null) {
+            equalizer.release();
+            equalizer = null;
+            isVocalRemovalEnabled = false;
+            Log.d(TAG, "✅ Equalizer released");
+        }
         
         if (exoPlayer != null) {
             exoPlayer.release();

@@ -7,7 +7,7 @@
 **Android 版本**通过 Capacitor 框架将 Web 应用转换为原生 Android App，使用 MediaStore API 直接访问系统媒体库。
 
 - **项目名称**: lrc-player
-- **当前版本**: 6.0.6 (UI优化版)
+- **当前版本**: 6.0.7 (调试日志清理版)
 - **作者**: magic-akari (forked and enhanced by GuestsZhen)
 - **许可证**: MIT
 - **在线地址**: https://guestszhen.github.io/lrc-player
@@ -15,86 +15,6 @@
 
 
 
-## 🎯 核心功能模块
-
-### 1. 播放器 (Player)
-- 🎵 简谱LRC高亮滚动播放 - 通过歌词中 "/"符号可实现双行显示
-- 🎨 高度自定义：字体大小调节、对齐方式（左/中/右）、背景颜色自定义、歌词颜色自定义、大小调识别
-- 🌓 主题自适应（亮色/暗色）
-- 🖥️ 全屏模式支持
-
-### 2. 简谱转调工具 (Tune) ⭐特色功能
-- 🎼 **首调唱名法转调**（核心特色）
-- 🔄 简谱数字与音名映射转换
-- 🎹 支持高低八度标记：
-  - `(5)` 表示低音
-  - `[5]` 表示高音
-- 📊 升降号支持（#1, b2 等）
-- 🌍 多调式转换（C调、D调等）
-- 📋 转换结果预览和导出
-
-### 3. 歌词编辑器 (Editor)
-- 📝 可视化歌词编辑界面
-- 🏷️ 支持插入和管理时间标签
-- 💾 歌词导入/导出功能
-- ☁️ GitHub Gist 云同步
-- 📋 复制和下载歌词文件
-- 🔧 歌词元数据编辑（标题、艺术家等）
-
-### 4. 歌词工具箱 (Lrc-utils)
-- 🔧 多种实用工具：歌词压缩、时间偏移、时间变换、翻译分割、标签移除
-- 📥 原文本和处理后文本对比
-- 💾 覆盖模式支持
-
-### 5. 歌词同步器 (Synchronizer)
-- ⏱️ 实时歌词时间轴同步
-- 🎮 两种同步模式：选择模式（手动选择行并打点）、高亮模式（跟随播放自动高亮）
-- ⌨️ 键盘快捷键支持
-- 🔄 平滑滚动到当前行
-- ⚡ 时间标签微调功能
-
-### 6. 偏好设置 (Preferences)
-- 🎨 主题设置（自动/亮色/暗色）
-- ⌨️ 键盘快捷键自定义
-- 🌐 多语言切换（EN/ZH-CN/ZH-TW）
-- 📝 编辑器配置
-- 🎵 音频播放设置
-
-### 7. Gist 云同步 (Gist)
-- ☁️ GitHub Gist 集成
-- 🔐 OAuth 认证
-- 📤 上传歌词到云端
-- 📥 从云端加载歌词
-- 🗂️ Gist 管理界面
-
-### 8. 测试版 ST播放器 (player-soundtouch)
-- 🎵 实现歌曲转调
-- ⚠️ 受技术限制，无法调整播放进度，指定时间点（seek）等
-- 🌐 **仅限 Web 环境使用**，Android 版本不支持
-
-### 9. 文件管理 (File Manager) ⭐新增
-- 📂 本地音频文件扫描和管理
-- 🎶 播放列表管理（添加、删除、排序）
-- 💾 IndexedDB 持久化存储 (Web) / Capacitor Preferences (Android)
-- 🔄 跨组件状态同步
-- 📱 Web 和 Android 双端支持
-- 📍 **播放列表滚动位置记忆** - 重新打开时自动定位到当前播放歌曲
-
-### 10. Footer 组件重构 ⭐已完成
-- 📦 **模块化架构**: 从单体 683 行优化为模块化结构
-- 🔧 **工具函数提取**: file-utils.ts, audio-decoder.ts, playback-control.ts
-- 🎣 **Hook 封装**: usePlaylistEvents.ts 管理 10 个事件监听器
-- ✨ **代码质量**: 提取 PlaylistPanel 组件，提升可维护性
-
-### 11. Android Player 页面 UI 优化 ⭐最新
-- 📱 **隐藏全屏按钮** - Android 环境下自动隐藏全屏按钮
-- ⬆️ **按钮位置调整** - 文字设置和调性识别按钮自动上移
-- 🎤 **去人声功能** - Android 支持相位抵消法去除居中人声（伴奏模式）
-- 🎼 **音高调节** - Android 支持 ±12 半音调性调整
-- ⚡ **速度调节** - Android 支持 0.5x - 2.0x 播放速度控制
-- 📝 **长歌名显示** - 修复跑马灯动画，完整显示长歌名
-
----
 
 ## 📁 项目结构详解
 
@@ -145,7 +65,7 @@
 | `content.tsx` | 主要内容区域，根据路由动态加载不同页面组件 |
 | `footer.tsx` | 底部控制栏，播放控制、进度条、信息显示 ⭐已重构 |
 
-**音频子组件 (audio/)：** ⭐已完成
+**音频子组件 (audio/)：** 
 
 | 组件文件 | 功能说明 |
 |---------|---------||
@@ -156,7 +76,7 @@
 | `Slider.tsx` | 通用滑块组件 |
 | `index.ts` | Audio 组件统一导出 |
 
-**播放列表相关组件：** ⭐已完成
+**播放列表相关组件：** 
 
 | 组件文件 | 功能说明 |
 |---------|---------||
@@ -164,13 +84,18 @@
 | `FileListPanel.tsx` | 文件列表面板组件，显示所有音频文件 |
 | `MSFileListPanel.tsx` | Android MediaStore 播放列表面板 |
 
-**导航和设置组件：** ⭐已完成
+**导航和设置组件：**  
 
 | 组件文件 | 功能说明 |
 |---------|---------||
 | `NavigationButtons.tsx` | 导航按钮组件，根据当前页面显示不同按钮 |
 | `PlayerSettingsPanel.tsx` | Player 设置面板 (字体、背景色、歌词颜色等) |
 | `RouteTransition.tsx` | 路由过渡动画组件，提供页面切换淡入淡出效果 |
+| `MusicsetPanel.tsx` | Player 设置面板（从 Header 提取） |
+| `MusicsetSTPanel.tsx` | ST 歌曲调整面板（音高、速度、去人声） |
+| `EQModal.tsx` | EQ 均衡器弹窗（10 频段调节 + 去人声） |
+| `HeaderControlsGroup.tsx` | 右上角控制按钮组（调性检测、ST调整、文字设置） |
+| `HeaderLeftControls.tsx` | 左侧导航和控制组件 |
 
 **功能页面组件：**
 
@@ -220,6 +145,7 @@
 | `usePageDetection.ts` | 页面检测 Hook |
 | `usePlatform.ts` | 平台检测 Hook |
 | `usePlaybackMode.ts` | 播放模式管理 Hook |
+| `useSTEventListeners.ts` | ST 播放器事件监听 Hook（音高、速度、去人声） |
 | `index.ts` | Hooks 统一导出 |
 
 #### src/utils/ - 工具函数库
@@ -228,7 +154,7 @@
 
 | 工具文件 | 功能说明 |
 |---------|---------|
-| `web-audio-player.ts` | Web Audio API 播放器封装，提供高级音频控制 |
+| `web-audio-player.ts` | Web Audio API 播放器封装，提供高级音频控制（含去人声功能） |
 | `audiomodule.ts` | 音频模块管理，统一音频状态和操作 |
 | `playlist-manager.ts` | 播放列表管理，支持多音频文件 |
 | `pitch-shifter.ts` | 音调转换工具，实现变调功能 |
@@ -239,6 +165,10 @@
 | `exoplayer-key-detector.ts` | ExoPlayer 按键检测器 ⭐已完成 |
 | `platform-detector.ts` | 平台检测工具 ⭐已完成 |
 | `mediastore-plugin.ts` | MediaStore 插件接口 (Android) ⭐已完成 |
+| `file-handler.ts` | 文件处理工具（拖放、文件读取） |
+| `fullscreen-helper.ts` | 全屏模式辅助工具 |
+| `notification-controls.ts` | 通知栏控制工具 |
+| `key-calculator.ts` | 调性计算工具 |
 
 **输入处理：**
 
@@ -419,7 +349,7 @@ Web Worker 用于在后台线程执行耗时任务，避免阻塞主线程。
 - **TypeScript 5.8** - 类型安全的 JavaScript 超集
 - **Vite 6** - 现代化的前端构建工具
 
-### 状态管理 ⭐新增
+### 状态管理  
 - **Zustand ^5.0.12** - 轻量级、高性能的全局状态管理库
 
 ### 音频处理
@@ -572,15 +502,20 @@ App (根组件)
 │   ├── useLang (语言)
 │   └── useKeyBindings (快捷键)
 │
-├── Zustand Stores ⭐新增
+├── Zustand Stores  
 │   ├── usePlayerSettings (Player 设置：字体、背景色、歌词颜色、透明度)
 │   ├── useNavigation (导航状态：全屏、菜单显示)
 │   ├── useFileManager (文件管理：播放列表、当前文件)
 │   ├── useAudioStore (音频状态：播放状态、音量、进度)
 │   └── usePlaylistStore (播放列表状态管理)
 │
-├── Header (导航栏)
-│   ├── NavigationButtons (导航按钮)
+├── Header (导航栏)  
+│   ├── HeaderLeftControls (左侧导航和控制)
+│   ├── HeaderControlsGroup (右上角控制按钮组)
+│   │   ├── NavigationButtons (导航按钮)
+│   │   ├── 调性检测按钮
+│   │   ├── ST歌曲调整按钮
+│   │   └── 文字设置按钮
 │   └── 路由切换按钮
 │
 ├── Content (内容区)
@@ -589,14 +524,15 @@ App (根组件)
 │   ├── Synchronizer (同步器)
 │   ├── Player (播放器)
 │   │   └── PlayerSettingsPanel (Player 设置面板)
-│   ├── PlayerSoundTouch (变调播放器)
+│   ├── PlayerSoundTouch (变调播放器) ⭐Web专用
+│   │   └── MusicsetSTPanel (ST 歌曲调整面板)
 │   ├── Tune (转调工具)
 │   ├── LrcUtils (工具箱)
 │   ├── Gist (云同步)
 │   ├── Preferences (设置)
 │   └── Home (首页)
 │
-├── Footer (控制栏) ⭐已重构
+├── Footer (控制栏)  
 │   ├── Audio 子组件
 │   │   ├── LrcAudio (歌曲信息显示)
 │   │   ├── PlaybackControls (播放控制按钮)
@@ -605,20 +541,21 @@ App (根组件)
 │   ├── PlaylistPanel (播放列表面板)
 │   └── LoadAudio (音频加载)
 │
-├── FileListPanel (文件列表面板) ⭐已完成
-├── MSFileListPanel (Android 播放列表) ⭐已完成
+├── FileListPanel (文件列表面板)  
+├── MSFileListPanel (Android 播放列表) 
+├── EQModal (EQ 均衡器弹窗) 
 └── Toast (消息提示)
 
 工具层：
 ├── web-audio-player.ts (音频播放)
 ├── audiomodule.ts (音频管理)
 ├── playlist-manager.ts (播放列表)
-├── file-utils.ts (文件处理工具) ⭐已完成
-├── audio-decoder.ts (音频解码) ⭐已完成
-├── playback-control.ts (播放控制) ⭐已完成
-├── exoplayer-plugin.ts (ExoPlayer 插件) ⭐已完成
-├── platform-detector.ts (平台检测) ⭐已完成
-├── mediastore-plugin.ts (MediaStore 插件) ⭐已完成
+├── file-utils.ts (文件处理工具)  
+├── audio-decoder.ts (音频解码) 
+├── playback-control.ts (播放控制) 
+├── exoplayer-plugin.ts (ExoPlayer 插件) 
+├── platform-detector.ts (平台检测) 
+├── mediastore-plugin.ts (MediaStore 插件)  
 ├── key-detector.ts (按键检测)
 ├── gistapi.ts (Gist API)
 └── router.ts (路由)
@@ -626,7 +563,8 @@ App (根组件)
 Hooks 层：
 ├── useMediaStore.ts (MediaStore 访问)
 ├── useAudioEvents.ts (音频事件)
-└── usePlaylistEvents.ts (播放列表事件) ⭐已完成
+├── usePlaylistEvents.ts (播放列表事件)  
+└── useSTEventListeners.ts (ST 播放器事件) 
 
 Worker 层：
 ├── sw.ts (Service Worker)
@@ -643,41 +581,44 @@ Worker 层：
 - 组件职责单一，易于维护和测试
 - 使用懒加载优化首屏性能
 
-### 2. 状态管理 ⭐重构完成
+### 2. 状态管理  
 - **Zustand Store**：轻量级全局状态管理（playerSettings、navigation、fileManager）
 - **React Context API**：应用级状态共享（语言、偏好设置）
-- **自定义 Hooks**：封装业务逻辑（useLrc、usePref、useLang、usePlaylistEvents）
+- **自定义 Hooks**：封装业务逻辑（useLrc、usePref、useLang、usePlaylistEvents、useSTEventListeners）
 - **PubSub 模式**：组件间通信和事件广播
 - **自动持久化**：Store 自动同步到 Capacitor Preferences / sessionStorage/localStorage
 
-### 3. 模块化组织
+
+
+### 4. 模块化组织
 - 按功能划分目录（components、hooks、utils、stores）
 - 常量集中管理（const 目录）
 - 类型定义统一管理（types 目录）
 
-### 4. 性能优化
+### 5. 性能优化
 - 代码分割和懒加载
 - Web Worker 处理耗时任务（NCM/QMC 解密）
 - Service Worker 离线缓存
 - LightningCSS 快速 CSS 处理
 
-### 5. 国际化支持
+### 6. 国际化支持
 - JSON 格式语言包
 - 动态语言切换
 - 三种语言支持（EN、ZH-CN、ZH-TW）
 
-### 6. PWA 特性
+### 7. PWA 特性
 - 可安装为桌面应用
 - 离线可用
 - 后台同步
 - 推送通知（可扩展）
 
-### 7. 跨平台适配 ⭐已完成
-- **Web 版本**：标准 HTML5 Audio API
+### 8. 跨平台适配  
+- **Web 版本**：标准 HTML5 Audio API + Web Audio API
 - **Android 版本**：ExoPlayer + MediaStore API
 - **平台检测**：自动识别运行环境
 - **统一接口**：抽象层屏蔽平台差异
 - **UI 差异化**：Android 隐藏全屏按钮，优化按钮布局
+
 
 ---
 
@@ -784,56 +725,6 @@ docker run -d -p 8080:80 lrc-player
 
 ---
 
-## 📊 应用场景
-
-1. **音乐制作人**：为简谱歌曲制作精准的时间轴歌词
-2. **KTV 系统**：创建卡拉OK字幕文件
-3. **音乐教育**：简谱教学和转调练习
-4. **歌词爱好者**：整理和美化歌词文件
-5. **开发者**：学习 React + TypeScript 最佳实践
-6. **播客制作者**：为音频内容添加字幕
-7. **语言学习者**：制作双语歌词对照学习材料
-
----
-
-## 🔮 未来扩展方向
-
-### 可能的功能增强
-- [ ] AI 自动歌词同步
-- [ ] 更多音频格式支持
-- [ ] 协作编辑功能
-- [ ] 歌词翻译集成
-- [ ] 更多简谱符号支持
-- [ ] 音频效果器（混响、均衡器等）
-- [ ] 导出为视频格式
-- [ ] 移动端原生应用（React Native）
-
-### 技术改进
-- [ ] 迁移到 React 19
-- [ ] 引入状态管理库（Zustand/Jotai）
-- [ ] 单元测试覆盖
-- [ ] E2E 测试
-- [ ] 性能监控和分析
-- [ ] 错误追踪系统
-
----
-
-## 📝 总结
-
-**简谱 LRC 播放器**是一个架构清晰、功能完善的现代化 Web 应用。它结合了：
-
-- ✅ 优秀的用户体验（直观的界面、流畅的交互）
-- ✅ 强大的功能集合（编辑、同步、播放、转调）
-- ✅ 现代的技术栈（React 18、TypeScript、Vite）
-- ✅ 良好的代码组织（模块化、组件化）
-- ✅ 完善的工程化（PWA、Docker、CI/CD）
-- ✅ 国际化支持（三语言）
-- ✅ 特色功能（简谱转调）
-- ✅ **Android 原生支持**（Capacitor + MediaStore API）
-
-这个项目不仅是一个实用的工具，也是学习现代前端开发的优秀案例。
-
----
 
 ## 📱 Android 版本架构
 
@@ -877,7 +768,6 @@ android/
         └── MediaStorePlugin.java  # MediaStore 原生插件 ⭐
 ```
 
-### MediaStore 集成
 
 这是 Android 版本的**核心创新点**，通过 Android MediaStore API 直接访问系统媒体库。
 
@@ -915,71 +805,12 @@ android/
 ### 构建和部署
 
 详见：
-- [ANDROID-CROSS-PLATFORM-GUIDE.md](./ANDROID-CROSS-PLATFORM-GUIDE.md) - 跨平台开发指南
 - [ANDROID-MEDIASTORE-DEBUG-GUIDE.md](./ANDROID-MEDIASTORE-DEBUG-GUIDE.md) - MediaStore 调试指南
 - [ANDROID-CAPACITOR-STATUS.md](./ANDROID-CAPACITOR-STATUS.md) - Capacitor 迁移状态
 
-### ExoPlayer 集成 ⭐已完成
-
-Android 版本使用 **ExoPlayer** 替代 HTML5 Audio，提供更好的性能和功能。
-
-#### ExoPlayerPlugin.java 主要功能
-
-- 🎵 高性能音频播放
-- 🎚️ 播放速度控制 (0.5x - 2.0x)
-- ⏯️ 播放/暂停/跳转控制
-- 🔊 音量控制
-- 📢 播放完成事件通知
-- 🔄 与 Web 层的双向通信
-- 🎤 **去人声（伴奏模式）** - 相位抵消法去除居中人声
-
-#### 关键特性
-
-1. **后台播放支持**：即使应用切换到后台也能继续播放
-2. **锁屏控制**：支持锁屏界面播放控制
-3. **音频焦点管理**：自动处理与其他应用的音频冲突
-4. **格式支持广泛**：支持更多音频格式（MP3, FLAC, AAC, OGG 等）
-5. **实时音高调节**：支持 ±12 半音调性调整
-6. **速度调节**：精确的 0.5x - 2.0x 速度控制
-7. **去人声功能**：基于相位抵消法的伴奏模式
-
-
-### 关键技术点
-
-#### 1. 类型兼容性处理
-
-在 TypeScript 中,`File | null` 和 `File | undefined` 是不同的类型。我们使用联合类型提高兼容性:
-
-```typescript
-readLrcFile: (track: any) => Promise<File | undefined | null>
-```
-
-#### 2. React 渲染期间状态更新修复
-
-**问题**: Header 渲染时触发 Content 的状态更新,导致警告。
-
-**解决**: 在 Content 中使用 `setTimeout` 异步更新状态:
-
-```typescript
-setTimeout(() => {
-    setCurrentPlayingFile(customEvent.detail.fileName);
-}, 0);
-```
-
-#### 3. Hook 参数传递
-
-确保 `setAudioSrc` 等回调函数正确传递给 Hook:
-
-```typescript
-usePlaylistEvents({
-    // ...
-    setAudioSrc,  // ✅ 直接传递,不使用 CustomEvent
-    // ...
-});
-```
 
 ---
 
-**文档生成时间**: 2026-05-01  
-**项目版本**: 6.0.6 (UI优化版)  
-**文档版本**: 2.4.0 
+**文档生成时间**: 2026-05-02  
+**项目版本**: 6.0.7 (调试日志清理版)  
+**文档版本**: 2.5.0 

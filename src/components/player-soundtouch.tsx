@@ -422,6 +422,7 @@ export const PlayerSoundTouch: React.FC<IPlayerProps> = ({ state, dispatch }) =>
         const newState = !vocalRemoval;
         setVocalRemoval(newState);
         webAudioPlayer.setVocalRemoval(newState);
+        
         // 同步到 Header
         window.dispatchEvent(new CustomEvent('st-vocal-removal-change', { detail: newState }));
     };

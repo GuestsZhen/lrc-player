@@ -16,6 +16,7 @@
 - **Web 版本**：
 浏览器在线使用，https://guestszhen.github.io/lrc-player
 支持 PWA 离线访问，将文件拖放到页面中加载，使用箭头键和空格键插入时间戳。你可以把这个链接收藏到浏览器书签。
+
 - **Android 版本**：原生 App，完全离线可用，支持 MediaStore API 扫描本地音乐库
 
 ### 📥 下载 Android APK
