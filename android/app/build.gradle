@@ -45,7 +45,7 @@ dependencies {
     implementation project(':capacitor-cordova-android-plugins')
     
     // ✅ Media3 (ExoPlayer) 依赖 - 用于音频播放
-    // 升级到 1.4.1 以获得简化的 AudioProcessor API
+    // 保持 1.5.1 稳定版本，自定义 AudioProcessor 方案已验证不可行
     def media3_version = "1.5.1"
     implementation "androidx.media3:media3-exoplayer:$media3_version"
     implementation "androidx.media3:media3-session:$media3_version"

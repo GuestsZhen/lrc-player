@@ -263,6 +263,11 @@ public class ExoPlayerPlugin extends Plugin {
                     notifyListeners("onPlayerError", event);
                     Log.e(TAG, "Player error: " + error.getMessage());
                 }
+                
+                @Override
+                public void onAudioSessionIdChanged(int audioSessionId) {
+                    Log.d(TAG, "🎵 Audio session ID changed: " + audioSessionId);
+                }
             });
             
             isInitialized = true;
