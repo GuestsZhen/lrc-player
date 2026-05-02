@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import { isAndroidNative } from '../utils/platform-detector.js';
 
 interface MusicsetPanelProps {
     showKeyDetectionMenu: boolean;
@@ -78,115 +79,117 @@ export const MusicsetPanel: React.FC<MusicsetPanelProps> = ({
             </div>
             
             {/* Android 模式下显示音高调节、速度调节、EQ 均衡器 */}
-            {/* 注意：这里假设调用方已经检查了 isAndroidNative() */}
-            
-            {/* 音高调节 */}
-            <div className="player-settings-group">
-                <div className="player-settings-label">音高调节</div>
-                <div className="player-settings-options">
-                    <button 
-                        className="player-setting-btn"
-                        onClick={() => onAdjustPitch(-1)}
-                        title="降低一个半音"
-                    >
-                        -
-                    </button>
-                    <button 
-                        className="player-setting-btn"
-                        onClick={onResetPitch}
-                        title="重置为原调"
-                        style={{ minWidth: '50px' }}
-                    >
-                        {getCurrentKey()}
-                    </button>
-                    <button 
-                        className="player-setting-btn"
-                        onClick={() => onAdjustPitch(1)}
-                        title="升高一个半音"
-                    >
-                        +
-                    </button>
-                </div>
-            </div>
-            
-            {/* 速度调节 */}
-            <div className="player-settings-group">
-                <div className="player-settings-label">速度调节</div>
-                <div className="player-settings-options">
-                    <button 
-                        className="player-setting-btn"
-                        onClick={() => onAdjustSpeed(-0.05)}
-                        title="降低速度 0.05x"
-                        disabled={playbackSpeed <= 0.5}
-                    >
-                        -
-                    </button>
-                    <button 
-                        className="player-setting-btn"
-                        onClick={onResetSpeed}
-                        title="重置为正常速度"
-                        style={{ minWidth: '60px' }}
-                    >
-                        {playbackSpeed.toFixed(2)}x
-                    </button>
-                    <button 
-                        className="player-setting-btn"
-                        onClick={() => onAdjustSpeed(0.05)}
-                        title="升高速度 0.05x"
-                        disabled={playbackSpeed >= 2.0}
-                    >
-                        +
-                    </button>
-                </div>
-                {/* 速度滑动条 */}
-                <div className="speed-control-slider" style={{ marginTop: '8px' }}>
-                    <input
-                        type="range"
-                        min="-0.693"
-                        max="0.693"
-                        step="any"
-                        value={Math.log(playbackSpeed)}
-                        onChange={(e) => {
-                            const logValue = parseFloat(e.target.value);
-                            const newSpeed = Math.exp(logValue);
-                            const clampedSpeed = Math.max(0.5, Math.min(2.0, newSpeed));
-                            onSpeedSliderChange(clampedSpeed);
-                        }}
-                        title={`当前速度: ${playbackSpeed.toFixed(2)}x`}
-                    />
-                </div>
-            </div>
-            
-            {/* EQ 均衡器按钮 */}
-            <div className="player-settings-group">
-                <button 
-                    className="start-detect-btn"
-                    onClick={onToggleEQPanel}
-                    style={{
-                        width: '100%',
-                        padding: '12px',
-                        fontSize: '1rem',
-                        fontWeight: '500',
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        boxShadow: '0 2px 8px rgba(102, 126, 234, 0.3)'
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.4)';
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(102, 126, 234, 0.3)';
-                    }}
-                >
-                    EQ 均衡器
-                </button>
-            </div>
+            {isAndroidNative() && (
+                <>
+                    {/* 音高调节 */}
+                    <div className="player-settings-group">
+                        <div className="player-settings-label">音高调节</div>
+                        <div className="player-settings-options">
+                            <button 
+                                className="player-setting-btn"
+                                onClick={() => onAdjustPitch(-1)}
+                                title="降低一个半音"
+                            >
+                                -
+                            </button>
+                            <button 
+                                className="player-setting-btn"
+                                onClick={onResetPitch}
+                                title="重置为原调"
+                                style={{ minWidth: '50px' }}
+                            >
+                                {getCurrentKey()}
+                            </button>
+                            <button 
+                                className="player-setting-btn"
+                                onClick={() => onAdjustPitch(1)}
+                                title="升高一个半音"
+                            >
+                                +
+                            </button>
+                        </div>
+                    </div>
+                    
+                    {/* 速度调节 */}
+                    <div className="player-settings-group">
+                        <div className="player-settings-label">速度调节</div>
+                        <div className="player-settings-options">
+                            <button 
+                                className="player-setting-btn"
+                                onClick={() => onAdjustSpeed(-0.05)}
+                                title="降低速度 0.05x"
+                                disabled={playbackSpeed <= 0.5}
+                            >
+                                -
+                            </button>
+                            <button 
+                                className="player-setting-btn"
+                                onClick={onResetSpeed}
+                                title="重置为正常速度"
+                                style={{ minWidth: '60px' }}
+                            >
+                                {playbackSpeed.toFixed(2)}x
+                            </button>
+                            <button 
+                                className="player-setting-btn"
+                                onClick={() => onAdjustSpeed(0.05)}
+                                title="升高速度 0.05x"
+                                disabled={playbackSpeed >= 2.0}
+                            >
+                                +
+                            </button>
+                        </div>
+                        {/* 速度滑动条 */}
+                        <div className="speed-control-slider" style={{ marginTop: '8px' }}>
+                            <input
+                                type="range"
+                                min="-0.693"
+                                max="0.693"
+                                step="any"
+                                value={Math.log(playbackSpeed)}
+                                onChange={(e) => {
+                                    const logValue = parseFloat(e.target.value);
+                                    const newSpeed = Math.exp(logValue);
+                                    const clampedSpeed = Math.max(0.5, Math.min(2.0, newSpeed));
+                                    onSpeedSliderChange(clampedSpeed);
+                                }}
+                                title={`当前速度: ${playbackSpeed.toFixed(2)}x`}
+                            />
+                        </div>
+                    </div>
+                    
+                    {/* EQ 均衡器按钮 */}
+                    <div className="player-settings-group">
+                        <button 
+                            className="start-detect-btn"
+                            onClick={onToggleEQPanel}
+                            style={{
+                                width: '100%',
+                                padding: '12px',
+                                fontSize: '1rem',
+                                fontWeight: '500',
+                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: '8px',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                                boxShadow: '0 2px 8px rgba(102, 126, 234, 0.3)'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.transform = 'translateY(-2px)';
+                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.4)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.transform = 'translateY(0)';
+                                e.currentTarget.style.boxShadow = '0 2px 8px rgba(102, 126, 234, 0.3)';
+                            }}
+                        >
+                            EQ 均衡器
+                        </button>
+                    </div>
+                </>
+            )}
         </div>
     );
 };
