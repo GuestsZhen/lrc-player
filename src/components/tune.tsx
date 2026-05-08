@@ -59,6 +59,7 @@ export const Tune: React.FC<{
     const [fromKey, setFromKey] = useState(0);  // 0-11 对应 C-B
     const [toKey, setToKey] = useState(0);
     const [transposedText, setTransposedText] = useState("");
+    const [octaveShift, setOctaveShift] = useState(0);  // ✅ 八度偏移：-1=降八度, 0=正常, 1=升八度
     
     const originalTextarea = useRef<HTMLInputLikeElement>(null);
     const transposedTextarea = useRef<HTMLInputLikeElement>(null);
@@ -91,11 +92,13 @@ export const Tune: React.FC<{
         const timePlaceholders: string[] = [];
         let timeIndex = 0;
         
-        // ✅ 匹配多种格式：
-        // 1. [00:16.63] - 时间轴
-        // 2. [length: 03:41.26] - 长度元数据
-        // 3. [ar:歌手名] - 其他元数据
-        const metadataPattern = /\[[^\]]*\]/g;
+        // ✅ 匹配真正的元数据，不匹配简谱高低音标记
+        // 匹配规则：
+        // 1. ^\[\d{2}:\d{2}\.\d{2}\] - 行首时间轴 [00:25.94]
+        // 2. \[[a-zA-Z]+:[^\]]*\] - 包含字母前缀的元数据 [ar:歌手], [ti:歌名]
+        // 3. \[\d{2}:\d{2}\.\d{2}\] - 任意位置的时间轴
+        // 不匹配：[1], [2], (1), (2) 等简谱高低音标记（单个数字）
+        const metadataPattern = /(\[\d{2}:\d{2}\.\d{2,}\])|(\[[a-zA-Z]+:[^\]]*\])/g;
         const protectedText = text.replace(metadataPattern, (match) => {
             // ✅ 使用不含数字和#的占位符，使用字母表示索引（A-Z, AA-ZZ等）
             const placeholder = `__${numberToLetters(timeIndex)}__`;
@@ -306,7 +309,8 @@ export const Tune: React.FC<{
         const originalText = originalTextarea.current?.value || originalLyricRef.current;
         if (!originalText) return;
 
-        const mode = fromKey - toKey;  // ✅ 参考 main.js 第147行
+        // ✅ 修正：原调 - 目标调，选择最短路径
+        const mode = (fromKey - toKey + 12) % 12;
         const result = transposeText(originalText, mode);
         
         setTransposedText(result);
@@ -323,11 +327,188 @@ export const Tune: React.FC<{
         }
     }, [lrcDispatch, transposedText]);
 
+    // ✅ 八度调整函数：处理简谱的高低音标记
+    const adjustOctave = useCallback((text: string, shift: number): string => {
+        if (shift === 0) return text;
+        
+        // ✅ 第一步：保护元数据（时间轴和标签）
+        const timePlaceholders: string[] = [];
+        let timeIndex = 0;
+        
+        // 匹配真正的元数据，不匹配简谱高低音标记
+        const metadataPattern = /(\[\d{2}:\d{2}\.\d{2,}\])|(\[[a-zA-Z]+:[^\]]*\])/g;
+        const protectedText = text.replace(metadataPattern, (match) => {
+            const placeholder = `__${numberToLetters(timeIndex)}__`;
+            timePlaceholders[timeIndex] = match;
+            timeIndex++;
+            return placeholder;
+        });
+        
+        // ✅ 第二步：对保护后的文本进行八度调整
+        // 按行处理，模拟转调函数的逻辑
+        const lines = protectedText.split('\n');
+        const adjustedLines = lines.map(line => {
+            let result = '';
+            let i = 0;
+            
+            while (i < line.length) {
+                const char = line[i];
+                
+                // 检查是否是高音标记 [数字] 或 [#数字]
+                if (char === '[') {
+                    // 尝试匹配 [数字]
+                    if (i + 2 < line.length && line[i + 2] === ']') {
+                        const num = line[i + 1];
+                        if (num >= '1' && num <= '7') {
+                            // 找到高音标记 [1-7]
+                            if (shift < 0) {
+                                // 降八度：高音 -> 中音
+                                result += num;
+                            } else {
+                                // 升八度：保持高音
+                                result += `[${num}]`;
+                            }
+                            i += 3; // 跳过 [数字]
+                            continue;
+                        }
+                    }
+                    // 尝试匹配 [#数字]
+                    if (i + 3 < line.length && line[i + 1] === '#' && line[i + 3] === ']') {
+                        const num = line[i + 2];
+                        if (num >= '1' && num <= '7') {
+                            // 找到高音标记 [#1-#7]
+                            if (shift < 0) {
+                                // 降八度：高音 -> 中音
+                                result += `#${num}`;
+                            } else {
+                                // 升八度：保持高音
+                                result += `[#${num}]`;
+                            }
+                            i += 4; // 跳过 [#数字]
+                            continue;
+                        }
+                    }
+                }
+                
+                // 检查是否是低音标记 (数字) 或 (#数字)
+                if (char === '(') {
+                    // 尝试匹配 (数字)
+                    if (i + 2 < line.length && line[i + 2] === ')') {
+                        const num = line[i + 1];
+                        if (num >= '1' && num <= '7') {
+                            // 找到低音标记 (1-7)
+                            if (shift > 0) {
+                                // 升八度：低音 -> 中音
+                                result += num;
+                            } else {
+                                // 降八度：保持低音
+                                result += `(${num})`;
+                            }
+                            i += 3; // 跳过 (数字)
+                            continue;
+                        }
+                    }
+                    // 尝试匹配 (#数字)
+                    if (i + 3 < line.length && line[i + 1] === '#' && line[i + 3] === ')') {
+                        const num = line[i + 2];
+                        if (num >= '1' && num <= '7') {
+                            // 找到低音标记 (#1-#7)
+                            if (shift > 0) {
+                                // 升八度：低音 -> 中音
+                                result += `#${num}`;
+                            } else {
+                                // 降八度：保持低音
+                                result += `(#${num})`;
+                            }
+                            i += 4; // 跳过 (#数字)
+                            continue;
+                        }
+                    }
+                }
+                
+                // 检查是否是中音数字（不在括号内）
+                if (char >= '1' && char <= '7') {
+                    // 检查前面是否有 [ 或 (，如果有则不是中音
+                    const prevChar = i > 0 ? line[i - 1] : '';
+                    if (prevChar !== '[' && prevChar !== '(') {
+                        // 检查是否有 # 前缀
+                        const hasSharp = i > 0 && line[i - 1] === '#';
+                        
+                        // 中音数字
+                        if (shift < 0) {
+                            // 降八度：中音 -> 低音
+                            if (hasSharp) {
+                                // 回退删除已添加的 #
+                                result = result.slice(0, -1);
+                                result += `(#${char})`;
+                            } else {
+                                result += `(${char})`;
+                            }
+                        } else {
+                            // 升八度：中音 -> 高音
+                            if (hasSharp) {
+                                // 回退删除已添加的 #
+                                result = result.slice(0, -1);
+                                result += `[${char}]`;
+                            } else {
+                                result += `[${char}]`;
+                            }
+                        }
+                        i++;
+                        continue;
+                    }
+                }
+                
+                // 其他字符直接添加
+                result += char;
+                i++;
+            }
+            
+            return result;
+        });
+        
+        const adjustedText = adjustedLines.join('\n');
+        
+        // ✅ 第三步：恢复元数据
+        let result = adjustedText;
+        timePlaceholders.forEach((originalTime, index) => {
+            const placeholder = `__${numberToLetters(index)}__`;
+            result = result.split(placeholder).join(originalTime);
+        });
+        
+        return result;
+    }, []);
+
+    // ✅ 降八度按钮处理
+    const handleLowerOctave = useCallback(() => {
+        if (!transposedText) return;
+        
+        const newShift = octaveShift - 1;
+        setOctaveShift(newShift);
+        
+        // 对当前显示的文本进行八度调整
+        const adjustedText = adjustOctave(transposedText, -1);
+        setTransposedText(adjustedText);
+    }, [transposedText, octaveShift, adjustOctave]);
+
+    // ✅ 升八度按钮处理
+    const handleRaiseOctave = useCallback(() => {
+        if (!transposedText) return;
+        
+        const newShift = octaveShift + 1;
+        setOctaveShift(newShift);
+        
+        // 对当前显示的文本进行八度调整
+        const adjustedText = adjustOctave(transposedText, 1);
+        setTransposedText(adjustedText);
+    }, [transposedText, octaveShift, adjustOctave]);
+
     // 清除转调设置
     const clearTranspose = useCallback(() => {
         setFromKey(0);
         setToKey(0);
         setTransposedText("");
+        setOctaveShift(0);  // ✅ 重置八度偏移
         setIsTransposed(false);
         const originalText = originalLyricRef.current;
         if (originalTextarea.current) {
@@ -407,7 +588,7 @@ export const Tune: React.FC<{
                     >
                         {KEYS.map((key, index) => (
                             <option key={key} value={index}>
-                                1 = {key}
+                                {key}
                             </option>
                         ))}
                     </select>
@@ -423,7 +604,7 @@ export const Tune: React.FC<{
                     >
                         {KEYS.map((key, index) => (
                             <option key={key} value={index}>
-                                1 = {key}
+                                {key}
                             </option>
                         ))}
                     </select>
@@ -436,6 +617,31 @@ export const Tune: React.FC<{
                         title={lang.tune.transpose}
                     >
                         {lang.tune.transpose}
+                    </button>
+                    {/* ✅ 八度控制按钮 */}
+                    <button
+                        className="tune-button ripple"
+                        onClick={handleLowerOctave}
+                        disabled={!isTransposed}
+                        title="降八度"
+                        style={{ 
+                            opacity: !isTransposed ? 0.5 : 1,
+                            background: octaveShift < 0 ? '#ff6b6b' : undefined
+                        }}
+                    >
+                        -
+                    </button>
+                    <button
+                        className="tune-button ripple"
+                        onClick={handleRaiseOctave}
+                        disabled={!isTransposed}
+                        title="升八度"
+                        style={{ 
+                            opacity: !isTransposed ? 0.5 : 1,
+                            background: octaveShift > 0 ? '#4ecdc4' : undefined
+                        }}
+                    >
+                        +
                     </button>
                     <button
                         className="tune-button ripple"
