@@ -114,6 +114,19 @@
     box-shadow: 0 0 8px var(--theme-contrast-color);
 }
 
+/* ✅ 合并编辑模式下的单输入框样式 */
+.line.editing .line-text-editor {
+    width: 100%;
+    border: 2px solid #007bff;
+    padding: 4px 8px;
+    background: rgba(255, 255, 255, 0.95);
+    color: #000;
+    font-family: inherit;
+    font-size: inherit;
+    border-radius: 4px;
+    outline: none;
+}
+
 .select {
     border-color: var(--theme-color);
 }
@@ -137,6 +150,19 @@
 .line.highlight {
     color: var(--theme-contrast-color);
     background-color: var(--theme-color);
+}
+
+/* ✅ 修复：编辑状态下的高亮行，输入框需要保持清晰的背景和边框 */
+.line.highlight.editing .line-time-editor,
+.line.highlight.editing .line-text-editor {
+    color: #000 !important;
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    border-color: #007bff !important;
+}
+
+.line.highlight.editing .line-time-editor::placeholder,
+.line.highlight.editing .line-text-editor::placeholder {
+    color: #666 !important;
 }
 
 .error::before {

@@ -179,32 +179,21 @@ export const Synchronizer: React.FC<ISynchronizerProps> = ({ state, dispatch }) 
             const lineElement = target.closest('.line') as HTMLElement | null;
             if (lineElement) {
                 const lineKey = Number.parseInt(lineElement.dataset.key!, 10) || 0;
-
-                dispatch({ type: ActionType.select, payload: () => lineKey });
+                
+                // ✅ 根据同步模式执行不同操作
+                if (syncMode === SyncMode.select) {
+                    // 编辑模式（选择模式）：选中歌词行
+                    dispatch({ type: ActionType.select, payload: () => lineKey });
+                } else {
+                    // 播放模式（高亮模式）：跳转到该歌词的时间位置
+                    const lyricTime = state.lyric[lineKey]?.time;
+                    if (lyricTime !== undefined && audioRef.current) {
+                        audioRef.current.currentTime = lyricTime;
+                    }
+                }
             }
         },
-        [dispatch],
-    );
-
-    const onLineDoubleClick = useCallback(
-        (ev: React.MouseEvent<HTMLUListElement | HTMLLIElement>) => {
-            ev.stopPropagation();
-
-            if (!audioRef.duration) {
-                return;
-            }
-
-            const target = ev.target as HTMLElement;
-
-            // 向上查找带有 line 类的父元素
-            const lineElement = target.closest('.line') as HTMLElement | null;
-            if (lineElement) {
-                const key = Number.parseInt(lineElement.dataset.key!, 10);
-
-                adjust(ev, 0, key);
-            }
-        },
-        [adjust],
+        [dispatch, state.lyric, syncMode],
     );
 
     const LyricLineIter = useCallback(
@@ -267,7 +256,7 @@ export const Synchronizer: React.FC<ISynchronizerProps> = ({ state, dispatch }) 
 
     return (
         <>
-            <ul ref={ul} className={ulClassName} onClickCapture={onLineClick} onDoubleClickCapture={onLineDoubleClick}>
+            <ul ref={ul} className={ulClassName} onClickCapture={onLineClick}>
                 {state.lyric.map(LyricLineIter)}
             </ul>
             <AsidePanel syncMode={syncMode} setSyncMode={setSyncMode} lrcDispatch={dispatch} prefState={prefState} />
@@ -292,9 +281,7 @@ const LyricLine: React.FC<ILyricLineProps & {
     // 编辑状态
     const [isEditing, setIsEditing] = useState(false);
     const [editText, setEditText] = useState(line.text);
-    const [editTime, setEditTime] = useState(line.time || 0);
     const inputRef = useRef<HTMLInputElement>(null);
-    const timeInputRef = useRef<HTMLInputElement>(null);
 
     // 三击检测
     const clickCount = useRef(0);
@@ -311,14 +298,17 @@ const LyricLine: React.FC<ILyricLineProps & {
     // 处理三击进入编辑
     const handleTripleClick = useCallback(() => {
         setIsEditing(true);
-        setEditText(line.text);
-        setEditTime(line.time || 0);
-        // 聚焦到文本输入框
+        // ✅ 合并时间和文本到同一个输入框
+        const timeTag = line.time ? convertTimeToTag(line.time, prefState.fixed) : '';
+        setEditText(`${timeTag}${line.text}`);
+        // 聚焦到输入框
         requestAnimationFrame(() => {
             inputRef.current?.focus();
-            inputRef.current?.setSelectionRange(0, inputRef.current.value.length);
+            // 将光标定位到时间标签后面
+            const timeLength = timeTag.length;
+            inputRef.current?.setSelectionRange(timeLength, timeLength);
         });
-    }, [line.text, line.time, index]);
+    }, [line.text, line.time, index, prefState.fixed]);
 
     // 处理点击计数
     const handleClick = useCallback(() => {
@@ -345,10 +335,31 @@ const LyricLine: React.FC<ILyricLineProps & {
     // 保存编辑
     const handleBlur = useCallback(() => {
         setIsEditing(false);
-        if ((editText !== line.text || editTime !== line.time) && onEdit) {
-            onEdit(index, editText, editTime);
+        
+        if (!onEdit) return;
+        
+        // ✅ 从合并的文本中解析时间和歌词
+        // 格式：[MM:SS.mmm]歌词文本
+        const timePattern = /^\[(\d{2}:\d{2}\.\d{2,3})\]\s*/;
+        const match = editText.match(timePattern);
+        
+        let newTime: number;
+        let newText: string;
+        
+        if (match) {
+            // 有时间标签
+            newTime = parseTimeToSeconds(match[1]);
+            newText = editText.replace(timePattern, '');
+        } else {
+            // 没有时间标签，保持原时间
+            newTime = line.time ?? 0;
+            newText = editText;
         }
-    }, [editText, editTime, line.text, line.time, index, onEdit]);
+        
+        if (newText !== line.text || newTime !== line.time) {
+            onEdit(index, newText, newTime);
+        }
+    }, [editText, line.text, line.time, index, onEdit]);
 
     // 键盘事件
     const handleKeyDown = useCallback((ev: React.KeyboardEvent<HTMLInputElement>) => {
@@ -356,39 +367,13 @@ const LyricLine: React.FC<ILyricLineProps & {
             handleBlur();
         } else if (ev.key === 'Escape') {
             setIsEditing(false);
-            setEditText(line.text);
-            setEditTime(line.time || 0);
-        } else if (ev.key === 'ArrowRight' && ev.target === timeInputRef.current) {
-            ev.preventDefault();
-            inputRef.current?.focus();
-        } else if (ev.key === 'ArrowLeft' && ev.target === inputRef.current && inputRef.current.selectionStart === 0) {
-            ev.preventDefault();
-            timeInputRef.current?.focus();
+            // 恢复原始内容
+            const timeTag = line.time ? convertTimeToTag(line.time, prefState.fixed) : '';
+            setEditText(`${timeTag}${line.text}`);
         }
-    }, [handleBlur, line.text, line.time]);
+    }, [handleBlur, line.text, line.time, prefState.fixed]);
 
-    // 时间输入处理
-    const handleTimeChange = useCallback((ev: React.ChangeEvent<HTMLInputElement>) => {
-        const value = ev.target.value;
-        const timePattern = /^([0-9]{0,2}):?([0-9]{0,2})\.?([0-9]{0,3})$/;
-        if (timePattern.test(value) || value === '') {
-            const parts = value.split(':');
-            let minutes = 0;
-            let seconds = 0;
-            
-            if (parts.length === 2) {
-                minutes = Number.parseInt(parts[0], 10) || 0;
-                const secParts = parts[1].split('.');
-                seconds = Number.parseFloat(secParts.join('.')) || 0;
-            } else {
-                seconds = Number.parseFloat(value) || 0;
-            }
-            
-            setEditTime(minutes * 60 + seconds);
-        }
-    }, []);
-
-    // 文本输入处理（已废弃，保留以防将来使用）
+    // 文本输入处理
     const handleTextChange = useCallback((ev: React.ChangeEvent<HTMLInputElement>) => {
         setEditText(ev.target.value);
     }, []);
@@ -401,8 +386,8 @@ const LyricLine: React.FC<ILyricLineProps & {
         return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}.${ms.toString().padStart(3, '0')}`;
     };
 
-    // 解析时间字符串为秒数
-    const _parseTimeToSeconds = (timeStr: string): number => {
+    // ✅ 解析时间字符串为秒数
+    const parseTimeToSeconds = (timeStr: string): number => {
         if (!timeStr) return 0;
         const parts = timeStr.split(':');
         let minutes = 0;
@@ -427,41 +412,14 @@ const LyricLine: React.FC<ILyricLineProps & {
                 className={`${className} editing`}
             >
                 {select && <Curser fixed={prefState.fixed} />}
-                <div style={{ display: 'flex', gap: '8px', width: '100%', alignItems: 'center' }}>
-                    <input
-                        ref={timeInputRef}
-                        className="line-time-editor"
-                        style={{ 
-                            width: '100px', 
-                            flexShrink: 0,
-                            border: '1px solid #007bff',
-                            padding: '2px 4px',
-                            background: 'transparent',
-                            color: 'inherit'
-                        }}
-                        value={secondsToTimeTag(editTime)}
-                        onChange={handleTimeChange}
-                        onBlur={handleBlur}
-                        onKeyDown={handleKeyDown}
-                    />
-                    <input
-                        ref={inputRef}
-                        className="line-text-editor"
-                        style={{ 
-                            flex: 1,
-                            border: '1px solid #007bff',
-                            padding: '2px 4px',
-                            background: 'transparent',
-                            color: 'inherit',
-                            fontFamily: 'inherit',
-                            fontSize: 'inherit'
-                        }}
-                        value={editText}
-                        onChange={handleTextChange}
-                        onBlur={handleBlur}
-                        onKeyDown={handleKeyDown}
-                    />
-                </div>
+                <input
+                    ref={inputRef}
+                    className="line-text-editor"
+                    value={editText}
+                    onChange={handleTextChange}
+                    onBlur={handleBlur}
+                    onKeyDown={handleKeyDown}
+                />
             </li>
         );
     }
@@ -474,6 +432,11 @@ const LyricLine: React.FC<ILyricLineProps & {
             onClickCapture={(ev) => {
                 ev.stopPropagation();
                 handleClick();
+            }}
+            onDoubleClickCapture={(ev) => {
+                ev.stopPropagation();
+                // ✅ 双击直接进入编辑模式
+                handleTripleClick();
             }}
         >
             {select && <Curser fixed={prefState.fixed} />}
