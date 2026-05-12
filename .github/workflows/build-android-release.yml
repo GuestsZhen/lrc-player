@@ -91,21 +91,19 @@ jobs:
           draft: false
           prerelease: false
           body: |
-            ## 💝 支持项目 / Support the Project
-                  
             如果你觉得这个项目对你有帮助，欢迎请作者喝杯咖啡 ☕
                   
             If you find this project helpful, consider buying me a cup of coffee!
                   
-            <div align="center">
+            <div align="left">
             <table>
             <tr>
             <td align="center">
-            <img src="https://raw.githubusercontent.com/GuestsZhen/lrc-player/main/public/images/Guests-Alipay.png" alt="支付宝 Alipay" width="200"/><br/>
+            <img src="https://raw.githubusercontent.com/GuestsZhen/lrc-player/main/public/images/Guests-Alipay.png" alt="支付宝 Alipay" width="100"/><br/>
             <strong>支付宝 / Alipay</strong>
             </td>
             <td align="center">
-            <img src="https://raw.githubusercontent.com/GuestsZhen/lrc-player/main/public/images/Guests-WX.png" alt="微信支付 WeChat Pay" width="200"/><br/>
+            <img src="https://raw.githubusercontent.com/GuestsZhen/lrc-player/main/public/images/Guests-WX.png" alt="微信支付 WeChat Pay" width="100"/><br/>
             <strong>微信支付 / WeChat Pay</strong>
             </td>
             </tr>
