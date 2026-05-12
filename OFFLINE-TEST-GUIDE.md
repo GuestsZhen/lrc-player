@@ -3,7 +3,7 @@
 ## 🔧 已修复的问题
 
 ### 1. APP_NAME 不一致
-- **问题**：`sw.ts` 使用 `"akari-lrc-maker"`，但 `sw.unregister.ts` 使用 `"akari-lrc-player"`
+- **问题**：之前使用 `"akari-lrc-maker"` 和 `"akari-lrc-player"`，命名不统一
 - **影响**：导致卸载 Service Worker 时无法正确清理缓存
 - **修复**：统一使用 `"lrc-player"`
 
