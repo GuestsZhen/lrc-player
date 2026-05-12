@@ -104,7 +104,10 @@
         "version": "版本",
         "commitHash": "Commit hash",
         "updateTime": "更新时间",
+        "author": "作者",
+        "akariUrl": "https://github.com/magic-akari/lrc-maker",
         "repo": "项目地址",
+        "repoUrl": "https://github.com/GuestsZhen/lrc-player",
         "help": "关于 & 帮助",
         "about": "本程序是基于Akari的lrc-maker制作的，增加了固定调唱名法转调、独立播放界面、播放列表等功能。感谢Akari、项目原地址为：https://github.com/magic-akari/lrc-maker",
         "language": "语言(language)",
@@ -207,25 +210,20 @@
                     "响应式设计：支持桌面端和移动端"
                 ]
             },
-            "usage": {
-                "title": "如何使用",
-                "basicOperation": "将文件拖放到页面中加载，使用箭头键和空格键插入时间戳。你可以把这个链接收藏到浏览器书签。",
-                "onlineDemo": "在线体验：https://guestszhen.github.io/lrc-player",
-                "scenarios": {
-                    "title": "💡 应用场景",
-                    "items": [
-                        "音乐制作人：为简谱歌曲制作精准的时间轴歌词",
-                        "KTV 系统：创建卡拉OK字幕文件",
-                        "音乐教育：简谱教学和转调练习",
-                        "歌词爱好者：整理和美化歌词文件",
-                        "开发者：学习 React + TypeScript 最佳实践"
-                    ]
-                }
-            },
             "credit": {
-                "text": "本程序是基于Akari的lrc-maker制作的，感谢Akari。",
-                "repoText": "项目原地址为：",
-                "repoUrl": "https://github.com/magic-akari/lrc-maker"
+                "title": "📱 双端支持",
+                "webDesc": "Web 版本：支持 PWA 离线访问，可将歌曲及lrc文件拖放到页面中加载，使用箭头键和空格键插入时间戳。",
+                "webLabel": "浏览器在线使用",
+                "webUrl": "https://guestszhen.github.io/lrc-player",
+                "androidDesc": "Android 版本：完全离线可用，可以保存播放列表，支持MediaStore、Exoplayer及后台播放。",
+                "androidLabel": "最新版本APK下载",
+                "androidUrl": "https://github.com/GuestsZhen/lrc-player/releases/latest"
+            },
+            "donate": {
+                "title": "💝 支持我们",
+                "message": "用得开心就打赏点 / Buy me a cup of coffee",
+                "alipay": "支付宝",
+                "wechat": "微信支付"
             }
         },
         "themeMode": {

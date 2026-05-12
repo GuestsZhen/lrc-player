@@ -87,12 +87,91 @@
 }
 
 .credit p {
-    font-style: italic;
     color: var(--text-secondary);
     line-height: 1.8;
     user-select: text;
     -webkit-user-select: text;
     -moz-user-select: text;
+}
+
+.platform-support p {
+    margin: 12px 0;
+    line-height: 1.6;
+    color: var(--text-primary);
+}
+
+.platform-item {
+    margin-bottom: 24px;
+}
+
+.platform-item:last-child {
+    margin-bottom: 0;
+}
+
+.platform-support strong {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.platform-support a {
+    color: var(--primary-color);
+    text-decoration: underline;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+
+.platform-support a:hover {
+    background-color: rgba(var(--theme-rgb), 0.1);
+    text-decoration: none;
+    color: var(--theme-color);
+}
+
+.donate {
+    margin-top: 32px;
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(255, 107, 121, 0.1), rgba(253, 126, 203, 0.1));
+    border-left: 4px solid #ff6b79;
+    border-radius: 8px;
+}
+
+div.qr-codes {
+    display: flex;
+    justify-content: space-around;
+    gap: 20px;
+    margin-top: 15px;
+    flex-wrap: wrap;
+}
+
+div.qr-code-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    min-width: 150px;
+}
+
+div.qr-code-item img {
+    width: 150px;
+    height: 150px;
+    object-fit: contain;
+    margin-bottom: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+div.qr-code-item span {
+    text-align: center;
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.donate-message {
+    font-size: 16px;
+    color: var(--text-primary);
+    margin-bottom: 15px;
+    text-align: center;
 }
 
 .preferences > ul {
@@ -125,6 +204,17 @@
 
 .list-item > .link {
     padding: 0;
+}
+
+/* 作者链接样式 */
+.list-item a[href*="github.com"] {
+    color: var(--primary-color);
+    text-decoration: underline;
+    transition: opacity 0.2s;
+}
+
+.list-item a[href*="github.com"]:hover {
+    opacity: 0.8;
 }
 
 .toggle-switch {

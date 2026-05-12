@@ -2,17 +2,17 @@
 
 ## 📊 项目概览
 
-**简谱 LRC 播放器**是一个基于 React 18 + TypeScript + Vite 6 构建的现代化歌词制作和播放工具。这是一个功能丰富的 Web 应用，主要用于创建、编辑、同步和播放 LRC 格式歌词文件，特别支持简谱转调功能。
+**Web版本简谱 LRC 播放器**是一个基于 React 18 + TypeScript + Vite 6 构建的歌词制作和播放工具。主要用于创建、编辑、同步和播放 LRC 格式歌词文件，特别支持简谱转调功能。使用HTML5 Audio API实现播放及seek功能，使用Web Audio API实现音高和速度单独调节功能。
 
-**Android 版本**通过 Capacitor 框架将 Web 应用转换为原生 Android App，使用 MediaStore API 直接访问系统媒体库。
+**Android 版本简谱 LRC 播放器**通过 Capacitor 框架将 Web 应用转换为原生 Android App，使用 MediaStore API 直接访问系统媒体库，使用ExoPlayer实现音高和速度单独调节功能。 
+
 
 - **项目名称**: lrc-player
-- **当前版本**: 6.0.7 (调试日志清理版)
-- **作者**: magic-akari (forked and enhanced by GuestsZhen)
+- **当前版本**: 7.0.2 (Service Worker 离线功能增强版)
+- **作者**: Akari & GuestsZhen
 - **许可证**: MIT
 - **在线地址**: https://guestszhen.github.io/lrc-player
 - **Android 包名**: com.lrcplayer.app
-
 
 
 
@@ -64,6 +64,8 @@
 | `header.tsx` | 顶部导航栏，包含菜单、功能按钮、路由切换 |
 | `content.tsx` | 主要内容区域，根据路由动态加载不同页面组件 |
 | `footer.tsx` | 底部控制栏，播放控制、进度条、信息显示 ⭐已重构 |
+| `NavigationButtons.tsx` | 导航按钮组件，根据当前页面显示不同按钮 |
+| `RouteTransition.tsx` | 路由过渡动画组件，提供页面切换淡入淡出效果 |
 
 **音频子组件 (audio/)：** 
 
@@ -75,27 +77,6 @@
 | `RateSlider.tsx` | 播放速率滑块，支持 0.5x - 2.0x 调节 |
 | `Slider.tsx` | 通用滑块组件 |
 | `index.ts` | Audio 组件统一导出 |
-
-**播放列表相关组件：** 
-
-| 组件文件 | 功能说明 |
-|---------|---------||
-| `PlaylistPanel.tsx` | 播放列表面板组件 (从 footer 提取) |
-| `FileListPanel.tsx` | 文件列表面板组件，显示所有音频文件 |
-| `MSFileListPanel.tsx` | Android MediaStore 播放列表面板 |
-
-**导航和设置组件：**  
-
-| 组件文件 | 功能说明 |
-|---------|---------||
-| `NavigationButtons.tsx` | 导航按钮组件，根据当前页面显示不同按钮 |
-| `PlayerSettingsPanel.tsx` | Player 设置面板 (字体、背景色、歌词颜色等) |
-| `RouteTransition.tsx` | 路由过渡动画组件，提供页面切换淡入淡出效果 |
-| `MusicsetPanel.tsx` | Player 设置面板（从 Header 提取） |
-| `MusicsetSTPanel.tsx` | ST 歌曲调整面板（音高、速度、去人声） |
-| `EQModal.tsx` | EQ 均衡器弹窗（10 频段调节 + 去人声） |
-| `HeaderControlsGroup.tsx` | 右上角控制按钮组（调性检测、ST调整、文字设置） |
-| `HeaderLeftControls.tsx` | 左侧导航和控制组件 |
 
 **功能页面组件：**
 
@@ -139,7 +120,7 @@
 | `useKeyBindings.ts` | 键盘快捷键绑定，处理用户输入 |
 | `useMediaStore.ts` | MediaStore 媒体库访问 Hook (Android) |
 | `useAudioEvents.ts` | 音频事件处理 Hook (play/pause/ended/timeupdate) |
-| `usePlaylistEvents.ts` | 播放列表事件监听 Hook ⭐已完成 (管理 10 个事件) |
+| `usePlaylistEvents.ts` | 播放列表事件监听 Hook (管理 10 个事件) |
 | `useAudioControl.ts` | 音频控制 Hook (音量、静音等) |
 | `useMenu.ts` | 菜单状态管理 Hook |
 | `usePageDetection.ts` | 页面检测 Hook |
@@ -158,13 +139,13 @@
 | `audiomodule.ts` | 音频模块管理，统一音频状态和操作 |
 | `playlist-manager.ts` | 播放列表管理，支持多音频文件 |
 | `pitch-shifter.ts` | 音调转换工具，实现变调功能 |
-| `file-utils.ts` | 文件处理工具 (getBaseName, findMatchingLrcFile) ⭐已完成 |
-| `audio-decoder.ts` | 音频解码工具 (NCM/QMC 解密) ⭐已完成 |
-| `playback-control.ts` | 播放控制工具 (索引计算、歌曲加载) ⭐已完成 |
-| `exoplayer-plugin.ts` | ExoPlayer 插件接口 (Android) ⭐已完成 |
-| `exoplayer-key-detector.ts` | ExoPlayer 按键检测器 ⭐已完成 |
-| `platform-detector.ts` | 平台检测工具 ⭐已完成 |
-| `mediastore-plugin.ts` | MediaStore 插件接口 (Android) ⭐已完成 |
+| `file-utils.ts` | 文件处理工具 (getBaseName, findMatchingLrcFile)   |
+| `audio-decoder.ts` | 音频解码工具 (NCM/QMC 解密)|
+| `playback-control.ts` | 播放控制工具 (索引计算、歌曲加载) |
+| `exoplayer-plugin.ts` | ExoPlayer 插件接口 (Android) |
+| `exoplayer-key-detector.ts` | ExoPlayer 按键检测器  |
+| `platform-detector.ts` | 平台检测工具 |
+| `mediastore-plugin.ts` | MediaStore 插件接口 (Android) |
 | `file-handler.ts` | 文件处理工具（拖放、文件读取） |
 | `fullscreen-helper.ts` | 全屏模式辅助工具 |
 | `notification-controls.ts` | 通知栏控制工具 |
@@ -189,7 +170,7 @@
 | `router.ts` | 前端路由管理，页面导航 |
 | `pubsub.ts` | 发布订阅模式实现，组件间通信 |
 
-**状态管理 (Zustand Stores)：** ⭐已完成
+**状态管理 (Zustand Stores)：** 
 
 | Store 文件 | 功能说明 |
 |-----------|----------|
@@ -608,9 +589,10 @@ Worker 层：
 
 ### 7. PWA 特性
 - 可安装为桌面应用
-- 离线可用
+- **离线可用** ⭐v7.0.2 新增完整离线支持
 - 后台同步
 - 推送通知（可扩展）
+
 
 ### 8. 跨平台适配  
 - **Web 版本**：标准 HTML5 Audio API + Web Audio API
@@ -651,14 +633,7 @@ Worker 层：
 | Safari | >= 11 | 部分功能需要 polyfill |
 | Edge | >= 79 | 基于 Chromium，完全支持 |
 
-**使用的现代特性：**
-- ES Modules
-- Web Audio API
-- Service Worker
-- Fetch API
-- LocalStorage / SessionStorage
-- CSS Variables
-- Flexbox / Grid
+
 
 ---
 
@@ -725,85 +700,6 @@ docker run -d -p 8080:80 lrc-player
 
 ---
 
-
-## 📱 Android 版本架构
-
-### 双端架构设计
-
-```
-lrc-player/
-├── Web 版本 (浏览器)
-│   ├── 文件选择: <input type="file" />
-│   ├── 播放列表: selected-files-panel
-│   └── 存储: localStorage/sessionStorage
-│
-└── Android 版本 (Capacitor)
-    ├── 文件选择: MediaStore API + FilePicker
-    ├── 播放列表: MSFileListPanel
-    ├── 存储: Capacitor Preferences
-    └── 完全离线运行
-```
-
-### 关键文件
-
-```
-src/
-├── utils/
-│   ├── platform-detector.ts       # 平台检测
-│   ├── audio-file-adapter.ts      # 音频文件适配
-│   ├── mediastore-plugin.ts       # MediaStore 接口
-│   └── storage.ts                 # 统一存储适配器
-├── components/
-│   ├── MSFileListPanel.tsx # Android 播放列表
-│   ├── header.tsx                 # 平台适配头部
-│   └── footer.tsx                 # 平台适配底部
-└── stores/
-    ├── playerSettings.ts          # 播放器设置 (Preferences)
-    └── fileManager.ts             # 文件管理
-
-android/
-└── app/src/main/java/com/lrcplayer/app/
-    ├── MainActivity.java          # 主活动
-    └── plugins/
-        └── MediaStorePlugin.java  # MediaStore 原生插件 ⭐
-```
-
-
-这是 Android 版本的**核心创新点**，通过 Android MediaStore API 直接访问系统媒体库。
-
-#### 工作流程
-
-```
-用户点击授权按钮
-  ↓
-调用 MediaStore.scanAudioFiles()
-  ↓
-检查权限 (READ_MEDIA_AUDIO, MANAGE_EXTERNAL_STORAGE)
-  ↓
-查询 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-  ↓
-返回音频文件列表 (content:// URIs)
-  ↓
-转换为实际文件路径
-  ↓
-查找对应的 LRC 歌词文件
-  ↓
-显示在播放列表中
-```
-
-#### MediaStorePlugin.java 主要方法
-
-| 方法名 | 功能说明 |
-|--------|----------|
-| `scanAudioFiles()` | 扫描所有音频文件 |
-| `getTracksInFolder()` | 获取指定文件夹下的歌曲 |
-| `getAudioFilePath()` | 获取音频文件的实际路径 |
-| `findLrcFile()` | 查找同名 LRC 歌词文件 |
-| `refreshLibrary()` | 刷新媒体库（触发媒体扫描） |
-| `readFileAsBase64()` | 读取文件为 Base64 字符串 |
-
-### 构建和部署
-
 详见：
 - [ANDROID-MEDIASTORE-DEBUG-GUIDE.md](./ANDROID-MEDIASTORE-DEBUG-GUIDE.md) - MediaStore 调试指南
 - [ANDROID-CAPACITOR-STATUS.md](./ANDROID-CAPACITOR-STATUS.md) - Capacitor 迁移状态
@@ -811,6 +707,10 @@ android/
 
 ---
 
-**文档生成时间**: 2026-05-02  
-**项目版本**: 6.0.7 (调试日志清理版)  
-**文档版本**: 2.5.0 
+**文档生成时间**: 2026-05-12  
+**项目版本**: 7.0.2 (Service Worker 离线功能增强版)  
+**文档版本**: 3.0.0
+
+**主要更新记录**：
+- v3.0.0 (2026-05-12): 添加 Service Worker 离线功能详细说明
+- v2.5.0 (2026-05-02): 初始架构文档 

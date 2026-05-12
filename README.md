@@ -14,16 +14,11 @@
 ## 📱 双端支持
 
 - **Web 版本**：
-浏览器在线使用，https://guestszhen.github.io/lrc-player
-支持 PWA 离线访问，将文件拖放到页面中加载，使用箭头键和空格键插入时间戳。你可以把这个链接收藏到浏览器书签。
+支持 PWA 离线访问，可将歌曲及lrc文件拖放到页面中加载，使用箭头键和空格键插入时间戳。
+浏览器在线使用：https://guestszhen.github.io/lrc-player
 
-- **Android 版本**：原生 App，完全离线可用，支持 MediaStore API 扫描本地音乐库
-
-### 📥 下载 Android APK
-
-最新版本：- [查看 Releases](https://github.com/GuestsZhen/lrc-player/releases/latest)
-
-> ⚠️ **首次使用必读**：安装后请授予存储权限以访问本地音乐文件
+- **Android 版本**：完全离线可用，可以保存播放列表，支持MediaStore、Exoplayer及后台播放。
+最新版本APK下载：https://github.com/GuestsZhen/lrc-player/releases/latest
 
 ## 这个项目是什么
 
@@ -234,6 +229,25 @@ cd android
 ```
 
 
-## 给这个项目点一个星星 :star:
+## 💝 支持项目 / Support the Project
 
-如果你喜欢这个项目，请点一个星星吧 :star:，同时分享这个项目来帮助更多的人。
+如果你觉得这个项目对你有帮助，欢迎请作者喝杯咖啡 ☕
+
+If you find this project helpful, consider buying me a cup of coffee!
+
+<div align="center">
+<table>
+<tr>
+<td align="center">
+<img src="./public/images/Guests Alipay.png" alt="支付宝 Alipay" width="200"/><br/>
+<strong>支付宝 / Alipay</strong>
+</td>
+<td align="center">
+<img src="./public/images/Guests WX.png" alt="微信支付 WeChat Pay" width="200"/><br/>
+<strong>微信支付 / WeChat Pay</strong>
+</td>
+</tr>
+</table>
+</div>
+
+---

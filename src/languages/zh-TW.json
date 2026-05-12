@@ -104,7 +104,10 @@
         "version": "版本",
         "commitHash": "Commit hash",
         "updateTime": "更新時間",
+        "author": "作者",
+        "akariUrl": "https://github.com/magic-akari/lrc-maker",
         "repo": "專案地址",
+        "repoUrl": "https://github.com/GuestsZhen/lrc-player",
         "help": "關於 & 幫助",
         "about": "本程序是基於Akari的lrc-maker製作的，增加了固定調唱名法轉調、獨立播放介面、播放列表等功能。感謝Akari、專案原地址為：https://github.com/magic-akari/lrc-maker",
         "language": "語言(language)",
@@ -207,25 +210,20 @@
                     "響應式設計：支援桌面端和行動端"
                 ]
             },
-            "usage": {
-                "title": "如何使用",
-                "basicOperation": "將檔案拖放到頁面中載入，使用箭頭鍵和空格鍵插入時間戳記。你可以把這個連結收藏到瀏覽器書籤。",
-                "onlineDemo": "線上體驗：https://guestszhen.github.io/lrc-player",
-                "scenarios": {
-                    "title": "💡 應用場景",
-                    "items": [
-                        "音樂製作人：為簡譜歌曲製作精準的時間軸歌詞",
-                        "KTV 系統：建立卡拉OK字幕檔案",
-                        "音樂教育：簡譜教學和轉調練習",
-                        "歌詞愛好者：整理和美化歌詞檔案",
-                        "開發者：學習 React + TypeScript 最佳實踐"
-                    ]
-                }
-            },
             "credit": {
-                "text": "本程序是基於Akari的lrc-maker製作的，感謝Akari。",
-                "repoText": "專案原地址為：",
-                "repoUrl": "https://github.com/magic-akari/lrc-maker"
+                "title": "📱 雙端支持",
+                "webDesc": "支援 PWA 離線訪問，可將歌曲及lrc檔案拖放到頁面中載入，使用箭頭鍵和空格鍵插入時間戳記。",
+                "webLabel": "瀏覽器線上使用",
+                "webUrl": "https://guestszhen.github.io/lrc-player",
+                "androidDesc": "原生 Android App，完全離線可用，支援 MediaStore&Exoplayer。",
+                "androidLabel": "最新版本下載",
+                "androidUrl": "https://github.com/GuestsZhen/lrc-player/releases/latest"
+            },
+            "donate": {
+                "title": "💝 支持我們",
+                "message": "用得開心就打賞點 / Buy me a cup of coffee",
+                "alipay": "支付寶",
+                "wechat": "微信支付"
             }
         },
         "themeMode": {

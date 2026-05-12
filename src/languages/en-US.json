@@ -109,8 +109,11 @@
     "preferences": {
         "version": "Version",
         "commitHash": "Commit hash",
-        "updateTime": "Update time",
+        "updateTime": "Update Time",
+        "author": "Author",
+        "akariUrl": "https://github.com/magic-akari/lrc-maker",
         "repo": "Repository",
+        "repoUrl": "https://github.com/GuestsZhen/lrc-player",
         "help": "Help & tips",
         "about": "This program is based on Akari's lrc-maker, with added features including fixed-do solfège transposition, independent playback interface, and playlist functionality. Thanks to Akari. Original project: https://github.com/magic-akari/lrc-maker",
         "language": "Language",
@@ -213,25 +216,20 @@
                     "Responsive Design: Supports Desktop and Mobile"
                 ]
             },
-            "usage": {
-                "title": "How to Use",
-                "basicOperation": "Drag and drop files onto the page to load. Use arrow keys and spacebar to insert timestamps. You can bookmark this link.",
-                "onlineDemo": "Online Demo: https://guestszhen.github.io/lrc-player",
-                "scenarios": {
-                    "title": "💡 Use Cases",
-                    "items": [
-                        "Music Producers: Create precise timeline lyrics for Jianpu songs",
-                        "KTV Systems: Create Karaoke subtitle files",
-                        "Music Education: Jianpu teaching and transposition practice",
-                        "Lyric Enthusiasts: Organize and beautify lyric files",
-                        "Developers: Learn React + TypeScript best practices"
-                    ]
-                }
-            },
             "credit": {
-                "text": "This program is based on Akari's lrc-maker. Thanks to Akari.",
-                "repoText": "Original project: ",
-                "repoUrl": "https://github.com/magic-akari/lrc-maker"
+                "title": "📱 Dual Platform Support",
+                "webDesc": "Supports PWA offline access, drag and drop songs & lrc files to load, use arrow keys and spacebar to insert timestamps.",
+                "webLabel": "Use in browser",
+                "webUrl": "https://guestszhen.github.io/lrc-player",
+                "androidDesc": "Native Android App, fully offline, supports MediaStore & Exoplayer.",
+                "androidLabel": "Latest version",
+                "androidUrl": "https://github.com/GuestsZhen/lrc-player/releases/latest"
+            },
+            "donate": {
+                "title": "💝 Support Us",
+                "message": "Buy me a cup of coffee / 用得开心就打赏点",
+                "alipay": "Alipay",
+                "wechat": "WeChat Pay"
             }
         },
         "themeMode": {

@@ -295,9 +295,21 @@ export const Preferences: React.FC = () => {
                 </li>
                 <li>
                     <section className="list-item">
+                        <span>{lang.preferences.author}</span>
+                        <span>
+                            <a href={lang.preferences.akariUrl} target="_blank" rel="noopener noreferrer">
+                                Akari
+                            </a>
+                            {' & '}
+                            GuestsZhen
+                        </span>
+                    </section>
+                </li>
+                <li>
+                    <section className="list-item">
                         <span>{lang.preferences.repo}</span>
-                        <a className="link" href={LINK.url} target="_blank" rel="noopener noreferrer">
-                            Github
+                        <a className="link" href={lang.preferences.repoUrl} target="_blank" rel="noopener noreferrer">
+                            {lang.preferences.repoUrl}
                         </a>
                     </section>
                 </li>
@@ -570,34 +582,45 @@ export const Preferences: React.FC = () => {
                     </ul>
                 </section>
 
-                {/* 如何使用 */}
-                <section className="intro-section">
-                    <h3>{lang.preferences.projectIntro.usage.title}</h3>
-                    <p>{lang.preferences.projectIntro.usage.basicOperation}</p>
-                    <p>
-                        <a href="https://guestszhen.github.io/lrc-player" target="_blank" rel="noopener noreferrer">
-                            {lang.preferences.projectIntro.usage.onlineDemo}
-                        </a>
-                    </p>
-                    
-                    <h4>{lang.preferences.projectIntro.usage.scenarios.title}</h4>
-                    <ol>
-                        {lang.preferences.projectIntro.usage.scenarios.items.map((item, index) => (
-                            <li key={index}>{item}</li>
-                        ))}
-                    </ol>
+                {/* 双端支持 */}
+                <section className="intro-section credit">
+                    <h3>{lang.preferences.projectIntro.credit.title}</h3>
+                    <div className="platform-support">
+                        <div className="platform-item">
+                            <p>{lang.preferences.projectIntro.credit.webDesc}</p>
+                            <p>
+                                {lang.preferences.projectIntro.credit.webLabel}：
+                                <a href={lang.preferences.projectIntro.credit.webUrl} target="_blank" rel="noopener noreferrer">
+                                    {lang.preferences.projectIntro.credit.webUrl}
+                                </a>
+                            </p>
+                        </div>
+                        <div className="platform-item">
+                            <p>{lang.preferences.projectIntro.credit.androidDesc}</p>
+                            <p>
+                                {lang.preferences.projectIntro.credit.androidLabel}：
+                                <a href={lang.preferences.projectIntro.credit.androidUrl} target="_blank" rel="noopener noreferrer">
+                                    {lang.preferences.projectIntro.credit.androidUrl}
+                                </a>
+                            </p>
+                        </div>
+                    </div>
                 </section>
 
-                {/* 致谢 */}
-                <section className="intro-section credit">
-                    <p>
-                        {lang.preferences.projectIntro.credit.text}
-                        <br />
-                        {lang.preferences.projectIntro.credit.repoText}
-                        <a href={lang.preferences.projectIntro.credit.repoUrl} target="_blank" rel="noopener noreferrer">
-                            {lang.preferences.projectIntro.credit.repoUrl}
-                        </a>
-                    </p>
+                {/* 打赏二维码 */}
+                <section className="intro-section donate">
+                    <h3>{lang.preferences.projectIntro.donate.title}</h3>
+                    <p className="donate-message">{lang.preferences.projectIntro.donate.message}</p>
+                    <div className="qr-codes">
+                        <div className="qr-code-item">
+                            <img src="/images/Guests Alipay.png" alt={lang.preferences.projectIntro.donate.alipay} />
+                            <span>{lang.preferences.projectIntro.donate.alipay}</span>
+                        </div>
+                        <div className="qr-code-item">
+                            <img src="/images/Guests WX.png" alt={lang.preferences.projectIntro.donate.wechat} />
+                            <span>{lang.preferences.projectIntro.donate.wechat}</span>
+                        </div>
+                    </div>
                 </section>
             </div>
         </div>
