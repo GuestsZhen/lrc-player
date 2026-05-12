@@ -5,7 +5,7 @@
 ### 1. APP_NAME 不一致
 - **问题**：`sw.ts` 使用 `"akari-lrc-maker"`，但 `sw.unregister.ts` 使用 `"akari-lrc-player"`
 - **影响**：导致卸载 Service Worker 时无法正确清理缓存
-- **修复**：统一使用 `"akari-lrc-player"`
+- **修复**：统一使用 `"lrc-player"`
 
 ### 2. 预缓存路径问题
 - **问题**：使用绝对路径 `/` 和 `/index.html`，在某些部署环境下可能失败
@@ -67,7 +67,7 @@
 **预期结果：**
 - ✅ Service Worker 成功注册
 - ✅ 状态显示 "activated and is running"
-- ✅ Cache Storage 中出现名为 `akari-lrc-player-7.0.2-xxxxx` 的缓存
+- ✅ Cache Storage 中出现名为 `lrc-player-7.0.2-xxxxx` 的缓存
 
 **失败排查：**
 - ❌ 如果看到 "registration failed"，检查：
@@ -81,7 +81,7 @@
 
 **步骤：**
 1. 打开开发者工具 → Application → Cache Storage
-2. 点击 `akari-lrc-player-7.0.2-xxxxx` 缓存
+2. 点击 `lrc-player-7.0.2-xxxxx` 缓存
 3. 查看缓存的资源列表
 
 **预期结果：**
@@ -185,7 +185,7 @@
 
 **预期结果：**
 - ✅ Service Worker 被成功卸载
-- ✅ 所有 `akari-lrc-player-*` 缓存被清理
+- ✅ 所有 `lrc-player-*` 缓存被清理
 - ✅ 页面重新加载后 Service Worker 重新注册
 
 ---

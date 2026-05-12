@@ -1,5 +1,5 @@
 export async function unregister() {
-    const APP_NAME = "akari-lrc-player";
+    const APP_NAME = "lrc-player";
 
     if ("serviceWorker" in navigator) {
         await caches.keys().then(async (cacheNames) => {
