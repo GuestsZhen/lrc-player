@@ -246,11 +246,11 @@ If you find this project helpful, consider buying me a cup of coffee! ☕
 <table>
 <tr>
 <td align="center">
-<img src="./public/images/Guests Alipay.png" alt="Alipay" width="200"/><br/>
+<img src="./public/images/Guests-Alipay.png" alt="Alipay" width="200"/><br/>
 <strong>Alipay</strong>
 </td>
 <td align="center">
-<img src="./public/images/Guests WX.png" alt="WeChat Pay" width="200"/><br/>
+<img src="./public/images/Guests-WX.png" alt="WeChat Pay" width="200"/><br/>
 <strong>WeChat Pay</strong>
 </td>
 </tr>

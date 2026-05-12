@@ -128,10 +128,11 @@
         "clearCache": "Clear caches",
         "projectDescription": {
             "title": "📖 About This Project",
-            "paragraph1": "This is a numbered musical notation (Jianpu) playback tool based on Akari's lrc-maker. The original program was a lyrics production tool, and we have added features such as fixed-do solfeggio transposition, independent playback interface, and playlist functionality.",
+            "paragraph1": "This is a numbered musical notation (Jianpu) playback tool based on Akari's lrc-maker, with added features including fixed-do solfeggio transposition, independent playback interface, and playlist functionality.",
             "paragraph2": "It mainly solves the need for scrolling playback of Jianpu LRC files and accompaniment on different platforms, avoiding problems such as traditional Jianpu images taking up too much screen space and requiring manual page turning.",
-            "paragraph3": "You can use this tool to create LRC files (add timestamps); numbered notation can be directly edited and achieve fixed-do transposition; meanwhile, accompaniment songs can recognize key, one-click pitch adjustment, playback speed adjustment, and vocal removal.",
-            "paragraph4": "This tool does not upload data or record any information. LRC files created with this tool can be used on any supported general player."
+            "paragraph3": "You can use this tool to create LRC files (add timestamps); numbered notation can be directly edited and achieve fixed-do transposition;",
+            "paragraph4": "Meanwhile, accompaniment songs can recognize key, one-click pitch adjustment, playback speed adjustment, and vocal removal.",
+            "paragraph5": "This tool does not upload data or record any information. LRC files created with this tool can be used on any supported general player."
         },
         "projectIntro": {
             "title": "🎯 Core Features",

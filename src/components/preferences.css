@@ -48,7 +48,7 @@
 
 .intro-section {
     margin-bottom: 32px;
-    padding: 1px;
+    padding: 20px;
     background: rgba(128, 128, 128, 0.05);
     border-radius: 6px;
     border-left: 4px solid var(--primary-color);

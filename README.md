@@ -24,11 +24,13 @@
 
 ## 这个项目是什么
 
-这是一个基于Akari的[lrc-maker](https://github.com/magic-akari/lrc-maker) 制作的简谱播放工具，原程序为歌词制作工具，在此基础上增加了固定调唱名法转调、独立播放界面、播放列表等功能。
+这是一个基于Akari的[lrc-maker](https://github.com/magic-akari/lrc-maker) 制作的简谱播放工具，增加了固定调唱名法转调、独立播放界面、播放列表等功能。
 
 主要解决简谱lrc文件和伴奏在不同平台上的滚动播放的需求、避免了传统简谱图片占用屏幕过大，需要手动翻页等问题。
 
-可以通过该工具实现制作lrc文件（打时间轴）；简谱数字谱可以直接编辑及实现固定调转调；同时伴奏歌曲可以识别调性，一键升降调、调整播放速度、及去人声等。
+可以通过该工具实现制作lrc文件（打时间轴）；简谱数字谱可以直接编辑及实现固定调转调；
+
+同时伴奏歌曲可以识别调性，一键升降调、调整播放速度、及去人声等。
 
 本工具不上传数据、不记录任何信息，通过该工具制作的lrc文件可以用于任何支持的通用播放器上。
 
@@ -246,11 +248,11 @@ If you find this project helpful, consider buying me a cup of coffee!
 <table>
 <tr>
 <td align="center">
-<img src="./public/images/Guests Alipay.png" alt="支付宝 Alipay" width="200"/><br/>
+<img src="./public/images/Guests-Alipay.png" alt="支付宝 Alipay" width="200"/><br/>
 <strong>支付宝 / Alipay</strong>
 </td>
 <td align="center">
-<img src="./public/images/Guests WX.png" alt="微信支付 WeChat Pay" width="200"/><br/>
+<img src="./public/images/Guests-WX.png" alt="微信支付 WeChat Pay" width="200"/><br/>
 <strong>微信支付 / WeChat Pay</strong>
 </td>
 </tr>

@@ -497,6 +497,7 @@ export const Preferences: React.FC = () => {
                     <p>{lang.preferences.projectDescription.paragraph2}</p>
                     <p>{lang.preferences.projectDescription.paragraph3}</p>
                     <p>{lang.preferences.projectDescription.paragraph4}</p>
+                    <p>{lang.preferences.projectDescription.paragraph5}</p>
                 </section>
 
                 <h2>{lang.preferences.projectIntro.title}</h2>
@@ -622,11 +623,11 @@ export const Preferences: React.FC = () => {
                     <p className="donate-message">{lang.preferences.projectIntro.donate.message}</p>
                     <div className="qr-codes">
                         <div className="qr-code-item">
-                            <img src="/images/Guests Alipay.png" alt={lang.preferences.projectIntro.donate.alipay} />
+                            <img src="/images/Guests-Alipay.png" alt={lang.preferences.projectIntro.donate.alipay} />
                             <span>{lang.preferences.projectIntro.donate.alipay}</span>
                         </div>
                         <div className="qr-code-item">
-                            <img src="/images/Guests WX.png" alt={lang.preferences.projectIntro.donate.wechat} />
+                            <img src="/images/Guests-WX.png" alt={lang.preferences.projectIntro.donate.wechat} />
                             <span>{lang.preferences.projectIntro.donate.wechat}</span>
                         </div>
                     </div>
