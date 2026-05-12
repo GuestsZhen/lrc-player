@@ -106,7 +106,7 @@
         "updateTime": "更新时间",
         "repo": "项目地址",
         "help": "关于 & 帮助",
-        "about": "本程序是基于Akari的lrc-maker制作的，增加了首调唱名法转调、独立播放界面、播放列表等功能。感谢Akari、项目原地址为：https://github.com/magic-akari/lrc-maker",
+        "about": "本程序是基于Akari的lrc-maker制作的，增加了固定调唱名法转调、独立播放界面、播放列表等功能。感谢Akari、项目原地址为：https://github.com/magic-akari/lrc-maker",
         "language": "语言(language)",
         "builtInAudio": "使用浏览器内建音频播放器",
         "spaceButton": "启用虚拟空格键",
@@ -131,7 +131,7 @@
             "tune": {
                 "title": "简谱转调工具 (Tune) ⭐特色功能",
                 "features": [
-                    "🎼 首调唱名法转调（核心特色）",
+                    "🎼 固定调唱名法转调（核心特色）",
                     "🔄 简谱数字与音名映射转换",
                     "🎹 支持高低八度标记：(5) 表示低音，[5] 表示高音",
                     "📊 升降号支持（#1, b2 等）",
@@ -277,7 +277,7 @@
         "noFilesFound": "未找到音频文件\n\n请检查：\n1. 是否已授予存储权限\n2. Music 文件夹中是否有音频文件"
     },
     "tune": {
-        "title": "首调唱名法转调",
+        "title": "固定调唱名法转调",
         "originalKey": "原调",
         "targetKey": "目标调性",
         "transpose": "转调",

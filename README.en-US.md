@@ -27,7 +27,7 @@ Latest Version: - [View Releases](https://github.com/GuestsZhen/lrc-player/relea
 
 ## What is this project?
 
-This is a numbered musical notation (Jianpu) playback tool based on Akari's lrc-maker. The original program was a scrolling lyrics production tool, and we have added features such as movable-do solfeggio transposition, independent playback interface, and playlist functionality.
+This is a numbered musical notation (Jianpu) playback tool based on Akari's lrc-maker. The original program was a scrolling lyrics production tool, and we have added features such as fixed-do solfeggio transposition, independent playback interface, and playlist functionality.
 
 Thanks to Akari, the original project can be found at: https://github.com/magic-akari/lrc-maker
 
@@ -42,7 +42,7 @@ Thanks to Akari, the original project can be found at: https://github.com/magic-
 - 🖥️ Full-screen mode support
 
 #### 2. Numbered Notation Transposition Tool (Tune) ⭐Featured Feature
-- 🎼 **Movable-do solfeggio transposition** (core feature)
+- 🎼 **Fixed-do solfeggio transposition** (core feature)
 - 🔄 Numbered notation to note name mapping conversion
 - 🎹 Support for octave markers:
   - `(5)` indicates lower octave

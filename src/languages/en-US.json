@@ -112,7 +112,7 @@
         "updateTime": "Update time",
         "repo": "Repository",
         "help": "Help & tips",
-        "about": "This program is based on Akari's lrc-maker, with added features including movable-do solfège transposition, independent playback interface, and playlist functionality. Thanks to Akari. Original project: https://github.com/magic-akari/lrc-maker",
+        "about": "This program is based on Akari's lrc-maker, with added features including fixed-do solfège transposition, independent playback interface, and playlist functionality. Thanks to Akari. Original project: https://github.com/magic-akari/lrc-maker",
         "language": "Language",
         "builtInAudio": "Use browser built-in audio player",
         "spaceButton": "On-screen space key",
@@ -135,9 +135,9 @@
                 ]
             },
             "tune": {
-                "title": "Movable-Do Transposition Tool ⭐ Featured",
+                "title": "Fixed-Do Transposition Tool ⭐ Featured",
                 "features": [
-                    "🎼 Movable-Do Solfège Transposition (Core Feature)",
+                    "🎼 Fixed-Do Solfège Transposition (Core Feature)",
                     "🔄 Jianpu Number to Note Name Mapping",
                     "🎹 Octave Marking Support: (5) for lower octave, [5] for higher octave",
                     "📊 Accidental Support (#1, b2, etc.)",
@@ -283,7 +283,7 @@
         "noFilesFound": "No audio files found\n\nPlease check:\n1. Storage permission granted\n2. Audio files exist in Music folder"
     },
     "tune": {
-        "title": "Movable-Do Transposition",
+        "title": "Fixed-Do Transposition",
         "originalKey": "Original Key",
         "targetKey": "Target Key",
         "transpose": "Transpose",
