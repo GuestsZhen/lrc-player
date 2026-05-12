@@ -249,11 +249,9 @@ If you find this project helpful, consider buying me a cup of coffee!
 <tr>
 <td align="center">
 <img src="./public/images/Guests-Alipay.png" alt="支付宝 Alipay" width="200"/><br/>
-<strong>支付宝 / Alipay</strong>
 </td>
 <td align="center">
 <img src="./public/images/Guests-WX.png" alt="微信支付 WeChat Pay" width="200"/><br/>
-<strong>微信支付 / WeChat Pay</strong>
 </td>
 </tr>
 </table>

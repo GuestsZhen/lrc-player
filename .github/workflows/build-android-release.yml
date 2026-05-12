@@ -99,12 +99,10 @@ jobs:
             <table>
             <tr>
             <td align="center">
-            <img src="https://raw.githubusercontent.com/GuestsZhen/lrc-player/main/public/images/Guests-Alipay.png" alt="支付宝 Alipay" width="100"/><br/>
-            <strong>支付宝 / Alipay</strong>
+            <img src="https://raw.githubusercontent.com/GuestsZhen/lrc-player/main/public/images/Guests-Alipay.png" alt="支付宝 Alipay" width="80"/><br/>
             </td>
             <td align="center">
-            <img src="https://raw.githubusercontent.com/GuestsZhen/lrc-player/main/public/images/Guests-WX.png" alt="微信支付 WeChat Pay" width="100"/><br/>
-            <strong>微信支付 / WeChat Pay</strong>
+            <img src="https://raw.githubusercontent.com/GuestsZhen/lrc-player/main/public/images/Guests-WX.png" alt="微信支付 WeChat Pay" width="80"/><br/>
             </td>
             </tr>
             </table>
