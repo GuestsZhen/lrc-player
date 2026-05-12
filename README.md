@@ -15,16 +15,23 @@
 
 - **Web 版本**：
 支持 PWA 离线访问，可将歌曲及lrc文件拖放到页面中加载，使用箭头键和空格键插入时间戳。
+
 浏览器在线使用：https://guestszhen.github.io/lrc-player
 
 - **Android 版本**：完全离线可用，可以保存播放列表，支持MediaStore、Exoplayer及后台播放。
+
 最新版本APK下载：https://github.com/GuestsZhen/lrc-player/releases/latest
 
 ## 这个项目是什么
 
-这是一个基于 Akari 的 lrc-maker 制作的简谱播放工具，原程序为滚动歌词制作工具，在此基础上增加了固定调唱名法转调、独立播放界面、播放列表等功能。
+这是一个基于Akari的[lrc-maker](https://github.com/magic-akari/lrc-maker) 制作的简谱播放工具，原程序为歌词制作工具，在此基础上增加了固定调唱名法转调、独立播放界面、播放列表等功能。
 
-感谢 Akari，项目原地址为：https://github.com/magic-akari/lrc-maker
+主要解决简谱lrc文件和伴奏在不同平台上的滚动播放的需求、避免了传统简谱图片占用屏幕过大，需要手动翻页等问题。
+
+可以通过该工具实现制作lrc文件（打时间轴）；简谱数字谱可以直接编辑及实现固定调转调；同时伴奏歌曲可以识别调性，一键升降调、调整播放速度、及去人声等。
+
+本工具不上传数据、不记录任何信息，通过该工具制作的lrc文件可以用于任何支持的通用播放器上。
+
 
 ## 主要功能
 

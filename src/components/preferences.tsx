@@ -490,6 +490,15 @@ export const Preferences: React.FC = () => {
 
             {/* 项目介绍 */}
             <div className="project-intro">
+                {/* 项目概述 */}
+                <section className="intro-section project-overview">
+                    <h2>{lang.preferences.projectDescription.title}</h2>
+                    <p>{lang.preferences.projectDescription.paragraph1}</p>
+                    <p>{lang.preferences.projectDescription.paragraph2}</p>
+                    <p>{lang.preferences.projectDescription.paragraph3}</p>
+                    <p>{lang.preferences.projectDescription.paragraph4}</p>
+                </section>
+
                 <h2>{lang.preferences.projectIntro.title}</h2>
 
                 {/* 播放器 */}
