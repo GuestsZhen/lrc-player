@@ -17,8 +17,8 @@ swWorker.addEventListener("install", (event) => {
     // ✅ 预缓存关键资源
     event.waitUntil(
         caches.open(CACHENAME).then((cache) => {
-            return cache.addAll(PRECACHE_URLS).catch((err) => {
-                console.error("Failed to precache:", err);
+            return cache.addAll(PRECACHE_URLS).catch(() => {
+                // Precache failed silently
             });
         })
     );

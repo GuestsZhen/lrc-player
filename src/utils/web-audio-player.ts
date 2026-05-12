@@ -675,7 +675,7 @@ export class WebAudioPlayer {
                         
             inverterL.connect(merger, 0, 0);                              // -R -> merger 左输入(channel 0)
         } catch (error) {
-            console.error('Failed to create vocal removal chain:', error);
+            // Failed to create vocal removal chain
             throw error;
         }
         

@@ -176,14 +176,14 @@ export const useSTEventListeners = ({
                                     
                                     import('../utils/exoplayer-plugin.js').then(({ setEQBandLevel }) => {
                                         resetBands.forEach(band => {
-                                            setEQBandLevel(band.index, 0).catch(err => {
-                                                console.error('Failed to reset band', band.index, err);
+                                            setEQBandLevel(band.index, 0).catch(() => {
+                                                // Failed to reset band
                                             });
                                         });
                                     });
                                 })
-                                .catch(error => {
-                                    console.error('Failed to reset EQ bands:', error);
+                                .catch(() => {
+                                    // Failed to reset EQ bands
                                 });
                         }
                         
@@ -194,13 +194,13 @@ export const useSTEventListeners = ({
                                         .then(eqData => {
                                             setEqBands(eqData.bands);
                                         })
-                                        .catch(error => {
-                                            console.error('Failed to get EQ bands:', error);
+                                        .catch(() => {
+                                            // Failed to get EQ bands
                                         });
                                 }
                             })
-                            .catch(error => {
-                                console.error('Failed to call setVocalRemoval:', error);
+                            .catch(() => {
+                                // Failed to call setVocalRemoval
                                 if (newState) {
                                     setShowEQPanel(false);
                                     setShowEQModal(false);
@@ -226,7 +226,7 @@ export const useSTEventListeners = ({
                         )
                     );
                 } catch (error) {
-                    console.error('❌ Failed to adjust EQ band:', error);
+                    // Failed to adjust EQ band
                 }
             };
             

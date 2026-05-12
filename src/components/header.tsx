@@ -249,7 +249,7 @@ export const Header: React.FC = () => {
                         setEqBands(eqData.bands);
                     }
                 } catch (error) {
-                    console.error('Failed to get EQ bands:', error);
+                    // Failed to get EQ bands
                 }
             }
         } else {

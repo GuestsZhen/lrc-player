@@ -226,7 +226,6 @@ export const setVocalRemoval = async (enabled: boolean): Promise<{ success: bool
     const result = await ExoPlayerPlugin.setVocalRemoval({ enabled });
     return result;
   } catch (error) {
-    console.error('❌ [PLUGIN] Failed to set vocal removal:', error);
     throw error;
   }
 };
@@ -252,7 +251,6 @@ export const getEQBands = async (): Promise<{ bands: Array<{ index: number; freq
     const result = await ExoPlayerPlugin.getEQBands();
     return result;
   } catch (error) {
-    console.error('❌ Failed to get EQ bands:', error);
     throw error;
   }
 };
@@ -267,7 +265,6 @@ export const setEQBandLevel = async (bandIndex: number, level: number): Promise<
     const result = await ExoPlayerPlugin.setEQBandLevel({ bandIndex, level });
     return result;
   } catch (error) {
-    console.error('❌ Failed to set EQ band level:', error);
     throw error;
   }
 };

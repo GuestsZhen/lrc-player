@@ -24,7 +24,6 @@ export default function(): Plugin {
                         
                         // 安装阶段：预缓存关键资源
                         self.addEventListener('install', (event) => {
-                            console.log('[SW] Dev mode - Installing...');
                             self.skipWaiting();
                             
                             event.waitUntil(
@@ -39,7 +38,7 @@ export default function(): Plugin {
                                         '/src/components/tune.tsx',
                                         '/src/components/lrc-utils.tsx'
                                     ]).catch(err => {
-                                        console.warn('[SW] Failed to precache:', err);
+                                        // Precache failed silently
                                     });
                                 })
                             );
@@ -47,7 +46,6 @@ export default function(): Plugin {
                         
                         // 激活阶段：清理旧缓存
                         self.addEventListener('activate', (event) => {
-                            console.log('[SW] Dev mode - Activating...');
                             event.waitUntil(
                                 Promise.all([
                                     self.clients.claim(),
@@ -87,7 +85,6 @@ export default function(): Plugin {
                             event.respondWith(
                                 caches.match(event.request).then((cached) => {
                                     if (cached) {
-                                        console.log('[SW] Cache hit:', url.pathname);
                                         return cached;
                                     }
                                     
@@ -97,13 +94,11 @@ export default function(): Plugin {
                                             const clone = response.clone();
                                             caches.open(CACHENAME).then((cache) => {
                                                 cache.put(event.request, clone);
-                                                console.log('[SW] Cached:', url.pathname);
                                             });
                                         }
                                         return response;
                                     }).catch(() => {
                                         // 离线且缓存未命中
-                                        console.warn('[SW] Offline and not cached:', url.pathname);
                                         if (url.pathname.endsWith('/') || url.pathname.endsWith('.html')) {
                                             return caches.match('./index.html');
                                         }
