@@ -31,7 +31,13 @@ export default function(): Plugin {
                                 caches.open(CACHENAME).then((cache) => {
                                     return cache.addAll([
                                         './',
-                                        './index.html'
+                                        './index.html',
+                                        // ✅ 预缓存所有主要路由组件
+                                        '/src/components/editor.tsx',
+                                        '/src/components/synchronizer.tsx',
+                                        '/src/components/player.tsx',
+                                        '/src/components/tune.tsx',
+                                        '/src/components/lrc-utils.tsx'
                                     ]).catch(err => {
                                         console.warn('[SW] Failed to precache:', err);
                                     });
@@ -68,7 +74,10 @@ export default function(): Plugin {
                             if (url.origin !== self.location.origin) return;
                             
                             // 判断是否可缓存
-                            const isCacheable = /(?:\\.css|\\.js|\\.svg|\\.woff2?|\\.ttf|\\.png|\\.jpg|\\.jpeg|\\.gif|\\.ico|\\.webmanifest|\\.json)$/i.test(url.pathname)
+                            const isCacheable = /(?:\\.css|\\.js|\\.svg|\\.woff2?|\\.ttf|\\.png|\\.jpg|\\.jpeg|\\.gif|\\.ico|\\.webmanifest|\\.json|\\.ts)$/i.test(url.pathname)
+                                || url.pathname.startsWith('/node_modules/')
+                                || url.pathname.startsWith('/src/')
+                                || url.pathname.startsWith('/@')
                                 || url.pathname.endsWith('/')
                                 || url.pathname.endsWith('/index.html');
                             
