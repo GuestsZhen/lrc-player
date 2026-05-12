@@ -1,12 +1,27 @@
 const swWorker = self as unknown as ServiceWorkerGlobalScope;
 
-const APP_NAME = "akari-lrc-maker";
+const APP_NAME = "akari-lrc-player";
 const VERSION = import.meta.env.app.version;
 const HASH = import.meta.env.app.hash;
 const CACHENAME = `${APP_NAME}-${VERSION}-${HASH}`;
 
-swWorker.addEventListener("install", () => {
+// ✅ 预缓存的关键资源列表（使用相对路径）
+const PRECACHE_URLS = [
+    "./",
+    "./index.html",
+];
+
+swWorker.addEventListener("install", (event) => {
     swWorker.skipWaiting();
+    
+    // ✅ 预缓存关键资源
+    event.waitUntil(
+        caches.open(CACHENAME).then((cache) => {
+            return cache.addAll(PRECACHE_URLS).catch((err) => {
+                console.error("Failed to precache:", err);
+            });
+        })
+    );
 });
 
 swWorker.addEventListener("activate", (event) => {
@@ -44,25 +59,49 @@ swWorker.addEventListener("fetch", (event) => {
         return;
     }
 
-    // 只处理本地资源 (.css, .js, .svg)
-    if (!/(?:\.css|\.js|\.svg)$/i.test(url.pathname)) {
+    // ✅ 缓存关键资源：HTML, CSS, JS, SVG, 字体, 图片
+    const isCacheable = /(?:\.css|\.js|\.svg|\.woff2?|\.ttf|\.png|\.jpg|\.jpeg|\.gif|\.ico|\.webmanifest)$/i.test(url.pathname)
+        || url.pathname.endsWith("/")
+        || url.pathname.endsWith("/index.html")
+        || url.pathname === swWorker.location.pathname;
+    
+    if (!isCacheable) {
         return;
     }
 
+    // ✅ 离线优先策略：缓存优先，网络回退
     event.respondWith(
-        caches.match(event.request).then(
-            (match) =>
-                match
-                || caches.open(CACHENAME).then((cache) =>
-                    fetch(event.request).then((response) => {
-                        if (response.status !== 200) {
-                            return response;
-                        }
+        caches.match(event.request).then((match) => {
+            // 缓存命中，直接返回
+            if (match) {
+                return match;
+            }
 
-                        cache.put(event.request, response.clone());
+            // 缓存未命中，尝试网络请求
+            return caches.open(CACHENAME).then((cache) => {
+                return fetch(event.request)
+                    .then((response) => {
+                        // 网络请求成功，缓存响应
+                        if (response.status === 200) {
+                            cache.put(event.request, response.clone());
+                        }
                         return response;
                     })
-                ),
-        ),
+                    .catch(() => {
+                        // ✅ 离线且缓存未命中：返回友好的离线页面
+                        // 对于 HTML 请求，返回缓存的 index.html
+                        if (url.pathname.endsWith("/") || url.pathname.endsWith(".html")) {
+                            return caches.match("./index.html").then((fallback) => {
+                                return fallback || new Response("Offline", { status: 503 });
+                            });
+                        }
+                        // 其他资源返回错误
+                        return new Response("Offline - Resource not available", {
+                            status: 503,
+                            statusText: "Service Unavailable",
+                        });
+                    });
+            });
+        }),
     );
 });
