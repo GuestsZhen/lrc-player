@@ -77,6 +77,11 @@ jobs:
           name: app-release
           path: android/app/build/outputs/apk/release/app-release.apk
 
+      - name: Get version from package.json
+        if: startsWith(github.ref, 'refs/tags/v')
+        id: get_version
+        run: echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
@@ -85,9 +90,8 @@ jobs:
           generate_release_notes: true
           draft: false
           prerelease: false
-          name: "LRC Player ${{ github.ref_name }}"
           body: |
-            ## 📱 LRC Player ${{ github.ref_name }}
+            ## 📱 LRC Player v${{ steps.get_version.outputs.VERSION }}
             
             ### ⚠️ 首次使用必读
             
