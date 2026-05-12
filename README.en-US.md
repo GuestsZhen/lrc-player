@@ -236,6 +236,29 @@ cd android
 ```
 
 
+## 💝 Support the Project
+
+If you find this project helpful, consider buying me a cup of coffee! ☕
+
+如果你觉得这个项目对你有帮助，欢迎请作者喝杯咖啡
+
+<div align="center">
+<table>
+<tr>
+<td align="center">
+<img src="./public/images/Guests Alipay.png" alt="Alipay" width="200"/><br/>
+<strong>Alipay</strong>
+</td>
+<td align="center">
+<img src="./public/images/Guests WX.png" alt="WeChat Pay" width="200"/><br/>
+<strong>WeChat Pay</strong>
+</td>
+</tr>
+</table>
+</div>
+
+---
+
 ## Give this project a star :star:
 
 If you like this project, please give it a star :star:, and share this project to help more people.
