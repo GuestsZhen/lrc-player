@@ -163,6 +163,10 @@ export default defineConfig({
             },
         },
     },
+    // ✅ 开发环境也支持 Service Worker
+    server: {
+        middlewareMode: false,
+    },
 });
 
 function htmlTag(meta: ReturnType<typeof tag>): HtmlTagDescriptor {
