@@ -85,8 +85,9 @@ jobs:
           generate_release_notes: true
           draft: false
           prerelease: false
+          name: "LRC Player ${{ github.ref_name }}"
           body: |
-            ## 📱 LRC Player v6.0.6
+            ## 📱 LRC Player ${{ github.ref_name }}
             
             ### ⚠️ 首次使用必读
             
